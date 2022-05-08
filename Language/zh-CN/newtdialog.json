@@ -1,0 +1,31 @@
+{
+	"strings": 
+	{
+		"NEWT_PRAY_FIRST_TIME": "<style=cWorldEvent>{0}{1}：谢您嘞{2}，好人一生大富大贵！</style>",
+		"NEWT_PRAY_NORMAL": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，送你<style=cIsHealth>{3}</style></style>",
+		"NEWT_PRAY_ELITE": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，小小心意送你<style=cIsHealth>{3}</style></style>",
+		"NEWT_PRAY_PECULIAR": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，送你特别礼物<style=cIsHealth>{3}</style></style>",
+		"NEWT_DEATH_STATE": "灵魂",
+		"NEWT_DEATH_INFO": "{0}<style=cDeath>已死亡</style>",
+		"NEWT_WELCOME_WORD_1": "<style=cWorldEvent><size=24px>{0}：欢迎光临，好又多月店！</size></style>",
+		"NEWT_WELCOME_WORD_2": "<style=cWorldEvent><size=24px>{0}：欢迎来到我家，陌生人。</size></style>",
+		"NEWT_WELCOME_WORD_3": "<style=cWorldEvent><size=24px>{0}：你好，有何贵干。</size></style>",
+		"NEWT_WELCOME_WORD_4": "<style=cWorldEvent><size=24px>{0}：欢迎光临，随便挑随便选。</size></style>",
+		"NEWT_WELCOME_WORD_5": "<style=cWorldEvent><size=24px>{0}：你好，陌生人。</size></style>",
+		"NEWT_ANGRY_WELCOME_WORD_1": "<style=cWorldEvent><size=24px>{0}{1}：走开，我有傻逼恐惧症！</size></style>",
+		"NEWT_ANGRY_WELCOME_WORD_2": "<style=cWorldEvent><size=24px>{0}{1}：滚，傻！逼！</size></style>",
+		"NEWT_ANGRY_WELCOME_WORD_3": "<style=cWorldEvent><size=24px>{0}{1}：废物，你不配来这里。</size></style>",
+		"NEWT_ANGRY_WELCOME_WORD_4": "<style=cWorldEvent><size=24px>{0}{1}：想知道我怎么死的吗？就是你们干的。</size></style>",
+		"NEWT_ANGRY_WELCOME_WORD_5": "<style=cWorldEvent><size=24px>{0}{1}：真有脸来。</size></style>",
+		"NEWT_ATTACKED_WORD_1": "<style=cWorldEvent>{0}：别打我。</style>",
+		"NEWT_ATTACKED_WORD_2": "<style=cWorldEvent>{0}：用力点，没吃饭吗？</style>",
+		"NEWT_ATTACKED_WORD_3": "<style=cWorldEvent>{0}：按键盘Alt + F4获得最新Steam游戏，最低250%折起。</style>",
+		"NEWT_ATTACKED_WORD_4": "<style=cWorldEvent>{0}：做人锕，最重要是开心。</style>",
+		"NEWT_ATTACKED_WORD_5": "<style=cWorldEvent>{0}：作业，工作找到了吗？搁着玩游戏。</style>",
+		"NEWT_ATTACKED_WORD_6": "<style=cWorldEvent>{0}：你有车？有房？有存款？有对象？</style>",
+		"NEWT_ATTACKED_WORD_7": "<style=cWorldEvent>{0}：如果我死了，请把我的骨灰带在身边，遇到危险就撒出去，让我再最后保护你一次。</style>",
+		"NEWT_ATTACKED_WORD_8": "<style=cWorldEvent>{0}：如果我死了会有人伤心吗？</style>",
+		"NEWT_ATTACKED_WORD_9": "<style=cWorldEvent>{0}：怎么样做才可以死了让父母朋友不伤心? - 知乎</style>",
+		"NEWT_ATTACKED_WORD_10": "<style=cWorldEvent>{0}：一天内哪些时间自杀成功率最高？熬夜玩游戏。</style>"
+	} 
+}
