@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using R2API.Utils;
@@ -8,16 +8,18 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 
 namespace BazaarIsMyHome
 {
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.Lunzir.BazaarIsMyHome", "BazaarIsMyHome", "1.3.0")]
+    [BepInPlugin("com.Lunzir.BazaarIsMyHome", "BazaarIsMyHome", "1.3.1")]
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync, VersionStrictness.DifferentModVersionsAreOk)]
-    [R2API.Utils.R2APISubmoduleDependency(nameof(CommandHelper))]
     public class BazaarIsMyHome : BaseUnityPlugin
     {
         public static PluginInfo PluginInfo;
@@ -75,26 +77,81 @@ namespace BazaarIsMyHome
         };
         List<CauldronHackedStruct> CauldronHackedStructs = new List<CauldronHackedStruct>();
 
-        private static readonly string[] PrintersCode = new string[]
-        {
-            "iscDuplicator",
-            "iscDuplicatorLarge",
-            "iscDuplicatorMilitary",
-            "iscDuplicatorWild",
-            //"iscDuplicatorBlue", // 自定义
-            //"iscDuplicatorPurple", // 自定义
-        };
+        AsyncOperationHandle<InteractableSpawnCard> iscDuplicator;
+        AsyncOperationHandle<InteractableSpawnCard> iscDuplicatorLarge;
+        AsyncOperationHandle<InteractableSpawnCard> iscDuplicatorMilitary;
+        AsyncOperationHandle<InteractableSpawnCard> iscDuplicatorWild;
+        AsyncOperationHandle<InteractableSpawnCard> iscChest1;
+        AsyncOperationHandle<InteractableSpawnCard> iscChest2;
+        AsyncOperationHandle<InteractableSpawnCard> iscGoldChest;
+        AsyncOperationHandle<InteractableSpawnCard> iscShrineRestack;
+        AsyncOperationHandle<InteractableSpawnCard> iscShrineHealing;
+        AsyncOperationHandle<InteractableSpawnCard> iscShopPortal;
+        AsyncOperationHandle<InteractableSpawnCard> iscShrineCleanse;
+        AsyncOperationHandle<InteractableSpawnCard> iscScrapper;
+        AsyncOperationHandle<GameObject> lunarShopTerminal;
+        AsyncOperationHandle<GameObject> multiShopEquipmentTerminal;
+        AsyncOperationHandle<GameObject> lunarCauldronWhiteToGreen;
+        AsyncOperationHandle<GameObject> lunarCauldronGreenToRed;
+        AsyncOperationHandle<GameObject> lunarCauldronRedToWhite;
 
-        private static readonly string[] LunarCauldronsCode = new string[]
-        {
-            "LunarCauldron, WhiteToGreen",
-            "LunarCauldron, GreenToRed Variant",
-            "LunarCauldron, RedToWhite Variant",
-        };
+        AsyncOperationHandle<InteractableSpawnCard>[] PrintersCode;
+        AsyncOperationHandle<GameObject>[] LunarCauldronsCode;
+
+        AsyncOperationHandle<GameObject> ShrineUseEffect;
+        AsyncOperationHandle<GameObject> LevelUpEffect;
+        AsyncOperationHandle<GameObject> MoneyPackPickupEffect;
+        AsyncOperationHandle<GameObject> TeamWarCryActivation;
+        AsyncOperationHandle<GameObject> LunarRerollEffect;
+        AsyncOperationHandle<GameObject> TeleporterBeaconEffect;
 
         public void Awake()
         {
             ModConfig.InitConfig(Config);
+
+            // --- preload stuff ---
+
+            iscDuplicator = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Duplicator/iscDuplicator.asset");
+            iscDuplicatorLarge = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/DuplicatorLarge/iscDuplicatorLarge.asset");
+            iscDuplicatorMilitary = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/DuplicatorMilitary/iscDuplicatorMilitary.asset");
+            iscDuplicatorWild = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/DuplicatorWild/iscDuplicatorWild.asset");
+            PrintersCode = [
+                iscDuplicator,
+                iscDuplicatorLarge,
+                iscDuplicatorMilitary,
+                iscDuplicatorWild
+            ];
+
+            iscChest1 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest1/iscChest1.asset");
+            iscChest2 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest1/iscChest2.asset");
+            iscGoldChest = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/GoldChest/iscGoldChest.asset");
+
+            iscShrineRestack = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineRestack/iscShrineRestack.asset");
+            iscShrineHealing = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineHealing/iscShrineHealing.asset");
+            iscShopPortal = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/PortalShop/iscShopPortal.asset");
+            iscShrineCleanse = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineCleanse/iscShrineCleanse.asset");
+            iscScrapper = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Scrapper/iscScrapper.asset");
+
+            lunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarShopTerminal/LunarShopTerminal.prefab");
+            multiShopEquipmentTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MultiShopEquipmentTerminal/MultiShopEquipmentTerminal.prefab");
+
+            lunarCauldronWhiteToGreen = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, WhiteToGreen.prefab");
+            lunarCauldronGreenToRed = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, GreenToRed Variant.prefab");
+            lunarCauldronRedToWhite = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, RedToWhite Variant.prefab");
+            LunarCauldronsCode = [
+                lunarCauldronWhiteToGreen,
+                lunarCauldronGreenToRed,
+                lunarCauldronRedToWhite
+            ];
+
+            ShrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab");
+            LevelUpEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/LevelUpEffect.prefab");
+            MoneyPackPickupEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/BonusGoldPackOnKill/MoneyPackPickupEffect.prefab");
+            TeamWarCryActivation = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/TeamWarCry/TeamWarCryActivation.prefab");
+            LunarRerollEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarRecycler/LunarRerollEffect.prefab");
+            TeleporterBeaconEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/Teleporter/TeleporterBeaconEffect.prefab");
+
+
 
             PluginInfo = Info;
             Tokens.RegisterLanguageTokens();
@@ -201,7 +258,7 @@ namespace BazaarIsMyHome
                     if (playerStruct.DonateCount <= (ModConfig.RewardCount.Value * 10))
                     {
                         // 购买特效
-                        SpawnEffect("Prefabs/Effects/ShrineUseEffect", self.transform.position, new Color32(64, 127, 255, 255), 5f);
+                        SpawnEffect(ShrineUseEffect, self.transform.position, new Color32(64, 127, 255, 255), 5f);
                         networkUser.DeductLunarCoins((uint)self.Networkcost);
                     }
                     //ChatHelper.Send($"DonateCount = {playerStruct.DonateCount }, RewardCount = {playerStruct.RewardCount}");
@@ -270,16 +327,16 @@ namespace BazaarIsMyHome
                 PurchaseInteraction.CreateItemTakenOrb(self.gameObject.transform.position, characterBody.gameObject, itemIndex);
                 ChatHelper.ThanksTip(networkUser, characterBody, itemDef, specialItemStruct.Count);
             }
-            SpawnEffect("prefabs/effects/levelupeffect", self.transform.position, new Color32(255, 255, 255, 255), 3f);
-            SpawnEffect("prefabs/effects/moneypackpickupeffect", self.transform.position, new Color32(255, 255, 255, 255), 3f);
-            SpawnEffect("prefabs/effects/teamwarcryactivation", self.transform.position, new Color32(255, 255, 255, 255), 3f);
+            SpawnEffect(LevelUpEffect, self.transform.position, new Color32(255, 255, 255, 255), 3f);
+            SpawnEffect(MoneyPackPickupEffect, self.transform.position, new Color32(255, 255, 255, 255), 3f);
+            SpawnEffect(TeamWarCryActivation, self.transform.position, new Color32(255, 255, 255, 255), 3f);
         }
         IEnumerator DelayEffect(PurchaseInteraction self, PurchaseInteraction interaction, float time)
         {
             yield return new WaitForSeconds(time);
             RerollLunarShopTerminal(self, interaction);
         }
-        private static void RerollLunarShopTerminal(PurchaseInteraction self, PurchaseInteraction interaction)
+        private void RerollLunarShopTerminal(PurchaseInteraction self, PurchaseInteraction interaction)
         {
             WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>(8);
             weightedSelection.AddChoice(Run.instance.availableLunarItemDropList, 50f);
@@ -290,7 +347,7 @@ namespace BazaarIsMyHome
             ShopTerminalBehavior shopTerminal = interaction.gameObject.GetComponent<ShopTerminalBehavior>();
             shopTerminal.SetPickupIndex(pickupDef.pickupIndex);
 
-            SpawnEffect("prefabs/effects/lunarrerolleffect", interaction.gameObject.transform.position + Vector3.up * 1f, new Color32(255, 255, 255, 255), 2f);
+            SpawnEffect(LunarRerollEffect, interaction.gameObject.transform.position + Vector3.up * 1f, new Color32(255, 255, 255, 255), 2f);
         }
 
         private void PurchaseInteraction_ScaleCost(On.RoR2.PurchaseInteraction.orig_ScaleCost orig, PurchaseInteraction self, float scalar)
@@ -452,7 +509,7 @@ namespace BazaarIsMyHome
                             if (random <= ModConfig.CauldronGreenHackedChance.Value && ModConfig.EnableCauldronHacking.Value) // 被黑概率
                             {
                                 //ChatHelper.Send("一台绿锅被黑");
-                                CauldronHacked_Start(self, LunarCauldronsCode[0], "LunarCauldronGreen"); // 变特定锅
+                                CauldronHacked_Start(self, "LunarCauldronGreen"); // 变特定锅
                             }
                         }
                         if (self.name.StartsWith("LunarCauldron, GreenToRed")) // 红锅
@@ -462,7 +519,7 @@ namespace BazaarIsMyHome
                             if (random <= ModConfig.CauldronRedHackedChance.Value && ModConfig.EnableCauldronHacking.Value)
                             {
                                 //ChatHelper.Send("一台红锅被黑");
-                                CauldronHacked_Start(self, LunarCauldronsCode[1], "LunarCauldronRed");
+                                CauldronHacked_Start(self, "LunarCauldronRed");
                             }
                         }
                         if (self.name.StartsWith("LunarCauldron, RedToWhite")) // 白锅
@@ -476,7 +533,7 @@ namespace BazaarIsMyHome
                             if (random <= ModConfig.CauldronWhiteHackedChance.Value && ModConfig.EnableCauldronHacking.Value)
                             {
                                 //ChatHelper.Send("一台白锅被黑");
-                                CauldronHacked_Start(self, LunarCauldronsCode[2], "LunarCauldronWhite");
+                                CauldronHacked_Start(self, "LunarCauldronWhite");
                             }
                         }
                     }
@@ -602,7 +659,7 @@ namespace BazaarIsMyHome
                 }
             }
         }
-        private void CauldronHacked_Start(PurchaseInteraction self, string oldName, string newName)
+        private void CauldronHacked_Start(PurchaseInteraction self, string newName)
         {
             float w1 = ModConfig.CauldronYellowWeight.Value, w2 = ModConfig.CauldronBlueWeight.Value, w3 = ModConfig.CauldronPurpleWeight.Value;
             float total = w1 + w2 + w3;
@@ -848,11 +905,11 @@ namespace BazaarIsMyHome
                     if (ModConfig.EnableDecorate.Value)
                     {
                         // 门口
-                        SpawnEffect("prefabs/effects/teleporterbeaconeffect", new Vector3(-73.5143f, -22.2897f, 9.1621f), Color.blue, 1f);
-                        SpawnEffect("prefabs/effects/teleporterbeaconeffect", new Vector3(-57.0645f, -22.2698f, -0.5218f), Color.blue, 1f);
+                        SpawnEffect(TeleporterBeaconEffect, new Vector3(-73.5143f, -22.2897f, 9.1621f), Color.blue, 1f);
+                        SpawnEffect(TeleporterBeaconEffect, new Vector3(-57.0645f, -22.2698f, -0.5218f), Color.blue, 1f);
                         // 传送门位置
-                        SpawnEffect("prefabs/effects/teleporterbeaconeffect", new Vector3(15.7063f, -2.1074f, 2.5406f), Color.blue, 1f);
-                        SpawnEffect("prefabs/effects/teleporterbeaconeffect", new Vector3(2.5543f, -2.7093f, -8.7185f), Color.blue, 1f);
+                        SpawnEffect(TeleporterBeaconEffect, new Vector3(15.7063f, -2.1074f, 2.5406f), Color.blue, 1f);
+                        SpawnEffect(TeleporterBeaconEffect, new Vector3(2.5543f, -2.7093f, -8.7185f), Color.blue, 1f);
                     }
                     // 欢迎语
                     StartCoroutine(ShopWelcomeWord());
@@ -1119,8 +1176,8 @@ namespace BazaarIsMyHome
                 else count = ModConfig.PrinterCount.Value;
                 for (int i = 0; i < count; i++)
                 {
-                    string radomString = GetRandomPrinter();
-                    SpawnCard spawnCard = LegacyResourcesAPI.Load<SpawnCard>("SpawnCards/InteractableSpawnCard/" + radomString);
+                    AsyncOperationHandle<InteractableSpawnCard> randomPrinter = GetRandomPrinter();
+                    SpawnCard spawnCard = randomPrinter.WaitForCompletion();
                     GameObject printerOne = spawnCard.DoSpawn(DicPrinters[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectorPlacementRule, Run.instance.runRNG)).spawnedInstance;
                     printerOne.transform.eulerAngles = DicPrinters[i].Rotation;
                 } 
@@ -1138,9 +1195,9 @@ namespace BazaarIsMyHome
                 else count = ModConfig.CauldronCount.Value;
                 for (int i = 0; i < count; i++)
                 {
-                    string randomString = GetRandomLunarCauldron();
-                    GameObject gameObject = null;
-                    gameObject = UnityEngine.Object.Instantiate<GameObject>(LegacyResourcesAPI.Load<GameObject>("prefabs/networkedobjects/" + randomString), DicCauldrons[i].Position, Quaternion.identity);
+                    AsyncOperationHandle<GameObject> randomCauldron = GetRandomLunarCauldron();
+                    GameObject gameObject = randomCauldron.WaitForCompletion();
+                    gameObject = UnityEngine.Object.Instantiate<GameObject>(gameObject, DicCauldrons[i].Position, Quaternion.identity);
                     gameObject.transform.eulerAngles = DicCauldrons[i].Rotation;
                     NetworkServer.Spawn(gameObject);
                 } 
@@ -1153,7 +1210,7 @@ namespace BazaarIsMyHome
                 // 收割机
                 DicScrapers.Clear();
                 SetScraper();
-                DoSpawnCard(DicScrapers, "SpawnCards/InteractableSpawnCard/iscscrapper", ModConfig.ScrapperCount.Value); 
+                DoSpawnCard(DicScrapers, iscScrapper, ModConfig.ScrapperCount.Value); 
             }
         }
         private void SpawnEquipment()
@@ -1163,7 +1220,7 @@ namespace BazaarIsMyHome
                 // 主动装备
                 DicEquipments.Clear();
                 SetEquipment();
-                DoSpawnGameObject(DicEquipments, "prefabs/networkedobjects/chest/multishopequipmentterminal", ModConfig.EquipmentCount.Value); 
+                DoSpawnGameObject(DicEquipments, multiShopEquipmentTerminal, ModConfig.EquipmentCount.Value); 
             }
         }
         private void SpawnLunarShopTerminal()
@@ -1190,7 +1247,7 @@ namespace BazaarIsMyHome
                 // 月球蓓蕾
                 DicLunarShopTerminals.Clear();
                 SetLunarShopTerminal();
-                DoSpawnGameObject(DicLunarShopTerminals, "prefabs/networkedobjects/chest/lunarshopterminal", ModConfig.LunarShopTerminalCount.Value);
+                DoSpawnGameObject(DicLunarShopTerminals, lunarShopTerminal, ModConfig.LunarShopTerminalCount.Value);
             }
         }
         private void SpawnShrineRestack()
@@ -1198,8 +1255,7 @@ namespace BazaarIsMyHome
             if (ModConfig.EnableShrineRestack.Value)
             {
                 // 跌序
-                string card = "SpawnCards/InteractableSpawnCard/iscshrinerestack";
-                SpawnCard spawnCard = LegacyResourcesAPI.Load<SpawnCard>(card);
+                SpawnCard spawnCard = iscShrineRestack.WaitForCompletion();
                 GameObject shrinerestackOne = spawnCard.DoSpawn(new Vector3(-130f, -24f, -40f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectorPlacementRule, Run.instance.runRNG)).spawnedInstance;
                 shrinerestackOne.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f);
                 shrinerestackOne.GetComponent<ShrineRestackBehavior>().maxPurchaseCount = ModConfig.ShrineRestackMaxCount.Value;
@@ -1219,7 +1275,7 @@ namespace BazaarIsMyHome
                 // 月池
                 DicLunarPools.Clear();
                 SetLunarPool();
-                DoSpawnCard(DicLunarPools, "SpawnCards/InteractableSpawnCard/iscshrinecleanse", DicLunarPools.Count); 
+                DoSpawnCard(DicLunarPools, iscShrineCleanse, DicLunarPools.Count); 
             }
         }
         private void SpawnShrineHealing()
@@ -1227,8 +1283,7 @@ namespace BazaarIsMyHome
             if (ModConfig.EnableShrineHealing.Value)
             {
                 // 木灵
-                string card = "SpawnCards/InteractableSpawnCard/iscshrinehealing";
-                SpawnCard spawnCard = LegacyResourcesAPI.Load<SpawnCard>(card);
+                SpawnCard spawnCard = iscShrineHealing.WaitForCompletion();
                 GameObject gameObject = spawnCard.DoSpawn(new Vector3(-119f, -23f, -52f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectorPlacementRule, Run.instance.runRNG)).spawnedInstance;
                 gameObject.transform.eulerAngles = new Vector3(0.0f, 210f, 0.0f);
                 gameObject.GetComponent<PurchaseInteraction>().costType = CostTypeIndex.LunarCoin;
@@ -1250,12 +1305,9 @@ namespace BazaarIsMyHome
                 DicBigChests.Clear();
                 DicSmallChests.Clear();
                 SetDecorate();
-                string card = "spawncards/interactablespawncard/iscGoldChest";
-                DoSpawnCard(DicGlodChests, card, DicGlodChests.Count);
-                card = "spawncards/interactablespawncard/iscChest2";
-                DoSpawnCard(DicBigChests, card, DicBigChests.Count);
-                card = "spawncards/interactablespawncard/iscChest1";
-                DoSpawnCard(DicSmallChests, card, DicSmallChests.Count); 
+                DoSpawnCard(DicGlodChests, iscGoldChest, DicGlodChests.Count);
+                DoSpawnCard(DicBigChests, iscChest2, DicBigChests.Count);
+                DoSpawnCard(DicSmallChests, iscChest1, DicSmallChests.Count); 
             }
 
         }
@@ -1264,15 +1316,14 @@ namespace BazaarIsMyHome
             if (ModConfig.EnableDecorate.Value)
             {
                 // 传送门
-                string card = "SpawnCards/InteractableSpawnCard/iscshopportal";
-                SpawnCard spawnCard = LegacyResourcesAPI.Load<SpawnCard>(card);
+                SpawnCard spawnCard = iscShopPortal.WaitForCompletion();
                 GameObject gameObject = spawnCard.DoSpawn(new Vector3(-135f, -23f, -60f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectorPlacementRule, Run.instance.runRNG)).spawnedInstance;
                 gameObject.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f); 
             }
         }
         #endregion
 
-        private void DoSpawnCard(Dictionary<int, SpawnCardStruct> keyValuePairs, string card, int max)
+        private void DoSpawnCard(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<InteractableSpawnCard> card, int max)
         {
             int count = 0;
             if (ModConfig.SpawnCountByStage.Value) count = SetCountbyGameStage(max, ModConfig.SpawnCountOffset.Value);
@@ -1281,11 +1332,12 @@ namespace BazaarIsMyHome
             {
                 try
                 {
-                    SpawnCard spawnCard = LegacyResourcesAPI.Load<RoR2.SpawnCard>(card);
+                    SpawnCard spawnCard = card.WaitForCompletion();
                     GameObject gameObject = spawnCard.DoSpawn(keyValuePairs[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectorPlacementRule, Run.instance.runRNG)).spawnedInstance;
                     gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
                     gameObject.transform.localScale = (Vector3)keyValuePairs[i].Scale;
-                    if (card.EndsWith("Chest") || card.EndsWith("Chest1") || card.EndsWith("Chest2"))
+
+                    if (card.LocationName.EndsWith("iscGoldChest.asset") || card.LocationName.EndsWith("iscChest1.asset") || card.LocationName.EndsWith("iscChest2.asset"))
                     {
                         gameObject.GetComponent<PurchaseInteraction>().SetAvailable(false);
                     }
@@ -1307,14 +1359,14 @@ namespace BazaarIsMyHome
             obj.transform.eulerAngles = default; 
 
         }
-        private void DoSpawnGameObject(Dictionary<int, SpawnCardStruct> keyValuePairs, string card, int max)
+        private void DoSpawnGameObject(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<GameObject> card, int max)
         {
 
             int count = 0;
             if (ModConfig.SpawnCountByStage.Value)
             {
                 count = SetCountbyGameStage(max, ModConfig.SpawnCountOffset.Value);
-                if (card.EndsWith("lunarshopterminal"))
+                if (card.LocationName.EndsWith("LunarShopTerminal.prefab"))
                 {
                     LunarShopTerminalTotalCount = count;
                     if (count <= 5)
@@ -1330,7 +1382,7 @@ namespace BazaarIsMyHome
             else
             {
                 count = max;
-                if (card.EndsWith("lunarshopterminal"))
+                if (card.LocationName.EndsWith("LunarShopTerminal.prefab"))
                 {
                     LunarShopTerminalTotalCount = max;
                     count = count - 5;
@@ -1338,10 +1390,10 @@ namespace BazaarIsMyHome
             }
             for (int i = 0; i < count; i++)
             {
-                GameObject gameObject = Instantiate(LegacyResourcesAPI.Load<GameObject>(card), keyValuePairs[i].Position, Quaternion.identity);
+                GameObject gameObject = Instantiate(card.WaitForCompletion(), keyValuePairs[i].Position, Quaternion.identity);
                 gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
                 gameObject.transform.localScale = (Vector3)keyValuePairs[i].Scale;
-                if (card.EndsWith("lunarshopterminal"))
+                if (card.LocationName.EndsWith("LunarShopTerminal.prefab"))
                 {
                     ObjectLunarShopTerminals_Spawn.Add(gameObject.GetComponent<PurchaseInteraction>());
                     if (ModConfig.EnableLunarShopTerminalInjection.Value || ModConfig.PenaltyCoefficient_Temp != 1)
@@ -1415,7 +1467,7 @@ namespace BazaarIsMyHome
         {
             return SceneManager.GetActiveScene().name == "bazaar";
         }
-        private string GetRandomPrinter()
+        private AsyncOperationHandle<InteractableSpawnCard> GetRandomPrinter()
         {
             float tier1 = ModConfig.PrinterTier1Weight.Value;
             float tier2 = ModConfig.PrinterTier2Weight.Value;
@@ -1428,7 +1480,7 @@ namespace BazaarIsMyHome
             else if (d <= tier1 + tier2 + tier3) return PrintersCode[2];
             else return PrintersCode[3];
         }
-        private string GetRandomLunarCauldron()
+        private AsyncOperationHandle<GameObject> GetRandomLunarCauldron()
         {
             float w_g = ModConfig.CauldronGreenWeight.Value;
             float g_r = ModConfig.CauldronRedWeight.Value;
@@ -1481,9 +1533,9 @@ namespace BazaarIsMyHome
             }
         }
 
-        private static void SpawnEffect(string effectName , Vector3 position, Color32 color, float scale = 1f)
+        private static void SpawnEffect(AsyncOperationHandle<GameObject> effect, Vector3 position, Color32 color, float scale = 1f)
         {
-            EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>(effectName), new EffectData()
+            EffectManager.SpawnEffect(effect.WaitForCompletion(), new EffectData()
             {
                 origin = position,
                 rotation = Quaternion.identity,
