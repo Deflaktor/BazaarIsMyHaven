@@ -1084,16 +1084,26 @@ namespace BazaarIsMyHome
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
-            DicEquipments.Add(random[0], new SpawnCardStruct(new Vector3(-128.9115f, -23.1756f, -24.6339f), new Vector3(350.0f, 90.0f, 0.0f)));
-            DicEquipments.Add(random[1], new SpawnCardStruct(new Vector3(-131.3281f, -23.0673f, -21.9982f), new Vector3(353.0f, 0.0f, 0.0f)));
-            DicEquipments.Add(random[2], new SpawnCardStruct(new Vector3(-132.8414f, -22.6963f, -26.6293f), new Vector3(353.0f, 220.0f, 0.0f)));
-            DicEquipments.Add(random[3], new SpawnCardStruct(new Vector3(-141.3541f, -21.2761f, -10.9000f), new Vector3(358.0f, 180.0f, 0.0f)));
-            DicEquipments.Add(random[4], new SpawnCardStruct(new Vector3(-138.9401f, -20.9378f, -8.87810f), new Vector3(355.0f, 100.0f, 0.0f)));
-            DicEquipments.Add(random[5], new SpawnCardStruct(new Vector3(-139.9517f, -20.8648f, -5.79960f), new Vector3(353.0f, 30.0f, 0.0f)));
-            //DicTriplEquipments.Add(random[0], new SpawnCardStruct(new Vector3(-142f, -22.0f, 0.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-            //DicTriplEquipments.Add(random[1], new SpawnCardStruct(new Vector3(-139f, -22.8f, -2.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-            //DicTriplEquipments.Add(random[2], new SpawnCardStruct(new Vector3(-136f, -22.5f, 0.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-            //DicTriplEquipments.Add(random[3], new SpawnCardStruct(new Vector3(-135f, -22.0f, 3.0f), new Vector3(0.0f, 72.0f, 0.0f)));
+            if (!ModConfig.SeerStationAvailable.Value && ModConfig.EquipmentCount.Value <= 2)
+            {
+                // left seer stand
+                DicEquipments.Add(0, new SpawnCardStruct(new Vector3(-133.9731f, -23.4f, -10.71112f), new Vector3(0f, 130.0f, 0.0f)));
+                // right seer stand
+                DicEquipments.Add(1, new SpawnCardStruct(new Vector3(-128.0793f, -23.4f, -7.056283f), new Vector3(0f, 160.0f, 0.0f)));
+            }
+            else
+            {
+                DicEquipments.Add(random[0], new SpawnCardStruct(new Vector3(-128.9115f, -23.1756f, -24.6339f), new Vector3(350.0f, 90.0f, 0.0f)));
+                DicEquipments.Add(random[1], new SpawnCardStruct(new Vector3(-131.3281f, -23.0673f, -21.9982f), new Vector3(353.0f, 0.0f, 0.0f)));
+                DicEquipments.Add(random[2], new SpawnCardStruct(new Vector3(-132.8414f, -22.6963f, -26.6293f), new Vector3(353.0f, 220.0f, 0.0f)));
+                DicEquipments.Add(random[3], new SpawnCardStruct(new Vector3(-141.3541f, -21.2761f, -10.9000f), new Vector3(358.0f, 180.0f, 0.0f)));
+                DicEquipments.Add(random[4], new SpawnCardStruct(new Vector3(-138.9401f, -20.9378f, -8.87810f), new Vector3(355.0f, 100.0f, 0.0f)));
+                DicEquipments.Add(random[5], new SpawnCardStruct(new Vector3(-139.9517f, -20.8648f, -5.79960f), new Vector3(353.0f, 30.0f, 0.0f)));
+                //DicTriplEquipments.Add(random[0], new SpawnCardStruct(new Vector3(-142f, -22.0f, 0.0f), new Vector3(0.0f, 72.0f, 0.0f)));
+                //DicTriplEquipments.Add(random[1], new SpawnCardStruct(new Vector3(-139f, -22.8f, -2.0f), new Vector3(0.0f, 72.0f, 0.0f)));
+                //DicTriplEquipments.Add(random[2], new SpawnCardStruct(new Vector3(-136f, -22.5f, 0.0f), new Vector3(0.0f, 72.0f, 0.0f)));
+                //DicTriplEquipments.Add(random[3], new SpawnCardStruct(new Vector3(-135f, -22.0f, 3.0f), new Vector3(0.0f, 72.0f, 0.0f)));
+            }
         }
         private void SetLunarShopTerminal()
         {
