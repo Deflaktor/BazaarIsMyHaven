@@ -14,7 +14,6 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
-using static BazaarIsMyHome.Common;
 
 namespace BazaarIsMyHome
 {
@@ -26,9 +25,13 @@ namespace BazaarIsMyHome
         public static PluginInfo PluginInfo;
         public static ItemHandler ItemHandler;
         public static BazaarIsMyHome instance;
+        private System.Random RNG = new System.Random();
+        private readonly DirectorPlacementRule DirectPlacement = new DirectorPlacementRule
+        {
+            placementMode = DirectorPlacementRule.PlacementMode.Direct
+        };
 
         Dictionary<int, SpawnCardStruct> DicEquipments = new Dictionary<int, SpawnCardStruct>();
-        Dictionary<int, SpawnCardStruct> DicScrapers = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicLunarPools = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicLunarShopTerminals = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicGlodChests = new Dictionary<int, SpawnCardStruct>();
@@ -45,7 +48,6 @@ namespace BazaarIsMyHome
         
         AsyncOperationHandle<InteractableSpawnCard> iscShopPortal;
         AsyncOperationHandle<InteractableSpawnCard> iscShrineCleanse;
-        AsyncOperationHandle<InteractableSpawnCard> iscScrapper;
         AsyncOperationHandle<InteractableSpawnCard> iscDeepVoidPortalBattery;
         AsyncOperationHandle<GameObject> lunarShopTerminal;
         AsyncOperationHandle<GameObject> multiShopEquipmentTerminal;
@@ -57,10 +59,13 @@ namespace BazaarIsMyHome
         BazaarPrinter bazaarPrinter;
         BazaarRestack bazaarRestack;
         BazaarPrayer bazaarPrayer;
+        BazaarScrapper bazaarScrapper;
+
 
         public void Awake()
         {
             instance = this;
+            Log.Init(Logger);
             ModConfig.InitConfig(Config);
 
             bazaarCauldron = new BazaarCauldron();
@@ -71,11 +76,14 @@ namespace BazaarIsMyHome
             bazaarRestack.Init();
             bazaarPrayer = new BazaarPrayer();
             bazaarPrayer.Init();
+            bazaarScrapper = new BazaarScrapper();
+            bazaarScrapper.Init();
 
             bazaarCauldron.Hook();
             bazaarPrinter.Hook();
             bazaarRestack.Hook();
             bazaarPrayer.Hook();
+            bazaarScrapper.Hook();
 
             // --- preload stuff ---
 
@@ -85,7 +93,6 @@ namespace BazaarIsMyHome
             
             iscShopPortal = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/PortalShop/iscShopPortal.asset");
             iscShrineCleanse = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineCleanse/iscShrineCleanse.asset");
-            iscScrapper = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Scrapper/iscScrapper.asset");
 
             lunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarShopTerminal/LunarShopTerminal.prefab");
             multiShopEquipmentTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MultiShopEquipmentTerminal/MultiShopEquipmentTerminal.prefab");
@@ -308,7 +315,7 @@ namespace BazaarIsMyHome
                     }
                     bazaarPrinter.EnterBazaar(); // 打印机
                     bazaarCauldron.EnterBazaar(); // 大锅
-                    SpawnScrapper(); // 收割机
+                    bazaarScrapper.EnterBazaar(); // 收割机
                     SpawnEquipment(); // 主动装备
                     SpawnLunarShopTerminal(); // 月球蓓蕾
                     SpawnShrineCleanse(); // 月池
@@ -662,24 +669,6 @@ namespace BazaarIsMyHome
 
         #region 初始化设备
 
-        private void SetScraper()
-        {
-            List<int> total = new List<int> { 0, 1, 2, 3 };
-            List<int> random = new List<int>();
-            while (total.Count > 0)
-            {
-                int index = RNG.Next(total.Count);
-                random.Add(total[index]);
-                total.RemoveAt(index);
-            }
-            DicScrapers.Add(random[0], new SpawnCardStruct(new Vector3(-95.0f, -25.5f, -45.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-            DicScrapers.Add(random[1], new SpawnCardStruct(new Vector3(-100.0f, -25.0f, -40.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-            DicScrapers.Add(random[2], new SpawnCardStruct(new Vector3(-90.0f, -25.5f, -40.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-            DicScrapers.Add(random[3], new SpawnCardStruct(new Vector3(-95.0f, -25.5f, -35.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-            //DicScrapers.Add(random[2], new SpawnCardStruct(new Vector3(-105f, -26.0f, -35.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-            //DicScrapers.Add(random[5], new SpawnCardInteface(new Vector3(-100.0f, -26.5f, -30.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-        }
-
         private void SetEquipment()
         {
             List<int> total = new List<int> { 0, 1, 2, 3, 4, 5 };
@@ -843,17 +832,7 @@ namespace BazaarIsMyHome
         #endregion
 
         #region 生成设备
- 
-        private void SpawnScrapper()
-        {
-            if (ModConfig.ScrapperCount.Value > 0)
-            {
-                // 收割机
-                DicScrapers.Clear();
-                SetScraper();
-                DoSpawnCard(DicScrapers, iscScrapper, ModConfig.ScrapperCount.Value); 
-            }
-        }
+
         private void SpawnEquipment()
         {
             if (ModConfig.EquipmentCount.Value > 0)
@@ -955,20 +934,8 @@ namespace BazaarIsMyHome
                 }
             }
         }
-        private void DoSpawnCard(string card, Vector3 vector)
-        {
-            SpawnCard spawnCard = LegacyResourcesAPI.Load<SpawnCard>(name);
-            DirectorPlacementRule placementRule = new DirectorPlacementRule
-            {
-                placementMode = DirectorPlacementRule.PlacementMode.Random
-            };
-            GameObject obj = spawnCard.DoSpawn(vector, Quaternion.identity, new DirectorSpawnRequest(spawnCard, placementRule, Run.instance.runRNG)).spawnedInstance;
-            obj.transform.eulerAngles = default; 
-
-        }
         private void DoSpawnGameObject(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<GameObject> card, int max)
         {
-
             int count = 0;
             if (ModConfig.SpawnCountByStage.Value)
             {
@@ -997,7 +964,7 @@ namespace BazaarIsMyHome
             }
             for (int i = 0; i < count; i++)
             {
-                GameObject gameObject = Instantiate(card.WaitForCompletion(), keyValuePairs[i].Position, Quaternion.identity);
+                GameObject gameObject = GameObject.Instantiate(card.WaitForCompletion(), keyValuePairs[i].Position, Quaternion.identity);
                 gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
                 gameObject.transform.localScale = (Vector3)keyValuePairs[i].Scale;
                 if (card.LocationName.EndsWith("LunarShopTerminal.prefab"))
@@ -1013,11 +980,36 @@ namespace BazaarIsMyHome
                         }
                         //gameObject.name = "MyLunarBud";
                         gameObject.GetComponent<PurchaseInteraction>().cost = total;
-                        gameObject.GetComponent<PurchaseInteraction>().Networkcost = total; 
+                        gameObject.GetComponent<PurchaseInteraction>().Networkcost = total;
                     }
                 }
                 NetworkServer.Spawn(gameObject);
             }
+        }
+        private void SpawnEffect(AsyncOperationHandle<GameObject> effect, Vector3 position, Color32 color, float scale = 1f)
+        {
+            EffectManager.SpawnEffect(effect.WaitForCompletion(), new EffectData()
+            {
+                origin = position,
+                rotation = Quaternion.identity,
+                scale = scale,
+                color = color
+            }, true);
+        }
+
+        private int SetCountbyGameStage(int max, int offset = 0)
+        {
+            int stageCount = Run.instance.stageClearCount + 1;
+            int set = stageCount + offset;
+            if (set > max)
+            {
+                set = max;
+            }
+            return set;
+        }
+        private bool IsCurrentMapInBazaar()
+        {
+            return SceneManager.GetActiveScene().name == "bazaar";
         }
 
         [ConCommand(commandName = "spawn_card", flags = ConVarFlags.ExecuteOnServer, helpText = "生成实物")]
@@ -1065,25 +1057,5 @@ namespace BazaarIsMyHome
                 color = Color.yellow
             }, true);
         }
-        public bool IsCurrentMapInBazaar()
-        {
-            return SceneManager.GetActiveScene().name == "bazaar";
-        }
-
-
-        public int SetCountbyGameStage(int max, int offset = 0)
-        {
-            int stageCount = Run.instance.stageClearCount + 1;
-            int set = stageCount + offset;
-            if (set > max)
-            {
-                set = max;
-            }
-            return set;
-        }
-
-
-
     }
-
 }
