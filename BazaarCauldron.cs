@@ -53,7 +53,7 @@ namespace BazaarIsMyHome
                 {
                     if (ModConfig.EnableCauldronHacking.Value || ModConfig.PenaltyCoefficient_Temp != 1)
                     {
-                        double random = BazaarIsMyHome.instance.random.NextDouble();
+                        double random = Common.random.NextDouble();
                         if (self.name.StartsWith("LunarCauldron, WhiteToGreen")) // 绿锅
                         {
                             self.cost = ModConfig.CauldronWhiteToGreenCost.Value * ModConfig.PenaltyCoefficient_Temp;
@@ -131,17 +131,17 @@ namespace BazaarIsMyHome
                 if (self.name.StartsWith("LunarCauldronGreen"))
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickupIndex = list[BazaarIsMyHome.instance.random.Next(0, list.Count)];
+                    newPickupIndex = list[Common.random.Next(0, list.Count)];
                 }
                 if (self.name.StartsWith("LunarCauldronRed"))
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickupIndex = list[BazaarIsMyHome.instance.random.Next(0, list.Count)];
+                    newPickupIndex = list[Common.random.Next(0, list.Count)];
                 }
                 if (self.name.StartsWith("LunarCauldronWhite"))
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickupIndex = list[BazaarIsMyHome.instance.random.Next(0, list.Count)];
+                    newPickupIndex = list[Common.random.Next(0, list.Count)];
                 }
             }
             orig(self, newPickupIndex, newHidden);
@@ -179,7 +179,7 @@ namespace BazaarIsMyHome
 
             while (total.Count > 0)
             {
-                int index = BazaarIsMyHome.instance.random.Next(total.Count);
+                int index = Common.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -219,7 +219,7 @@ namespace BazaarIsMyHome
         {
             float w1 = ModConfig.CauldronYellowWeight.Value, w2 = ModConfig.CauldronBlueWeight.Value, w3 = ModConfig.CauldronPurpleWeight.Value;
             float total = w1 + w2 + w3;
-            double random = BazaarIsMyHome.instance.random.NextDouble() * total;
+            double random = Common.random.NextDouble() * total;
             CauldronHackedStruct cauldronHacked = null;
             if (random <= w1)
             {
@@ -276,7 +276,7 @@ namespace BazaarIsMyHome
             float g_r = ModConfig.CauldronRedWeight.Value;
             float g_w = ModConfig.CauldronWhiteWeight.Value;
             float total = w_g + g_r + g_w;
-            double d = BazaarIsMyHome.instance.random.NextDouble() * total;
+            double d = Common.random.NextDouble() * total;
             if (d <= w_g) return LunarCauldronsCode[0];
             else if (d <= w_g + g_r) return LunarCauldronsCode[1];
             else { return LunarCauldronsCode[2]; }

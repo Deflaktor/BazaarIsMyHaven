@@ -25,13 +25,7 @@ namespace BazaarIsMyHome
         public static PluginInfo PluginInfo;
         public static ItemHandler ItemHandler;
         public static BazaarIsMyHome instance;
-        public System.Random random = new System.Random();
-        readonly DirectorPlacementRule DirectorPlacementRule = new DirectorPlacementRule
-        {
-            placementMode = DirectorPlacementRule.PlacementMode.Direct
-        };
 
-        Dictionary<int, SpawnCardStruct> DicPrinters = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicEquipments = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicScrapers = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicLunarPools = new Dictionary<int, SpawnCardStruct>();
@@ -77,10 +71,6 @@ namespace BazaarIsMyHome
         };
         
 
-        AsyncOperationHandle<InteractableSpawnCard> iscDuplicator;
-        AsyncOperationHandle<InteractableSpawnCard> iscDuplicatorLarge;
-        AsyncOperationHandle<InteractableSpawnCard> iscDuplicatorMilitary;
-        AsyncOperationHandle<InteractableSpawnCard> iscDuplicatorWild;
         AsyncOperationHandle<InteractableSpawnCard> iscChest1;
         AsyncOperationHandle<InteractableSpawnCard> iscChest2;
         AsyncOperationHandle<InteractableSpawnCard> iscGoldChest;
@@ -93,7 +83,7 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<GameObject> lunarShopTerminal;
         AsyncOperationHandle<GameObject> multiShopEquipmentTerminal;
 
-        AsyncOperationHandle<InteractableSpawnCard>[] PrintersCode;
+        
 
         AsyncOperationHandle<GameObject> ShrineUseEffect;
         AsyncOperationHandle<GameObject> LevelUpEffect;
@@ -103,6 +93,7 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<GameObject> TeleporterBeaconEffect;
 
         BazaarCauldron bazaarCauldron;
+        BazaarPrinter bazaarPrinter;
 
         public void Awake()
         {
@@ -111,19 +102,13 @@ namespace BazaarIsMyHome
 
             bazaarCauldron = new BazaarCauldron();
             bazaarCauldron.Init();
+            bazaarPrinter = new BazaarPrinter();
+            bazaarPrinter.Init();
+
+            bazaarCauldron.Hook();
+            bazaarPrinter.Hook();
 
             // --- preload stuff ---
-
-            iscDuplicator = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Duplicator/iscDuplicator.asset");
-            iscDuplicatorLarge = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/DuplicatorLarge/iscDuplicatorLarge.asset");
-            iscDuplicatorMilitary = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/DuplicatorMilitary/iscDuplicatorMilitary.asset");
-            iscDuplicatorWild = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/DuplicatorWild/iscDuplicatorWild.asset");
-            PrintersCode = [
-                iscDuplicator,
-                iscDuplicatorLarge,
-                iscDuplicatorMilitary,
-                iscDuplicatorWild
-            ];
 
             iscChest1 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest1/iscChest1.asset");
             iscChest2 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest2/iscChest2.asset");
@@ -153,7 +138,6 @@ namespace BazaarIsMyHome
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             // 大锅、打印机注入、主动装备、月球装备、切片
             On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
-            On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
             // 切片使用次数
             On.RoR2.PurchaseInteraction.ScaleCost += PurchaseInteraction_ScaleCost;
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
@@ -281,7 +265,7 @@ namespace BazaarIsMyHome
         private void GiftReward(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Inventory inventory)
         {
             float w1 = ModConfig.PrayNormalWeight.Value, w2 = ModConfig.PrayEliteWeight.Value, w3 = ModConfig.PrayPeculiarWeight.Value;
-            double random = this.random.NextDouble() * (w1 + w2 + w3);
+            double random = Common.random.NextDouble() * (w1 + w2 + w3);
             if (random <= w1)
             {
                 WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>(8);
@@ -297,7 +281,7 @@ namespace BazaarIsMyHome
             }
             else if (random <= w1 + w2)
             {
-                string equipCode = EquipmentCodes[this.random.Next(EquipmentCodes.Count)];
+                string equipCode = EquipmentCodes[Common.random.Next(EquipmentCodes.Count)];
                 EquipmentIndex equipIndex = EquipmentCatalog.FindEquipmentIndex(equipCode);
                 EquipmentIndex IsHasEquip = inventory.GetEquipmentIndex();
                 EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(equipIndex);
@@ -310,7 +294,7 @@ namespace BazaarIsMyHome
             }
             else
             {
-                SpecialItemStruct specialItemStruct = SpecialCodes[this.random.Next(SpecialCodes.Count)];
+                SpecialItemStruct specialItemStruct = SpecialCodes[Common.random.Next(SpecialCodes.Count)];
                 ItemIndex itemIndex = ItemCatalog.FindItemIndex(specialItemStruct.Name);
                 ItemDef itemDef = ItemCatalog.GetItemDef(itemIndex);
                 inventory.GiveItem(itemDef, specialItemStruct.Count);
@@ -451,7 +435,7 @@ namespace BazaarIsMyHome
                         RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, false);
                     }
                     PlayerStructs.Clear();
-                    SpawnPrinters(); // 打印机
+                    bazaarPrinter.EnterBazaar(); // 打印机
                     bazaarCauldron.EnterBazaar(); // 大锅
                     SpawnScrapper(); // 收割机
                     SpawnEquipment(); // 主动装备
@@ -486,42 +470,6 @@ namespace BazaarIsMyHome
             orig(self);
             if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
-                // 打印机
-                if (ModConfig.PrinterCount.Value > 0)
-                {
-                    if (self.name.StartsWith("Duplicator")
-                                || self.name.StartsWith("DuplicatorLarge")
-                                || self.name.StartsWith("DuplicatorMilitary")
-                                || self.name.StartsWith("DuplicatorWild"))
-                    {
-                        float w1, w2, w3, w4, w5, w6, total;
-                        w1 = ModConfig.PrinterTier1Weight.Value;
-                        w2 = ModConfig.PrinterTier2Weight.Value;
-                        w3 = ModConfig.PrinterTier3Weight.Value;
-                        w4 = ModConfig.PrinterTierBossWeight.Value;
-                        w5 = ModConfig.PrinterTierLunarWeight.Value;
-                        w6 = ModConfig.PrinterTierVoidWeight.Value;
-                        total = w1 + w2 + w3 + w4 + w5 + w6;
-                        if (total != 0)
-                        {
-                            double random = this.random.NextDouble() * total;
-                            if (random <= w1) { }
-                            else if (random <= w1 + w2) { }
-                            else if (random <= w1 + w2 + w3) { }
-                            else if (random <= w1 + w2 + w3 + w4) { }
-                            else if (random <= w1 + w2 + w3 + w4 + w5)
-                            {
-                                self.name = "DuplicatorBlue";
-                                self.costType = CostTypeIndex.LunarItemOrEquipment;
-                            }
-                            else
-                            {
-                                self.name = "DuplicatorPurple";
-                                self.costType = CostTypeIndex.RedItem;
-                            }
-                        }
-                    }
-                }
                 if (ModConfig.EquipmentCount.Value > 0)
                 {
                     // 主动装备
@@ -593,30 +541,6 @@ namespace BazaarIsMyHome
                 }
             }
         }
-
-        private void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
-        {
-            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
-            {
-                if (self.name.StartsWith("DuplicatorBlue"))
-                {
-                    List<PickupIndex> listLunarItem = Run.instance.availableLunarItemDropList;
-                    newPickupIndex = listLunarItem[UnityEngine.Random.Range(0, listLunarItem.Count)];
-                }
-                if (self.name.StartsWith("DuplicatorPurple"))
-                {
-                    WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>(8);
-                    weightedSelection.AddChoice(Run.instance.availableVoidTier1DropList, 25f);
-                    weightedSelection.AddChoice(Run.instance.availableVoidTier2DropList, 25f);
-                    weightedSelection.AddChoice(Run.instance.availableVoidTier3DropList, 25f);
-                    weightedSelection.AddChoice(Run.instance.availableVoidBossDropList, 25f);
-                    List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
-                    newPickupIndex = list[UnityEngine.Random.Range(0, list.Count)];
-                }
-            }
-            orig(self, newPickupIndex, newHidden);
-        }
-
 
         private void SceneDirector_Start(On.RoR2.SceneDirector.orig_Start orig, SceneDirector self)
         {
@@ -878,33 +802,14 @@ namespace BazaarIsMyHome
         }
 
         #region 初始化设备
-        private void SetPrinter()
-        {
-            List<int> total = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
-            List<int> random = new List<int>();
-            while (total.Count > 0)
-            {
-                int index = this.random.Next(total.Count);
-                random.Add(total[index]);
-                total.RemoveAt(index);
-            }
-            DicPrinters.Add(random[0], new SpawnCardStruct(new Vector3(-112f, -26.8f, -46.0f), new Vector3(0.0f, 32.2f, 0.0f)));
-            DicPrinters.Add(random[1], new SpawnCardStruct(new Vector3(-108f, -26.8f, -48.5f), new Vector3(0.0f, 32.2f, 0.0f)));
-            DicPrinters.Add(random[2], new SpawnCardStruct(new Vector3(-104f, -26.7f, -51.0f), new Vector3(0.0f, 32.2f, 0.0f)));
-            DicPrinters.Add(random[3], new SpawnCardStruct(new Vector3(-127f, -26.0f, -34.5f), new Vector3(0.0f, 32.2f, 0.0f)));
-            DicPrinters.Add(random[4], new SpawnCardStruct(new Vector3(-131f, -26.0f, -31.8f), new Vector3(0.0f, 32.2f, 0.0f)));
-            DicPrinters.Add(random[5], new SpawnCardStruct(new Vector3(-135f, -26.0f, -29.0f), new Vector3(0.0f, 32.2f, 0.0f)));
-            DicPrinters.Add(random[6], new SpawnCardStruct(new Vector3(-144f, -24.7f, -24.0f), new Vector3(0.0f, 60.2f, 0.0f)));
-            DicPrinters.Add(random[7], new SpawnCardStruct(new Vector3(-145f, -25.0f, -20.0f), new Vector3(0.0f, 80.0f, 0.0f)));
-            DicPrinters.Add(random[8], new SpawnCardStruct(new Vector3(-146f, -25.3f, -16.0f), new Vector3(0.0f, 100.0f, 0.0f)));
-        }
+
         private void SetScraper()
         {
             List<int> total = new List<int> { 0, 1, 2, 3 };
             List<int> random = new List<int>();
             while (total.Count > 0)
             {
-                int index = this.random.Next(total.Count);
+                int index = Common.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -922,7 +827,7 @@ namespace BazaarIsMyHome
             List<int> random = new List<int>();
             while (total.Count > 0)
             {
-                int index = this.random.Next(total.Count);
+                int index = Common.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -1040,7 +945,7 @@ namespace BazaarIsMyHome
 
             while (total.Count > 0)
             {
-                int index = this.random.Next(total.Count);
+                int index = Common.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -1052,7 +957,7 @@ namespace BazaarIsMyHome
             random = new List<int>();
             while (total.Count > 0)
             {
-                int index = this.random.Next(total.Count);
+                int index = Common.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -1065,7 +970,7 @@ namespace BazaarIsMyHome
             random = new List<int>();
             while (total.Count > 0)
             {
-                int index = this.random.Next(total.Count);
+                int index = Common.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -1079,26 +984,7 @@ namespace BazaarIsMyHome
         #endregion
 
         #region 生成设备
-        private void SpawnPrinters()
-        {
-            if (ModConfig.PrinterCount.Value > 0)
-            {
-                // 打印机
-                DicPrinters.Clear();
-                SetPrinter();
-                int count = 0;
-                if (ModConfig.SpawnCountByStage.Value) count = SetCountbyGameStage(ModConfig.PrinterCount.Value, ModConfig.SpawnCountOffset.Value);
-                else count = ModConfig.PrinterCount.Value;
-                for (int i = 0; i < count; i++)
-                {
-                    AsyncOperationHandle<InteractableSpawnCard> randomPrinter = GetRandomPrinter();
-                    SpawnCard spawnCard = randomPrinter.WaitForCompletion();
-                    GameObject printerOne = spawnCard.DoSpawn(DicPrinters[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectorPlacementRule, Run.instance.runRNG)).spawnedInstance;
-                    printerOne.transform.eulerAngles = DicPrinters[i].Rotation;
-                } 
-            }
-        }
-        
+ 
         private void SpawnScrapper()
         {
             if (ModConfig.ScrapperCount.Value > 0)
@@ -1152,7 +1038,7 @@ namespace BazaarIsMyHome
             {
                 // 跌序
                 SpawnCard spawnCard = iscShrineRestack.WaitForCompletion();
-                GameObject shrinerestackOne = spawnCard.DoSpawn(new Vector3(-130f, -24f, -40f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectorPlacementRule, Run.instance.runRNG)).spawnedInstance;
+                GameObject shrinerestackOne = spawnCard.DoSpawn(new Vector3(-130f, -24f, -40f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, Common.directPlacement, Run.instance.runRNG)).spawnedInstance;
                 shrinerestackOne.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f);
                 shrinerestackOne.GetComponent<ShrineRestackBehavior>().maxPurchaseCount = ModConfig.ShrineRestackMaxCount.Value;
                 shrinerestackOne.GetComponent<PurchaseInteraction>().cost = ModConfig.ShrineRestackCost.Value;
@@ -1180,7 +1066,7 @@ namespace BazaarIsMyHome
             {
                 // 木灵
                 SpawnCard spawnCard = iscShrineHealing.WaitForCompletion();
-                GameObject gameObject = spawnCard.DoSpawn(new Vector3(-119f, -23f, -52f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectorPlacementRule, Run.instance.runRNG)).spawnedInstance;
+                GameObject gameObject = spawnCard.DoSpawn(new Vector3(-119f, -23f, -52f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, Common.directPlacement, Run.instance.runRNG)).spawnedInstance;
                 gameObject.transform.eulerAngles = new Vector3(0.0f, 210f, 0.0f);
                 gameObject.GetComponent<PurchaseInteraction>().costType = CostTypeIndex.LunarCoin;
                 gameObject.GetComponent<PurchaseInteraction>().cost = ModConfig.PrayCost.Value * ModConfig.PenaltyCoefficient_Temp;
@@ -1213,7 +1099,7 @@ namespace BazaarIsMyHome
             {
                 // 传送门
                 SpawnCard spawnCard = iscShopPortal.WaitForCompletion();
-                GameObject gameObject = spawnCard.DoSpawn(new Vector3(-135f, -23f, -60f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectorPlacementRule, Run.instance.runRNG)).spawnedInstance;
+                GameObject gameObject = spawnCard.DoSpawn(new Vector3(-135f, -23f, -60f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, Common.directPlacement, Run.instance.runRNG)).spawnedInstance;
                 gameObject.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f); 
             }
         }
@@ -1229,7 +1115,7 @@ namespace BazaarIsMyHome
                 try
                 {
                     SpawnCard spawnCard = card.WaitForCompletion();
-                    GameObject gameObject = spawnCard.DoSpawn(keyValuePairs[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectorPlacementRule, Run.instance.runRNG)).spawnedInstance;
+                    GameObject gameObject = spawnCard.DoSpawn(keyValuePairs[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, Common.directPlacement, Run.instance.runRNG)).spawnedInstance;
                     gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
                     gameObject.transform.localScale = (Vector3)keyValuePairs[i].Scale;
 
@@ -1358,19 +1244,7 @@ namespace BazaarIsMyHome
         {
             return SceneManager.GetActiveScene().name == "bazaar";
         }
-        private AsyncOperationHandle<InteractableSpawnCard> GetRandomPrinter()
-        {
-            float tier1 = ModConfig.PrinterTier1Weight.Value;
-            float tier2 = ModConfig.PrinterTier2Weight.Value;
-            float tier3 = ModConfig.PrinterTier3Weight.Value;
-            float boss = ModConfig.PrinterTierBossWeight.Value;
-            float total = tier1 + tier2 + tier3 + boss;
-            double d = random.NextDouble() * total;
-            if (d <= tier1) return PrintersCode[0];
-            else if (d <= tier1 + tier2) return PrintersCode[1];
-            else if (d <= tier1 + tier2 + tier3) return PrintersCode[2];
-            else return PrintersCode[3];
-        }
+
 
         public int SetCountbyGameStage(int max, int offset = 0)
         {
