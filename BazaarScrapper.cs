@@ -25,7 +25,7 @@ namespace BazaarIsMyHome
 
         }
 
-        public override void EnterBazaar()
+        public override void SetupBazaar()
         {
             SpawnScrapper();
         }

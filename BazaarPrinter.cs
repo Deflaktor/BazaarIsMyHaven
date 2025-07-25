@@ -39,7 +39,7 @@ namespace BazaarIsMyHome
             On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
         }
 
-        public override void EnterBazaar()
+        public override void SetupBazaar()
         {
             SpawnPrinters();
         }

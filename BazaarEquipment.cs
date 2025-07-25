@@ -26,7 +26,7 @@ namespace BazaarIsMyHome
             On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
         }
 
-        public override void EnterBazaar()
+        public override void SetupBazaar()
         {
             
         }

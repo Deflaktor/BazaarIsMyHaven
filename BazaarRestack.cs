@@ -23,7 +23,7 @@ namespace BazaarIsMyHome
             On.RoR2.PurchaseInteraction.ScaleCost += PurchaseInteraction_ScaleCost;
         }
 
-        public override void EnterBazaar()
+        public override void SetupBazaar()
         {
             SpawnShrineRestack();
         }

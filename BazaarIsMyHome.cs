@@ -189,14 +189,14 @@ namespace BazaarIsMyHome
                         isEnableSacrifice = true;
                         RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, false);
                     }
-                    bazaarPrinter.EnterBazaar(); // 打印机
-                    bazaarCauldron.EnterBazaar(); // 大锅
-                    bazaarScrapper.EnterBazaar(); // 收割机
-                    bazaarEquipment.EnterBazaar(); // 主动装备
-                    bazaarLunarShop.EnterBazaar(); // 月球蓓蕾
+                    bazaarPrinter.SetupBazaar(); // 打印机
+                    bazaarCauldron.SetupBazaar(); // 大锅
+                    bazaarScrapper.SetupBazaar(); // 收割机
+                    bazaarEquipment.SetupBazaar(); // 主动装备
+                    bazaarLunarShop.SetupBazaar(); // 月球蓓蕾
                     SpawnShrineCleanse(); // 月池
-                    bazaarRestack.EnterBazaar(); // 跌序
-                    bazaarPrayer.EnterBazaar();
+                    bazaarRestack.SetupBazaar(); // 跌序
+                    bazaarPrayer.SetupBazaar();
                     SpawnDecorate(); // 装饰
                     if (isEnableSacrifice) RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, true);
                     #endregion
