@@ -147,11 +147,6 @@ namespace BazaarIsMyHome
             orig(self, newPickupIndex, newHidden);
         }
 
-        private bool IsMultiplayer()
-        {
-            return PlayerCharacterMasterController.instances.Count > 1;
-        }
-
         public void SpawnLunarCauldron()
         {
             if (ModConfig.CauldronCount.Value > 0)

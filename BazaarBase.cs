@@ -101,6 +101,10 @@ namespace BazaarIsMyHome
         {
             return SceneManager.GetActiveScene().name == "bazaar";
         }
+        protected bool IsMultiplayer()
+        {
+            return PlayerCharacterMasterController.instances.Count > 1;
+        }
 
     }
 }
