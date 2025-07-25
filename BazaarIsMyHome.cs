@@ -3,7 +3,6 @@ using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using R2API.Utils;
 using RoR2;
-using ServerSideTweaks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -25,7 +24,8 @@ namespace BazaarIsMyHome
     {
         public static PluginInfo PluginInfo;
         public static ItemHandler ItemHandler;
-        System.Random Random = new System.Random();
+        public static BazaarIsMyHome instance;
+        public System.Random random = new System.Random();
         readonly DirectorPlacementRule DirectorPlacementRule = new DirectorPlacementRule
         {
             placementMode = DirectorPlacementRule.PlacementMode.Direct
@@ -35,7 +35,6 @@ namespace BazaarIsMyHome
         Dictionary<int, SpawnCardStruct> DicEquipments = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicScrapers = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicLunarPools = new Dictionary<int, SpawnCardStruct>();
-        Dictionary<int, SpawnCardStruct> DicCauldrons = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicLunarShopTerminals = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicGlodChests = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicBigChests = new Dictionary<int, SpawnCardStruct>();
@@ -76,7 +75,7 @@ namespace BazaarIsMyHome
             new SpecialItemStruct("WarCryOnCombat", 10),
             new SpecialItemStruct("TempestOnKill", 10),
         };
-        List<CauldronHackedStruct> CauldronHackedStructs = new List<CauldronHackedStruct>();
+        
 
         AsyncOperationHandle<InteractableSpawnCard> iscDuplicator;
         AsyncOperationHandle<InteractableSpawnCard> iscDuplicatorLarge;
@@ -93,12 +92,8 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<InteractableSpawnCard> iscDeepVoidPortalBattery;
         AsyncOperationHandle<GameObject> lunarShopTerminal;
         AsyncOperationHandle<GameObject> multiShopEquipmentTerminal;
-        AsyncOperationHandle<GameObject> lunarCauldronWhiteToGreen;
-        AsyncOperationHandle<GameObject> lunarCauldronGreenToRed;
-        AsyncOperationHandle<GameObject> lunarCauldronRedToWhite;
 
         AsyncOperationHandle<InteractableSpawnCard>[] PrintersCode;
-        AsyncOperationHandle<GameObject>[] LunarCauldronsCode;
 
         AsyncOperationHandle<GameObject> ShrineUseEffect;
         AsyncOperationHandle<GameObject> LevelUpEffect;
@@ -107,9 +102,15 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<GameObject> LunarRerollEffect;
         AsyncOperationHandle<GameObject> TeleporterBeaconEffect;
 
+        BazaarCauldron bazaarCauldron;
+
         public void Awake()
         {
+            instance = this;
             ModConfig.InitConfig(Config);
+
+            bazaarCauldron = new BazaarCauldron();
+            bazaarCauldron.Init();
 
             // --- preload stuff ---
 
@@ -136,15 +137,6 @@ namespace BazaarIsMyHome
 
             lunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarShopTerminal/LunarShopTerminal.prefab");
             multiShopEquipmentTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MultiShopEquipmentTerminal/MultiShopEquipmentTerminal.prefab");
-
-            lunarCauldronWhiteToGreen = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, WhiteToGreen.prefab");
-            lunarCauldronGreenToRed = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, GreenToRed Variant.prefab");
-            lunarCauldronRedToWhite = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, RedToWhite Variant.prefab");
-            LunarCauldronsCode = [
-                lunarCauldronWhiteToGreen,
-                lunarCauldronGreenToRed,
-                lunarCauldronRedToWhite
-            ];
 
             ShrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab");
             LevelUpEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/LevelUpEffect.prefab");
@@ -273,17 +265,7 @@ namespace BazaarIsMyHome
                     //ChatHelper.Send($"DonateCount = {playerStruct.DonateCount }, RewardCount = {playerStruct.RewardCount}");
                     return;
                 }
-                // 修复白色大锅
-                if (self.name.StartsWith("LunarCauldron, RedToWhite Variant"))
-                {
-                    if (IsMultiplayer() && ModCompatibilityShareSuite.enabled && ModCompatibilityShareSuite.IsShareSuite_PrinterCauldronFixEnabled())
-                    {
-                        Inventory inventory = activator.GetComponent<CharacterBody>().inventory;
-                        ShopTerminalBehavior shop = self.GetComponent<ShopTerminalBehavior>();
-                        inventory.GiveItem(PickupCatalog.GetPickupDef(shop.CurrentPickupIndex()).itemIndex, 2);
-                    }
 
-                }
                 if (self.name.StartsWith("LunarRecycler"))
                 {
                     float time = 1f;
@@ -299,7 +281,7 @@ namespace BazaarIsMyHome
         private void GiftReward(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Inventory inventory)
         {
             float w1 = ModConfig.PrayNormalWeight.Value, w2 = ModConfig.PrayEliteWeight.Value, w3 = ModConfig.PrayPeculiarWeight.Value;
-            double random = Random.NextDouble() * (w1 + w2 + w3);
+            double random = this.random.NextDouble() * (w1 + w2 + w3);
             if (random <= w1)
             {
                 WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>(8);
@@ -315,7 +297,7 @@ namespace BazaarIsMyHome
             }
             else if (random <= w1 + w2)
             {
-                string equipCode = EquipmentCodes[Random.Next(EquipmentCodes.Count)];
+                string equipCode = EquipmentCodes[this.random.Next(EquipmentCodes.Count)];
                 EquipmentIndex equipIndex = EquipmentCatalog.FindEquipmentIndex(equipCode);
                 EquipmentIndex IsHasEquip = inventory.GetEquipmentIndex();
                 EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(equipIndex);
@@ -328,7 +310,7 @@ namespace BazaarIsMyHome
             }
             else
             {
-                SpecialItemStruct specialItemStruct = SpecialCodes[Random.Next(SpecialCodes.Count)];
+                SpecialItemStruct specialItemStruct = SpecialCodes[this.random.Next(SpecialCodes.Count)];
                 ItemIndex itemIndex = ItemCatalog.FindItemIndex(specialItemStruct.Name);
                 ItemDef itemDef = ItemCatalog.GetItemDef(itemIndex);
                 inventory.GiveItem(itemDef, specialItemStruct.Count);
@@ -450,7 +432,6 @@ namespace BazaarIsMyHome
             {
                 Config.Reload();
                 ModConfig.InitConfig(Config);
-                SetCaudronList_Hacked();
                 ShopKeep.SpawnTime_Record = 0;
                 ModConfig.RerolledCount = 0;
 
@@ -471,7 +452,7 @@ namespace BazaarIsMyHome
                     }
                     PlayerStructs.Clear();
                     SpawnPrinters(); // 打印机
-                    SpawnLunarCauldron(); // 大锅
+                    bazaarCauldron.EnterBazaar(); // 大锅
                     SpawnScrapper(); // 收割机
                     SpawnEquipment(); // 主动装备
                     SpawnLunarShopTerminal(); // 月球蓓蕾
@@ -505,62 +486,6 @@ namespace BazaarIsMyHome
             orig(self);
             if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
-                // 大锅
-                if (ModConfig.CauldronCount.Value > 0)
-                {
-                    if (ModConfig.EnableCauldronHacking.Value || ModConfig.PenaltyCoefficient_Temp != 1)
-                    {
-                        double random = Random.NextDouble();
-                        if (self.name.StartsWith("LunarCauldron, WhiteToGreen")) // 绿锅
-                        {
-                            self.cost = ModConfig.CauldronWhiteToGreenCost.Value * ModConfig.PenaltyCoefficient_Temp;
-                            self.Networkcost = ModConfig.CauldronWhiteToGreenCost.Value * ModConfig.PenaltyCoefficient_Temp;
-                            if (random <= ModConfig.CauldronGreenHackedChance.Value && ModConfig.EnableCauldronHacking.Value) // 被黑概率
-                            {
-                                //ChatHelper.Send("一台绿锅被黑");
-                                CauldronHacked_Start(self, "LunarCauldronGreen"); // 变特定锅
-                            }
-                        }
-                        if (self.name.StartsWith("LunarCauldron, GreenToRed")) // 红锅
-                        {
-                            self.cost = ModConfig.CauldronGreenToRedCost.Value * ModConfig.PenaltyCoefficient_Temp;
-                            self.Networkcost = ModConfig.CauldronGreenToRedCost.Value * ModConfig.PenaltyCoefficient_Temp;
-                            if (random <= ModConfig.CauldronRedHackedChance.Value && ModConfig.EnableCauldronHacking.Value)
-                            {
-                                //ChatHelper.Send("一台红锅被黑");
-                                CauldronHacked_Start(self, "LunarCauldronRed");
-                            }
-                        }
-                        if (self.name.StartsWith("LunarCauldron, RedToWhite")) // 白锅
-                        {
-                            self.cost = ModConfig.CauldronRedToWhiteCost.Value * ModConfig.PenaltyCoefficient_Temp;
-                            self.Networkcost = ModConfig.CauldronRedToWhiteCost.Value * ModConfig.PenaltyCoefficient_Temp;
-                            if (ModConfig.CauldronWhiteCostTypeChange.Value)
-                            {
-                                self.costType = CostTypeIndex.GreenItem;
-                            }
-                            if (random <= ModConfig.CauldronWhiteHackedChance.Value && ModConfig.EnableCauldronHacking.Value)
-                            {
-                                //ChatHelper.Send("一台白锅被黑");
-                                CauldronHacked_Start(self, "LunarCauldronWhite");
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    if (ModConfig.PenaltyCoefficient_Temp != 1) // 如果商人死了，关了数量，开了惩罚系数
-                    {
-                        if (self.name.StartsWith("LunarCauldron, WhiteToGreen") 
-                            || self.name.StartsWith("LunarCauldron, GreenToRed")
-                            || self.name.StartsWith("LunarCauldron, RedToWhite")) 
-                        {
-                            self.cost = self.cost * ModConfig.PenaltyCoefficient_Temp;
-                            self.Networkcost = self.cost * ModConfig.PenaltyCoefficient_Temp;
-                        } 
-                    }
-                }
-
                 // 打印机
                 if (ModConfig.PrinterCount.Value > 0)
                 {
@@ -579,7 +504,7 @@ namespace BazaarIsMyHome
                         total = w1 + w2 + w3 + w4 + w5 + w6;
                         if (total != 0)
                         {
-                            double random = Random.NextDouble() * total;
+                            double random = this.random.NextDouble() * total;
                             if (random <= w1) { }
                             else if (random <= w1 + w2) { }
                             else if (random <= w1 + w2 + w3) { }
@@ -668,60 +593,11 @@ namespace BazaarIsMyHome
                 }
             }
         }
-        private void CauldronHacked_Start(PurchaseInteraction self, string newName)
-        {
-            float w1 = ModConfig.CauldronYellowWeight.Value, w2 = ModConfig.CauldronBlueWeight.Value, w3 = ModConfig.CauldronPurpleWeight.Value;
-            float total = w1 + w2 + w3;
-            double random = Random.NextDouble() * total;
-            CauldronHackedStruct cauldronHacked = null;
-            if (random <= w1)
-            {
-                //ChatHelper.Send("被黑成黄色");
-                cauldronHacked = CauldronHackedStructs.FirstOrDefault(x => x.Name.StartsWith(newName) && x.Name.EndsWith("Yellow"));
-                self.name = cauldronHacked.Name;
-                self.cost = cauldronHacked.Cost;
-                self.Networkcost = cauldronHacked.Cost;
-                self.costType = cauldronHacked.CostTypeIndex;
-            }
-            else if (random <= w1 + w2)
-            {
-                //ChatHelper.Send("被黑成蓝色");
-                cauldronHacked = CauldronHackedStructs.FirstOrDefault(x => x.Name.StartsWith(newName) && x.Name.EndsWith("Blue"));
-                self.name = cauldronHacked.Name;
-                self.cost = cauldronHacked.Cost;
-                self.Networkcost = cauldronHacked.Cost;
-                self.costType = cauldronHacked.CostTypeIndex;
-            }
-            else
-            {
-                //ChatHelper.Send("被黑成紫色");
-                cauldronHacked = CauldronHackedStructs.FirstOrDefault(x => x.Name.StartsWith(newName) && x.Name.EndsWith("Purple"));
-                self.name = cauldronHacked.Name;
-                self.cost = cauldronHacked.Cost;
-                self.Networkcost = cauldronHacked.Cost;
-                self.costType = cauldronHacked.CostTypeIndex;
-            }
-        }
 
         private void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
         {
             if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
-                if (self.name.StartsWith("LunarCauldronGreen"))
-                {
-                    CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickupIndex = list[Random.Next(0, list.Count)];
-                }
-                if (self.name.StartsWith("LunarCauldronRed"))
-                {
-                    CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickupIndex = list[Random.Next(0, list.Count)];
-                }
-                if (self.name.StartsWith("LunarCauldronWhite"))
-                {
-                    CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickupIndex = list[Random.Next(0, list.Count)];
-                }
                 if (self.name.StartsWith("DuplicatorBlue"))
                 {
                     List<PickupIndex> listLunarItem = Run.instance.availableLunarItemDropList;
@@ -740,25 +616,7 @@ namespace BazaarIsMyHome
             }
             orig(self, newPickupIndex, newHidden);
         }
-        private void CauldronHacked_SetPickupIndex(ShopTerminalBehavior self, out List<PickupIndex> listLunarItem)
-        {
-            listLunarItem = new List<PickupIndex>();
-            if (self.name.EndsWith("Yellow"))
-            {
-                listLunarItem.AddRange(Run.instance.availableBossDropList);
-            }
-            if (self.name.EndsWith("Blue"))
-            {
-                listLunarItem.AddRange(Run.instance.availableLunarItemDropList);
-            }
-            if (self.name.EndsWith("Purple"))
-            {
-                listLunarItem.AddRange(Run.instance.availableVoidTier1DropList);
-                listLunarItem.AddRange(Run.instance.availableVoidTier2DropList);
-                listLunarItem.AddRange(Run.instance.availableVoidTier3DropList);
-                listLunarItem.AddRange(Run.instance.availableVoidBossDropList);
-            }
-        }
+
 
         private void SceneDirector_Start(On.RoR2.SceneDirector.orig_Start orig, SceneDirector self)
         {
@@ -1026,7 +884,7 @@ namespace BazaarIsMyHome
             List<int> random = new List<int>();
             while (total.Count > 0)
             {
-                int index = Random.Next(total.Count);
+                int index = this.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -1046,7 +904,7 @@ namespace BazaarIsMyHome
             List<int> random = new List<int>();
             while (total.Count > 0)
             {
-                int index = Random.Next(total.Count);
+                int index = this.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -1057,35 +915,14 @@ namespace BazaarIsMyHome
             //DicScrapers.Add(random[2], new SpawnCardStruct(new Vector3(-105f, -26.0f, -35.0f), new Vector3(0.0f, 72.0f, 0.0f)));
             //DicScrapers.Add(random[5], new SpawnCardInteface(new Vector3(-100.0f, -26.5f, -30.0f), new Vector3(0.0f, 72.0f, 0.0f)));
         }
-        private void SetCauldron()
-        {
-            List<int> total = new List<int> { 0, 1, 2, 3, 4, 5, 6 };
-            List<int> random = new List<int>();
 
-            while (total.Count > 0)
-            {
-                int index = Random.Next(total.Count);
-                random.Add(total[index]);
-                total.RemoveAt(index);
-            }
-            DicCauldrons.Add(random[0], new SpawnCardStruct(new Vector3(-115.9816f, -24.1175f, -6.2091f), new Vector3(0.0f, 120.0f, 0.0f)));
-            DicCauldrons.Add(random[1], new SpawnCardStruct(new Vector3(-119.9280f, -24.1238f, -7.0865f), new Vector3(0.0f, 140.0f, 0.0f)));
-            DicCauldrons.Add(random[2], new SpawnCardStruct(new Vector3(-123.4725f, -23.7951f, -5.4690f), new Vector3(0.0f, 160.0f, 0.0f)));
-            DicCauldrons.Add(random[3], new SpawnCardStruct(new Vector3(-107.8159f, -23.8448f, -4.5170f), new Vector3(0.0f, 130.0f, 0.0f)));
-            DicCauldrons.Add(random[4], new SpawnCardStruct(new Vector3(-101.2425f, -24.8612f, -9.1464f), new Vector3(0.0f, 160.0f, 0.0f)));
-            DicCauldrons.Add(random[5], new SpawnCardStruct(new Vector3(-98.5219f, -25.6548f, -12.3659f), new Vector3(0.0f, 155.0f, 0.0f)));
-            DicCauldrons.Add(random[6], new SpawnCardStruct(new Vector3(-94.6071f, -25.8717f, -13.6159f), new Vector3(0.0f, 135.0f, 0.0f)));
-            //DicCauldrons.Add(random[6], new SpawnCardStruct(new Vector3(-91.1582f, -25.0957f, -10.9174f), new Vector3(0.0f, 80.0f, 0.0f)));
-            //DicCauldrons.Add(random[7], new SpawnCardStruct(new Vector3(-89.8054f, -24.0894f, -7.2084f), new Vector3(0.0f, 80.0f, 0.0f)));
-            //DicCauldrons.Add(random[8], new SpawnCardStruct(new Vector3(-85.7223f, -23.6673f, -4.8544f), new Vector3(0.0f, 85.0f, 0.0f)));
-        }
         private void SetEquipment()
         {
             List<int> total = new List<int> { 0, 1, 2, 3, 4, 5 };
             List<int> random = new List<int>();
             while (total.Count > 0)
             {
-                int index = Random.Next(total.Count);
+                int index = this.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -1203,7 +1040,7 @@ namespace BazaarIsMyHome
 
             while (total.Count > 0)
             {
-                int index = Random.Next(total.Count);
+                int index = this.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -1215,7 +1052,7 @@ namespace BazaarIsMyHome
             random = new List<int>();
             while (total.Count > 0)
             {
-                int index = Random.Next(total.Count);
+                int index = this.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -1228,7 +1065,7 @@ namespace BazaarIsMyHome
             random = new List<int>();
             while (total.Count > 0)
             {
-                int index = Random.Next(total.Count);
+                int index = this.random.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -1261,26 +1098,7 @@ namespace BazaarIsMyHome
                 } 
             }
         }
-        private void SpawnLunarCauldron()
-        {
-            if (ModConfig.CauldronCount.Value > 0)
-            {
-                // 大锅
-                DicCauldrons.Clear();
-                SetCauldron();
-                int count = 0;
-                if (ModConfig.SpawnCountByStage.Value) count = SetCountbyGameStage(ModConfig.CauldronCount.Value, ModConfig.SpawnCountOffset.Value);
-                else count = ModConfig.CauldronCount.Value;
-                for (int i = 0; i < count; i++)
-                {
-                    AsyncOperationHandle<GameObject> randomCauldron = GetRandomLunarCauldron();
-                    GameObject gameObject = randomCauldron.WaitForCompletion();
-                    gameObject = UnityEngine.Object.Instantiate<GameObject>(gameObject, DicCauldrons[i].Position, Quaternion.identity);
-                    gameObject.transform.eulerAngles = DicCauldrons[i].Rotation;
-                    NetworkServer.Spawn(gameObject);
-                } 
-            }
-        }
+        
         private void SpawnScrapper()
         {
             if (ModConfig.ScrapperCount.Value > 0)
@@ -1536,12 +1354,7 @@ namespace BazaarIsMyHome
                 color = Color.yellow
             }, true);
         }
-
-        private bool IsMultiplayer()
-        {
-            return PlayerCharacterMasterController.instances.Count > 1;
-        }
-        private bool IsCurrentMapInBazaar()
+        public bool IsCurrentMapInBazaar()
         {
             return SceneManager.GetActiveScene().name == "bazaar";
         }
@@ -1552,36 +1365,14 @@ namespace BazaarIsMyHome
             float tier3 = ModConfig.PrinterTier3Weight.Value;
             float boss = ModConfig.PrinterTierBossWeight.Value;
             float total = tier1 + tier2 + tier3 + boss;
-            double d = Random.NextDouble() * total;
+            double d = random.NextDouble() * total;
             if (d <= tier1) return PrintersCode[0];
             else if (d <= tier1 + tier2) return PrintersCode[1];
             else if (d <= tier1 + tier2 + tier3) return PrintersCode[2];
             else return PrintersCode[3];
         }
-        private AsyncOperationHandle<GameObject> GetRandomLunarCauldron()
-        {
-            float w_g = ModConfig.CauldronGreenWeight.Value;
-            float g_r = ModConfig.CauldronRedWeight.Value;
-            float g_w = ModConfig.CauldronWhiteWeight.Value;
-            float total = w_g + g_r + g_w;
-            double d = Random.NextDouble() * total;
-            if (d <= w_g) return LunarCauldronsCode[0];
-            else if (d <= w_g + g_r) return LunarCauldronsCode[1];
-            else { return LunarCauldronsCode[2]; }
-        }
-        private void GetRandomLunarCauldron_DLC1()
-        {
-            int total = 0;
-            if (ModConfig.CauldronGreenWeight.Value != 0f) total++;
-            if (ModConfig.CauldronRedWeight.Value != 0f) total++;
-            if (ModConfig.CauldronWhiteWeight.Value != 0f) total++;
-            if (ModConfig.CauldronYellowWeight.Value != 0f) total++;
-            if (ModConfig.CauldronBlueWeight.Value != 0f) total++;
-            if (ModConfig.CauldronPurpleWeight.Value != 0f) total++;
 
-        }
-
-        private int SetCountbyGameStage(int max, int offset = 0)
+        public int SetCountbyGameStage(int max, int offset = 0)
         {
             int stageCount = Run.instance.stageClearCount + 1;
             int set = stageCount + offset;
@@ -1591,25 +1382,7 @@ namespace BazaarIsMyHome
             }
             return set;
         }
-        private void SetCaudronList_Hacked()
-        {
-            if (ModConfig.CauldronCount.Value > 0)
-            {
-                if (ModConfig.EnableCauldronHacking.Value || ModConfig.PenaltyCoefficient_Temp != 1)
-                {
-                    CauldronHackedStructs.Clear();
-                    CauldronHackedStructs.Add(new CauldronHackedStruct("LunarCauldronGreen-Yellow", ModConfig.CauldronWhiteToGreenCost_Hacked.Value * ModConfig.PenaltyCoefficient_Temp, CostTypeIndex.WhiteItem));
-                    CauldronHackedStructs.Add(new CauldronHackedStruct("LunarCauldronGreen-Blue", ModConfig.CauldronWhiteToGreenCost_Hacked.Value * ModConfig.PenaltyCoefficient_Temp, CostTypeIndex.WhiteItem));
-                    CauldronHackedStructs.Add(new CauldronHackedStruct("LunarCauldronGreen-Purple", ModConfig.CauldronWhiteToGreenCost_Hacked.Value * ModConfig.PenaltyCoefficient_Temp, CostTypeIndex.WhiteItem));
-                    CauldronHackedStructs.Add(new CauldronHackedStruct("LunarCauldronRed-Yellow", ModConfig.CauldronGreenToRedCost_Hacked.Value * ModConfig.PenaltyCoefficient_Temp, CostTypeIndex.GreenItem));
-                    CauldronHackedStructs.Add(new CauldronHackedStruct("LunarCauldronRed-Blue", ModConfig.CauldronGreenToRedCost_Hacked.Value * ModConfig.PenaltyCoefficient_Temp, CostTypeIndex.GreenItem));
-                    CauldronHackedStructs.Add(new CauldronHackedStruct("LunarCauldronRed-Purple", ModConfig.CauldronGreenToRedCost_Hacked.Value * ModConfig.PenaltyCoefficient_Temp, CostTypeIndex.GreenItem));
-                    CauldronHackedStructs.Add(new CauldronHackedStruct("LunarCauldronWhite-Yellow", ModConfig.CauldronRedToWhiteCost_Hacked.Value * ModConfig.PenaltyCoefficient_Temp, CostTypeIndex.BossItem));
-                    CauldronHackedStructs.Add(new CauldronHackedStruct("LunarCauldronWhite-Blue", ModConfig.CauldronRedToWhiteCost_Hacked.Value * ModConfig.PenaltyCoefficient_Temp, CostTypeIndex.LunarItemOrEquipment));
-                    CauldronHackedStructs.Add(new CauldronHackedStruct("LunarCauldronWhite-Purple", ModConfig.CauldronRedToWhiteCost_Hacked.Value * ModConfig.PenaltyCoefficient_Temp, CostTypeIndex.RedItem));
-                } 
-            }
-        }
+
 
         private static void SpawnEffect(AsyncOperationHandle<GameObject> effect, Vector3 position, Color32 color, float scale = 1f)
         {
@@ -1622,58 +1395,6 @@ namespace BazaarIsMyHome
             }, true);
         }
 
-        internal class SpawnCardStruct
-        {
-            public SpawnCardStruct(Vector3 position, Vector3 rotation, Vector3? scale = null)
-            {
-                Position = position;
-                Rotation = rotation;
-                Scale = scale ?? new Vector3(1, 1, 1);
-            }
-
-            public Vector3 Position { get; set; }
-            public Vector3 Rotation { get; set; }
-            public Vector3? Scale { get; set; }
-        }
-        internal class PlayerStruct
-        {
-            public PlayerStruct(NetworkUser networkUser, int donateCount, int rewardCount = 0)
-            {
-                NetworkUser = networkUser;
-                DonateCount = donateCount;
-                RewardCount = rewardCount;
-            }
-
-            public NetworkUser NetworkUser { get; set; }
-            public int DonateCount { get; set; }
-            public int RewardCount { get; set; }
-        }
-        internal class SpecialItemStruct
-        {
-            public SpecialItemStruct(string name, int count, bool isUse = false)
-            {
-                Name = name;
-                Count = count;
-                IsUse = isUse;
-            }
-
-            public string Name { get; set; }
-            public int Count { get; set; }
-            public bool IsUse { get; set; }
-        }
-        internal class CauldronHackedStruct
-        {
-            public CauldronHackedStruct(string name, int cost, CostTypeIndex costTypeIndex)
-            {
-                Name = name;
-                Cost = cost;
-                CostTypeIndex = costTypeIndex;
-            }
-
-            public string Name { get; set; }
-            public int Cost { get; set; }
-            public CostTypeIndex CostTypeIndex { get; set; }
-        }
     }
 
     public static class Tokens
