@@ -5,6 +5,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using static BazaarIsMyHome.Common;
 
 namespace BazaarIsMyHome
 {
@@ -67,7 +68,7 @@ namespace BazaarIsMyHome
                         total = w1 + w2 + w3 + w4 + w5 + w6;
                         if (total != 0)
                         {
-                            double random = Common.random.NextDouble() * total;
+                            double random = RNG.NextDouble() * total;
                             if (random <= w1) { }
                             else if (random <= w1 + w2) { }
                             else if (random <= w1 + w2 + w3) { }
@@ -125,7 +126,7 @@ namespace BazaarIsMyHome
                 {
                     AsyncOperationHandle<InteractableSpawnCard> randomPrinter = GetRandomPrinter();
                     SpawnCard spawnCard = randomPrinter.WaitForCompletion();
-                    GameObject printerOne = spawnCard.DoSpawn(DicPrinters[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, Common.directPlacement, Run.instance.runRNG)).spawnedInstance;
+                    GameObject printerOne = spawnCard.DoSpawn(DicPrinters[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
                     printerOne.transform.eulerAngles = DicPrinters[i].Rotation;
                 }
             }
@@ -137,7 +138,7 @@ namespace BazaarIsMyHome
             List<int> random = new List<int>();
             while (total.Count > 0)
             {
-                int index = Common.random.Next(total.Count);
+                int index = RNG.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -160,7 +161,7 @@ namespace BazaarIsMyHome
             float tier3 = ModConfig.PrinterTier3Weight.Value;
             float boss = ModConfig.PrinterTierBossWeight.Value;
             float total = tier1 + tier2 + tier3 + boss;
-            double d = Common.random.NextDouble() * total;
+            double d = RNG.NextDouble() * total;
             if (d <= tier1) return PrintersCode[0];
             else if (d <= tier1 + tier2) return PrintersCode[1];
             else if (d <= tier1 + tier2 + tier3) return PrintersCode[2];

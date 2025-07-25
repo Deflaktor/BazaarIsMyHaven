@@ -14,6 +14,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
+using static BazaarIsMyHome.Common;
 
 namespace BazaarIsMyHome
 {
@@ -38,43 +39,10 @@ namespace BazaarIsMyHome
         List<PurchaseInteraction> ObjectLunarShopTerminals = new List<PurchaseInteraction>();
         List<PurchaseInteraction> ObjectLunarShopTerminals_Spawn = new List<PurchaseInteraction>();
 
-        Dictionary<NetworkUserId, PlayerStruct> PlayerStructs = new Dictionary<NetworkUserId, PlayerStruct>();
-        // 如果游戏更新，要检查一下
-        List<string> EquipmentCodes = new List<string>
-        {
-            "EliteEarthEquipment" ,
-            "EliteFireEquipment",
-            "EliteHauntedEquipment",
-            "EliteIceEquipment",
-            "EliteLightningEquipment",
-            "ElitePoisonEquipment",
-            "EliteVoidEquipment",
-            "EliteLunarEquipment",
-            "LunarPortalOnUse",
-        };
-        List<SpecialItemStruct> SpecialCodes = new List<SpecialItemStruct>
-        {
-            new SpecialItemStruct("BoostAttackSpeed", 10),
-            new SpecialItemStruct("BoostDamage", 10),
-            new SpecialItemStruct("BoostEquipmentRecharge", 10),
-            new SpecialItemStruct("BoostHp", 10),
-            new SpecialItemStruct("BurnNearby", 1),
-            new SpecialItemStruct("CrippleWardOnLevel", 10),
-            new SpecialItemStruct("CooldownOnCrit", 1),
-            new SpecialItemStruct("EmpowerAlways", 1),
-            new SpecialItemStruct("Ghost", 1),
-            new SpecialItemStruct("Incubator", 3),
-            new SpecialItemStruct("InvadingDoppelganger", 1),
-            new SpecialItemStruct("LevelBonus", 10),
-            new SpecialItemStruct("WarCryOnCombat", 10),
-            new SpecialItemStruct("TempestOnKill", 10),
-        };
-        
-
         AsyncOperationHandle<InteractableSpawnCard> iscChest1;
         AsyncOperationHandle<InteractableSpawnCard> iscChest2;
         AsyncOperationHandle<InteractableSpawnCard> iscGoldChest;
-        AsyncOperationHandle<InteractableSpawnCard> iscShrineHealing;
+        
         AsyncOperationHandle<InteractableSpawnCard> iscShopPortal;
         AsyncOperationHandle<InteractableSpawnCard> iscShrineCleanse;
         AsyncOperationHandle<InteractableSpawnCard> iscScrapper;
@@ -82,18 +50,13 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<GameObject> lunarShopTerminal;
         AsyncOperationHandle<GameObject> multiShopEquipmentTerminal;
 
-        
-
-        AsyncOperationHandle<GameObject> ShrineUseEffect;
-        AsyncOperationHandle<GameObject> LevelUpEffect;
-        AsyncOperationHandle<GameObject> MoneyPackPickupEffect;
-        AsyncOperationHandle<GameObject> TeamWarCryActivation;
         AsyncOperationHandle<GameObject> LunarRerollEffect;
         AsyncOperationHandle<GameObject> TeleporterBeaconEffect;
 
         BazaarCauldron bazaarCauldron;
         BazaarPrinter bazaarPrinter;
         BazaarRestack bazaarRestack;
+        BazaarPrayer bazaarPrayer;
 
         public void Awake()
         {
@@ -106,18 +69,20 @@ namespace BazaarIsMyHome
             bazaarPrinter.Init();
             bazaarRestack = new BazaarRestack();
             bazaarRestack.Init();
+            bazaarPrayer = new BazaarPrayer();
+            bazaarPrayer.Init();
 
             bazaarCauldron.Hook();
             bazaarPrinter.Hook();
             bazaarRestack.Hook();
+            bazaarPrayer.Hook();
 
             // --- preload stuff ---
 
             iscChest1 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest1/iscChest1.asset");
             iscChest2 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest2/iscChest2.asset");
             iscGoldChest = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/GoldChest/iscGoldChest.asset");
-
-            iscShrineHealing = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineHealing/iscShrineHealing.asset");
+            
             iscShopPortal = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/PortalShop/iscShopPortal.asset");
             iscShrineCleanse = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineCleanse/iscShrineCleanse.asset");
             iscScrapper = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Scrapper/iscScrapper.asset");
@@ -125,10 +90,6 @@ namespace BazaarIsMyHome
             lunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarShopTerminal/LunarShopTerminal.prefab");
             multiShopEquipmentTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MultiShopEquipmentTerminal/MultiShopEquipmentTerminal.prefab");
 
-            ShrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab");
-            LevelUpEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/LevelUpEffect.prefab");
-            MoneyPackPickupEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/BonusGoldPackOnKill/MoneyPackPickupEffect.prefab");
-            TeamWarCryActivation = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/TeamWarCry/TeamWarCryActivation.prefab");
             LunarRerollEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarRecycler/LunarRerollEffect.prefab");
             TeleporterBeaconEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/Teleporter/TeleporterBeaconEffect.prefab");
 
@@ -215,42 +176,6 @@ namespace BazaarIsMyHome
         {
             if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
-                if (self.name.StartsWith("ShrineHealing"))
-                {
-                    //HasBeenDonate = true;
-                    NetworkUser networkUser = Util.LookUpBodyNetworkUser(activator.gameObject);
-                    CharacterMaster characterMaster = activator.GetComponent<CharacterBody>().master;
-                    CharacterBody characterBody = activator.GetComponent<CharacterBody>();
-                    Inventory inventory = characterBody.inventory;
-
-                    PlayerStructs.TryGetValue(networkUser.id, out PlayerStruct playerStruct);
-                    if (playerStruct is null)
-                    {
-                        playerStruct = new PlayerStruct(networkUser, 1);
-                        PlayerStructs.Add(networkUser.id, playerStruct);
-                        ChatHelper.ThanksTip(networkUser, characterBody);
-                    }
-                    else
-                    {
-                        playerStruct.DonateCount += 1; // 加一次捐赠次数
-                        if (playerStruct.DonateCount % 10 == 0) // 每满10次捐赠
-                        {
-                            playerStruct.RewardCount += 1;
-                            if (playerStruct.RewardCount <= ModConfig.RewardCount.Value)
-                            {
-                                GiftReward(self, networkUser, characterBody, inventory); // 给奖励
-                            }
-                        }
-                    }
-                    if (playerStruct.DonateCount <= (ModConfig.RewardCount.Value * 10))
-                    {
-                        // 购买特效
-                        SpawnEffect(ShrineUseEffect, self.transform.position, new Color32(64, 127, 255, 255), 5f);
-                        networkUser.DeductLunarCoins((uint)self.Networkcost);
-                    }
-                    //ChatHelper.Send($"DonateCount = {playerStruct.DonateCount }, RewardCount = {playerStruct.RewardCount}");
-                    return;
-                }
 
                 if (self.name.StartsWith("LunarRecycler"))
                 {
@@ -264,50 +189,7 @@ namespace BazaarIsMyHome
             }
             orig(self, activator);
         }
-        private void GiftReward(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Inventory inventory)
-        {
-            float w1 = ModConfig.PrayNormalWeight.Value, w2 = ModConfig.PrayEliteWeight.Value, w3 = ModConfig.PrayPeculiarWeight.Value;
-            double random = Common.random.NextDouble() * (w1 + w2 + w3);
-            if (random <= w1)
-            {
-                WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>(8);
-                weightedSelection.AddChoice(Run.instance.availableTier1DropList, 100f);
-                weightedSelection.AddChoice(Run.instance.availableTier2DropList, 60f);
-                weightedSelection.AddChoice(Run.instance.availableTier3DropList, 10f);
-                List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
-                PickupDef pickupDef = PickupCatalog.GetPickupDef(list[UnityEngine.Random.Range(0, list.Count)]);
-                inventory.GiveItem((pickupDef != null) ? pickupDef.itemIndex : ItemIndex.None, 1);
-                // 特效
-                PurchaseInteraction.CreateItemTakenOrb(self.gameObject.transform.position, characterBody.gameObject, pickupDef.itemIndex);
-                ChatHelper.ThanksTip(networkUser, characterBody, pickupDef);
-            }
-            else if (random <= w1 + w2)
-            {
-                string equipCode = EquipmentCodes[Common.random.Next(EquipmentCodes.Count)];
-                EquipmentIndex equipIndex = EquipmentCatalog.FindEquipmentIndex(equipCode);
-                EquipmentIndex IsHasEquip = inventory.GetEquipmentIndex();
-                EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(equipIndex);
 
-                if (IsHasEquip != EquipmentIndex.None) // 如果玩家身上有主动装备，掉落出来
-                    PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(IsHasEquip), characterBody.gameObject.transform.position + Vector3.up * 1.5f, Vector3.up * 20f + self.transform.forward * 2f);
-                inventory.SetEquipmentIndex(equipIndex); // 为了获得文本，其实可以用GiveEquipmentString()
-
-                ChatHelper.ThanksTip(networkUser, characterBody, equipmentDef);
-            }
-            else
-            {
-                SpecialItemStruct specialItemStruct = SpecialCodes[Common.random.Next(SpecialCodes.Count)];
-                ItemIndex itemIndex = ItemCatalog.FindItemIndex(specialItemStruct.Name);
-                ItemDef itemDef = ItemCatalog.GetItemDef(itemIndex);
-                inventory.GiveItem(itemDef, specialItemStruct.Count);
-                // 特效
-                PurchaseInteraction.CreateItemTakenOrb(self.gameObject.transform.position, characterBody.gameObject, itemIndex);
-                ChatHelper.ThanksTip(networkUser, characterBody, itemDef, specialItemStruct.Count);
-            }
-            SpawnEffect(LevelUpEffect, self.transform.position, new Color32(255, 255, 255, 255), 3f);
-            SpawnEffect(MoneyPackPickupEffect, self.transform.position, new Color32(255, 255, 255, 255), 3f);
-            SpawnEffect(TeamWarCryActivation, self.transform.position, new Color32(255, 255, 255, 255), 3f);
-        }
         IEnumerator DelayEffect(PurchaseInteraction self, PurchaseInteraction interaction, float time)
         {
             yield return new WaitForSeconds(time);
@@ -414,11 +296,6 @@ namespace BazaarIsMyHome
                 ShopKeep.SpawnTime_Record = 0;
                 ModConfig.RerolledCount = 0;
 
-                if (ModConfig.EnableShrineHealing.Value)
-                {
-                    InitPrayData(); 
-                }
-
                 if (NetworkServer.active)
                 {
                     #region 开始生成设备
@@ -429,7 +306,6 @@ namespace BazaarIsMyHome
                         isEnableSacrifice = true;
                         RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, false);
                     }
-                    PlayerStructs.Clear();
                     bazaarPrinter.EnterBazaar(); // 打印机
                     bazaarCauldron.EnterBazaar(); // 大锅
                     SpawnScrapper(); // 收割机
@@ -437,7 +313,7 @@ namespace BazaarIsMyHome
                     SpawnLunarShopTerminal(); // 月球蓓蕾
                     SpawnShrineCleanse(); // 月池
                     bazaarRestack.EnterBazaar(); // 跌序
-                    SpawnShrineHealing(); // 祈祷
+                    bazaarPrayer.EnterBazaar();
                     SpawnDecorate(); // 装饰
                     if (isEnableSacrifice) RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, true);
                     #endregion
@@ -446,18 +322,6 @@ namespace BazaarIsMyHome
             orig.Invoke(self);
         }
 
-        private void InitPrayData()
-        {
-            //SpecialCodes 
-            SpecialCodes.ForEach(x => x.IsUse = false);
-            string[] codes = ModConfig.PrayPeculiarList.Value.Split(',');
-            for (int i = 0; i < codes.Length; i++)
-            {
-                string code = codes[i].Trim().ToLower();
-                SpecialItemStruct result = SpecialCodes.FirstOrDefault(x => x.Name.ToLower() == code);
-                result.IsUse = true;
-            }
-        }
 
         private void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
         {
@@ -804,7 +668,7 @@ namespace BazaarIsMyHome
             List<int> random = new List<int>();
             while (total.Count > 0)
             {
-                int index = Common.random.Next(total.Count);
+                int index = RNG.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -822,7 +686,7 @@ namespace BazaarIsMyHome
             List<int> random = new List<int>();
             while (total.Count > 0)
             {
-                int index = Common.random.Next(total.Count);
+                int index = RNG.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -940,7 +804,7 @@ namespace BazaarIsMyHome
 
             while (total.Count > 0)
             {
-                int index = Common.random.Next(total.Count);
+                int index = RNG.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -952,7 +816,7 @@ namespace BazaarIsMyHome
             random = new List<int>();
             while (total.Count > 0)
             {
-                int index = Common.random.Next(total.Count);
+                int index = RNG.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -965,7 +829,7 @@ namespace BazaarIsMyHome
             random = new List<int>();
             while (total.Count > 0)
             {
-                int index = Common.random.Next(total.Count);
+                int index = RNG.Next(total.Count);
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
@@ -1038,24 +902,7 @@ namespace BazaarIsMyHome
                 DoSpawnCard(DicLunarPools, iscShrineCleanse, DicLunarPools.Count); 
             }
         }
-        private void SpawnShrineHealing()
-        {
-            if (ModConfig.EnableShrineHealing.Value)
-            {
-                // 木灵
-                SpawnCard spawnCard = iscShrineHealing.WaitForCompletion();
-                GameObject gameObject = spawnCard.DoSpawn(new Vector3(-119f, -23f, -52f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, Common.directPlacement, Run.instance.runRNG)).spawnedInstance;
-                gameObject.transform.eulerAngles = new Vector3(0.0f, 210f, 0.0f);
-                gameObject.GetComponent<PurchaseInteraction>().costType = CostTypeIndex.LunarCoin;
-                gameObject.GetComponent<PurchaseInteraction>().cost = ModConfig.PrayCost.Value * ModConfig.PenaltyCoefficient_Temp;
-                gameObject.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.PrayCost.Value * ModConfig.PenaltyCoefficient_Temp;
 
-                //gameObject.GetComponent<ShrineHealingBehavior>().baseRadius = 80;
-                //gameObject.GetComponent<ShrineHealingBehavior>().radiusBonusPerPurchase = 0;
-                gameObject.GetComponent<ShrineHealingBehavior>().costMultiplierPerPurchase = 1;
-                gameObject.GetComponent<ShrineHealingBehavior>().maxPurchaseCount = int.MaxValue; 
-            }
-        }
         private void SpawnDecorate()
         {
             if (ModConfig.EnableDecorate.Value)
@@ -1077,7 +924,7 @@ namespace BazaarIsMyHome
             {
                 // 传送门
                 SpawnCard spawnCard = iscShopPortal.WaitForCompletion();
-                GameObject gameObject = spawnCard.DoSpawn(new Vector3(-135f, -23f, -60f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, Common.directPlacement, Run.instance.runRNG)).spawnedInstance;
+                GameObject gameObject = spawnCard.DoSpawn(new Vector3(-135f, -23f, -60f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
                 gameObject.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f); 
             }
         }
@@ -1093,7 +940,7 @@ namespace BazaarIsMyHome
                 try
                 {
                     SpawnCard spawnCard = card.WaitForCompletion();
-                    GameObject gameObject = spawnCard.DoSpawn(keyValuePairs[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, Common.directPlacement, Run.instance.runRNG)).spawnedInstance;
+                    GameObject gameObject = spawnCard.DoSpawn(keyValuePairs[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
                     gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
                     gameObject.transform.localScale = (Vector3)keyValuePairs[i].Scale;
 
@@ -1236,16 +1083,6 @@ namespace BazaarIsMyHome
         }
 
 
-        private static void SpawnEffect(AsyncOperationHandle<GameObject> effect, Vector3 position, Color32 color, float scale = 1f)
-        {
-            EffectManager.SpawnEffect(effect.WaitForCompletion(), new EffectData()
-            {
-                origin = position,
-                rotation = Quaternion.identity,
-                scale = scale,
-                color = color
-            }, true);
-        }
 
     }
 

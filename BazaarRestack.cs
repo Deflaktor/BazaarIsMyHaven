@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using static BazaarIsMyHome.Common;
 
 namespace BazaarIsMyHome
 {
@@ -62,14 +63,13 @@ namespace BazaarIsMyHome
             orig(self, scalar);
         }
 
-
         private void SpawnShrineRestack()
         {
             if (ModConfig.EnableShrineRestack.Value)
             {
                 // 跌序
                 SpawnCard spawnCard = iscShrineRestack.WaitForCompletion();
-                GameObject shrinerestackOne = spawnCard.DoSpawn(new Vector3(-130f, -24f, -40f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, Common.directPlacement, Run.instance.runRNG)).spawnedInstance;
+                GameObject shrinerestackOne = spawnCard.DoSpawn(new Vector3(-130f, -24f, -40f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
                 shrinerestackOne.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f);
                 shrinerestackOne.GetComponent<ShrineRestackBehavior>().maxPurchaseCount = ModConfig.ShrineRestackMaxCount.Value;
                 shrinerestackOne.GetComponent<PurchaseInteraction>().cost = ModConfig.ShrineRestackCost.Value;
