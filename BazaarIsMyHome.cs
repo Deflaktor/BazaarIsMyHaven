@@ -74,7 +74,6 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<InteractableSpawnCard> iscChest1;
         AsyncOperationHandle<InteractableSpawnCard> iscChest2;
         AsyncOperationHandle<InteractableSpawnCard> iscGoldChest;
-        AsyncOperationHandle<InteractableSpawnCard> iscShrineRestack;
         AsyncOperationHandle<InteractableSpawnCard> iscShrineHealing;
         AsyncOperationHandle<InteractableSpawnCard> iscShopPortal;
         AsyncOperationHandle<InteractableSpawnCard> iscShrineCleanse;
@@ -94,6 +93,7 @@ namespace BazaarIsMyHome
 
         BazaarCauldron bazaarCauldron;
         BazaarPrinter bazaarPrinter;
+        BazaarRestack bazaarRestack;
 
         public void Awake()
         {
@@ -104,9 +104,12 @@ namespace BazaarIsMyHome
             bazaarCauldron.Init();
             bazaarPrinter = new BazaarPrinter();
             bazaarPrinter.Init();
+            bazaarRestack = new BazaarRestack();
+            bazaarRestack.Init();
 
             bazaarCauldron.Hook();
             bazaarPrinter.Hook();
+            bazaarRestack.Hook();
 
             // --- preload stuff ---
 
@@ -114,7 +117,6 @@ namespace BazaarIsMyHome
             iscChest2 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest2/iscChest2.asset");
             iscGoldChest = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/GoldChest/iscGoldChest.asset");
 
-            iscShrineRestack = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineRestack/iscShrineRestack.asset");
             iscShrineHealing = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineHealing/iscShrineHealing.asset");
             iscShopPortal = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/PortalShop/iscShopPortal.asset");
             iscShrineCleanse = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineCleanse/iscShrineCleanse.asset");
@@ -339,13 +341,6 @@ namespace BazaarIsMyHome
                         }
                     } 
                 }
-                if (self.name.StartsWith("ShrineRestack"))
-                {
-                    if (ModConfig.EnableShrineRestack.Value)
-                    {
-                        scalar = (float)ModConfig.ShrineRestackScalar.Value;
-                    }
-                }
             }
             orig.Invoke(self, scalar);
         }
@@ -441,7 +436,7 @@ namespace BazaarIsMyHome
                     SpawnEquipment(); // 主动装备
                     SpawnLunarShopTerminal(); // 月球蓓蕾
                     SpawnShrineCleanse(); // 月池
-                    SpawnShrineRestack(); // 跌序
+                    bazaarRestack.EnterBazaar(); // 跌序
                     SpawnShrineHealing(); // 祈祷
                     SpawnDecorate(); // 装饰
                     if (isEnableSacrifice) RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, true);
@@ -1032,24 +1027,7 @@ namespace BazaarIsMyHome
                 DoSpawnGameObject(DicLunarShopTerminals, lunarShopTerminal, ModConfig.LunarShopTerminalCount.Value);
             }
         }
-        private void SpawnShrineRestack()
-        {
-            if (ModConfig.EnableShrineRestack.Value)
-            {
-                // 跌序
-                SpawnCard spawnCard = iscShrineRestack.WaitForCompletion();
-                GameObject shrinerestackOne = spawnCard.DoSpawn(new Vector3(-130f, -24f, -40f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, Common.directPlacement, Run.instance.runRNG)).spawnedInstance;
-                shrinerestackOne.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f);
-                shrinerestackOne.GetComponent<ShrineRestackBehavior>().maxPurchaseCount = ModConfig.ShrineRestackMaxCount.Value;
-                shrinerestackOne.GetComponent<PurchaseInteraction>().cost = ModConfig.ShrineRestackCost.Value;
-                shrinerestackOne.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.ShrineRestackCost.Value;
-                if (ModConfig.PenaltyCoefficient_Temp != 1)
-                {
-                    shrinerestackOne.GetComponent<PurchaseInteraction>().cost *= ModConfig.PenaltyCoefficient_Temp;
-                    shrinerestackOne.GetComponent<ShrineRestackBehavior>().costMultiplierPerPurchase = ModConfig.PenaltyCoefficient_Temp;
-                }
-            }
-        }
+
         private void SpawnShrineCleanse()
         {
             if (ModConfig.EnableShrineCleanse.Value)
