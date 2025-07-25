@@ -30,9 +30,11 @@ namespace BazaarIsMyHome
 
         public void Awake()
         {
+            PluginInfo = Info;
             instance = this;
             Log.Init(Logger);
             ModConfig.InitConfig(Config);
+            Tokens.RegisterLanguageTokens();
 
             bazaarMods.Add(new BazaarCauldron());
             bazaarMods.Add(new BazaarPrinter());
@@ -52,13 +54,6 @@ namespace BazaarIsMyHome
                 bazaarMod.Hook();
             }
 
-
-            // --- preload stuff ---
-
-            
-
-            PluginInfo = Info;
-            Tokens.RegisterLanguageTokens();
             ItemHandler = new ItemHandler();
             On.RoR2.Run.Start += Run_Start;
             // 预言地图
@@ -149,7 +144,7 @@ namespace BazaarIsMyHome
                     #endregion
                 }
             }
-            orig.Invoke(self);
+            orig(self);
         }
 
         private void SceneDirector_Start(On.RoR2.SceneDirector.orig_Start orig, SceneDirector self)
@@ -167,12 +162,12 @@ namespace BazaarIsMyHome
         {
             if (ModConfig.EnableMod.Value && ModConfig.EnableAutoOpenShop.Value)
             {
-                orig.Invoke(self);
+                orig(self);
                 self.shouldAttemptToSpawnShopPortal = true;
             }
             else
             {
-                orig.Invoke(self);
+                orig(self);
             }
         }
         private void KickFromShop_FixedUpdate(On.EntityStates.NewtMonster.KickFromShop.orig_FixedUpdate orig, EntityStates.NewtMonster.KickFromShop self)
@@ -193,26 +188,22 @@ namespace BazaarIsMyHome
                         if (hitObject.name.StartsWith("ShopkeeperBody") && damageInfo.attacker)
                         {
                             ChatHelper.HitWord();
-                            orig.Invoke(self, damageInfo, hitObject);
+                            orig(self, damageInfo, hitObject);
                         }
                     }
                     catch (Exception)
                     {
                         
                     }
-                    finally
-                    {
-
-                    }
                     return;
                 }
             }
-            orig.Invoke(self, damageInfo, hitObject);
+            orig(self, damageInfo, hitObject);
 
         }
         private void CharacterMaster_OnBodyDeath(On.RoR2.CharacterMaster.orig_OnBodyDeath orig, CharacterMaster self, CharacterBody body)
         {
-            orig.Invoke(self, body);
+            orig(self, body);
             if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
                 //var attack = self.name;
@@ -338,7 +329,7 @@ namespace BazaarIsMyHome
             {
 
             }
-            orig.Invoke(self);
+            orig(self);
         }
         IEnumerator ShopWelcomeWord()
         {

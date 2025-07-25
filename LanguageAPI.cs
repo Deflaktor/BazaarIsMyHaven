@@ -38,11 +38,11 @@ namespace BazaarIsMyHome
                 {
                     LanguageRoot
                 }), self.name);
-                orig.Invoke(self, newFolders.Union(second));
+                orig(self, newFolders.Union(second));
             }
             else
             {
-                orig.Invoke(self, newFolders);
+                orig(self, newFolders);
             }
         }
     }

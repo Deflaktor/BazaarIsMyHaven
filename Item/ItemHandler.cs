@@ -6,7 +6,7 @@ namespace BazaarIsMyHome
     {
         public void GlobalEventManager_OnCrit(On.RoR2.GlobalEventManager.orig_OnCrit orig, GlobalEventManager self, CharacterBody body, DamageInfo damageInfo, CharacterMaster master, float procCoefficient, ProcChainMask procChainMask)
         {
-            orig.Invoke(self, body, damageInfo, master, procCoefficient, procChainMask);
+            orig(self, body, damageInfo, master, procCoefficient, procChainMask);
             Inventory inventory = master.inventory;
             int itemCount = inventory.GetItemCount(JunkContent.Items.CooldownOnCrit);
             if (itemCount > 0)
