@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using R2API.Utils;
@@ -129,46 +129,6 @@ namespace BazaarIsMyHome
             On.RoR2.GlobalEventManager.OnCrit += ItemHandler.GlobalEventManager_OnCrit;
             On.RoR2.CharacterBody.RecalculateStats += ItemHandler.CharacterBody_RecalculateStats;
             R2API.Utils.CommandHelper.AddToConsoleWhenReady();
-
-            On.RoR2.Run.FixedUpdate += Run_FixedUpdate;
-        }
-
-        private GameObject testEquip;
-        private float rotate = 0f;
-        private void Run_FixedUpdate(On.RoR2.Run.orig_FixedUpdate orig, Run self)
-        {
-            orig(self);
-#if DEBUG
-            if (Input.GetKeyDown(KeyCode.F4))
-            {
-                foreach (PlayerCharacterMasterController pc in PlayerCharacterMasterController.instances)
-                {
-                    var user = pc.networkUser;
-                    var pos = pc.body.transform.position;
-                    var rot = pc.body.transform.eulerAngles;
-
-                    
-
-                    if (testEquip == null)
-                    {
-                        testEquip = Instantiate(multiShopEquipmentTerminal.WaitForCompletion(), pos, Quaternion.identity);
-                        testEquip.transform.eulerAngles = new Vector3(0f, rotate, 0f);
-                        testEquip.transform.localScale = new Vector3(1, 1, 1);
-                        NetworkServer.Spawn(testEquip);
-                    } else
-                    {
-                        testEquip.transform.position = new Vector3(pos.x, -23.56834f, pos.z);
-                        testEquip.transform.eulerAngles = new Vector3(0f, rotate, 0f);
-                        testEquip.transform.localScale = new Vector3(1, 1, 1);
-                        rotate += 10f;
-                        if (rotate >= 360)
-                            rotate = 0f;
-
-                        Logger.LogDebug($"Player pressed F4: (" + testEquip.transform.position.x + "," + testEquip.transform.position.y + "," + testEquip.transform.position.z + ") (" + testEquip.transform.eulerAngles.x + "," + testEquip.transform.eulerAngles.y + "," + testEquip.transform.eulerAngles.z + ")");
-                    }
-                }
-            }
-#endif
         }
 
         private void Run_Start(On.RoR2.Run.orig_Start orig, Run self)
