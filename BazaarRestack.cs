@@ -20,31 +20,12 @@ namespace BazaarIsMyHome
 
         public override void Hook()
         {
-            On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
-            On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.PurchaseInteraction.ScaleCost += PurchaseInteraction_ScaleCost;
         }
 
         public override void EnterBazaar()
         {
             SpawnShrineRestack();
-        }
-
-        public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
-        {
-            orig(self);
-            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
-            {
-            }
-        }
-
-        public void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
-        {
-            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
-            {
-                
-            }
-            orig(self, activator);
         }
 
         private void PurchaseInteraction_ScaleCost(On.RoR2.PurchaseInteraction.orig_ScaleCost orig, PurchaseInteraction self, float scalar)
