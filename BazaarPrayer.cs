@@ -67,7 +67,7 @@ namespace BazaarIsMyHome
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
         }
 
-        public override void EnterBazaar()
+        public override void SetupBazaar()
         {
             if (ModConfig.EnableShrineHealing.Value)
             {

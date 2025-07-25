@@ -19,7 +19,7 @@ namespace BazaarIsMyHome
 
         public abstract void Init();
         public abstract void Hook();
-        public abstract void EnterBazaar();
+        public abstract void SetupBazaar();
 
         //protected void DoSpawnCard(string name, Vector3 vector)
         //{

@@ -36,7 +36,7 @@ namespace BazaarIsMyHome
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
         }
 
-        public override void EnterBazaar()
+        public override void SetupBazaar()
         {
             SpawnLunarShopTerminal();
         }
