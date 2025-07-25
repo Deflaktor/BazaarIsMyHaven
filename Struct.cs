@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace BazaarIsMyHome
 {
-    internal class SpawnCardStruct
+    public class SpawnCardStruct
     {
         public SpawnCardStruct(Vector3 position, Vector3 rotation, Vector3? scale = null)
         {
@@ -19,7 +19,7 @@ namespace BazaarIsMyHome
         public Vector3 Rotation { get; set; }
         public Vector3? Scale { get; set; }
     }
-    internal class PlayerStruct
+    public class PlayerStruct
     {
         public PlayerStruct(NetworkUser networkUser, int donateCount, int rewardCount = 0)
         {
@@ -32,7 +32,7 @@ namespace BazaarIsMyHome
         public int DonateCount { get; set; }
         public int RewardCount { get; set; }
     }
-    internal class SpecialItemStruct
+    public class SpecialItemStruct
     {
         public SpecialItemStruct(string name, int count, bool isUse = false)
         {
@@ -45,7 +45,7 @@ namespace BazaarIsMyHome
         public int Count { get; set; }
         public bool IsUse { get; set; }
     }
-    internal class CauldronHackedStruct
+    public class CauldronHackedStruct
     {
         public CauldronHackedStruct(string name, int cost, CostTypeIndex costTypeIndex)
         {

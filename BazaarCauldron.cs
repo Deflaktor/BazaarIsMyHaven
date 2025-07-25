@@ -7,11 +7,10 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using static BazaarIsMyHome.Common;
 
 namespace BazaarIsMyHome
 {
-    public class BazaarCauldron
+    public class BazaarCauldron : BazaarBase
     {
         List<CauldronHackedStruct> CauldronHackedStructs = new List<CauldronHackedStruct>();
         AsyncOperationHandle<GameObject> lunarCauldronWhiteToGreen;
@@ -20,7 +19,7 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<GameObject>[] LunarCauldronsCode;
         Dictionary<int, SpawnCardStruct> DicCauldrons = new Dictionary<int, SpawnCardStruct>();
 
-        public void Init()
+        public override void Init()
         {
             lunarCauldronWhiteToGreen = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, WhiteToGreen.prefab");
             lunarCauldronGreenToRed = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, GreenToRed Variant.prefab");
@@ -32,14 +31,14 @@ namespace BazaarIsMyHome
             ];
         }
 
-        public void Hook()
+        public override void Hook()
         {
             On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
         }
 
-        public void EnterBazaar()
+        public override void EnterBazaar()
         {
             SetCauldronList_Hacked();
             SpawnLunarCauldron();
@@ -48,7 +47,7 @@ namespace BazaarIsMyHome
         public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
         {
             orig(self);
-            if (ModConfig.EnableMod.Value && BazaarIsMyHome.instance.IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
                 if (ModConfig.CauldronCount.Value > 0)
                 {
@@ -109,7 +108,7 @@ namespace BazaarIsMyHome
 
         public void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
-            if (ModConfig.EnableMod.Value && BazaarIsMyHome.instance.IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
                 // 修复白色大锅
                 if (self.name.StartsWith("LunarCauldron, RedToWhite Variant"))
@@ -127,7 +126,7 @@ namespace BazaarIsMyHome
 
         public void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
         {
-            if (ModConfig.EnableMod.Value && BazaarIsMyHome.instance.IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
                 if (self.name.StartsWith("LunarCauldronGreen"))
                 {
@@ -161,7 +160,7 @@ namespace BazaarIsMyHome
                 DicCauldrons.Clear();
                 SetCauldron();
                 int count = 0;
-                if (ModConfig.SpawnCountByStage.Value) count = BazaarIsMyHome.instance.SetCountbyGameStage(ModConfig.CauldronCount.Value, ModConfig.SpawnCountOffset.Value);
+                if (ModConfig.SpawnCountByStage.Value) count = SetCountbyGameStage(ModConfig.CauldronCount.Value, ModConfig.SpawnCountOffset.Value);
                 else count = ModConfig.CauldronCount.Value;
                 for (int i = 0; i < count; i++)
                 {

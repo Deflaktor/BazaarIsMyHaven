@@ -5,11 +5,10 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using static BazaarIsMyHome.Common;
 
 namespace BazaarIsMyHome
 {
-    public class BazaarPrinter
+    public class BazaarPrinter : BazaarBase
     {
         AsyncOperationHandle<InteractableSpawnCard> iscDuplicator;
         AsyncOperationHandle<InteractableSpawnCard> iscDuplicatorLarge;
@@ -18,7 +17,7 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<InteractableSpawnCard>[] PrintersCode;
 
         Dictionary<int, SpawnCardStruct> DicPrinters = new Dictionary<int, SpawnCardStruct>();
-        public void Init()
+        public override void Init()
         {
 
             iscDuplicator = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Duplicator/iscDuplicator.asset");
@@ -34,13 +33,13 @@ namespace BazaarIsMyHome
 
         }
 
-        public void Hook()
+        public override void Hook()
         {
             On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake; ;
             On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
         }
 
-        public void EnterBazaar()
+        public override void EnterBazaar()
         {
             SpawnPrinters();
         }
@@ -48,7 +47,7 @@ namespace BazaarIsMyHome
         private void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, RoR2.PurchaseInteraction self)
         {
             orig(self);
-            if (ModConfig.EnableMod.Value && BazaarIsMyHome.instance.IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
                 // 打印机
                 if (ModConfig.PrinterCount.Value > 0)
@@ -91,7 +90,7 @@ namespace BazaarIsMyHome
 
         private void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
         {
-            if (ModConfig.EnableMod.Value && BazaarIsMyHome.instance.IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
                 if (self.name.StartsWith("DuplicatorBlue"))
                 {
@@ -120,8 +119,10 @@ namespace BazaarIsMyHome
                 DicPrinters.Clear();
                 SetPrinter();
                 int count = 0;
-                if (ModConfig.SpawnCountByStage.Value) count = BazaarIsMyHome.instance.SetCountbyGameStage(ModConfig.PrinterCount.Value, ModConfig.SpawnCountOffset.Value);
-                else count = ModConfig.PrinterCount.Value;
+                if (ModConfig.SpawnCountByStage.Value)
+                    count = SetCountbyGameStage(ModConfig.PrinterCount.Value, ModConfig.SpawnCountOffset.Value);
+                else
+                    count = ModConfig.PrinterCount.Value;
                 for (int i = 0; i < count; i++)
                 {
                     AsyncOperationHandle<InteractableSpawnCard> randomPrinter = GetRandomPrinter();

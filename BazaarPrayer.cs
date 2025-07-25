@@ -6,11 +6,10 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using static BazaarIsMyHome.Common;
 
 namespace BazaarIsMyHome
 {
-    public class BazaarPrayer
+    public class BazaarPrayer : BazaarBase
     {
         AsyncOperationHandle<InteractableSpawnCard> iscShrineHealing;
 
@@ -54,7 +53,7 @@ namespace BazaarIsMyHome
             "LunarPortalOnUse",
         };
 
-        public void Init()
+        public override void Init()
         {
             iscShrineHealing = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineHealing/iscShrineHealing.asset");
             LevelUpEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/LevelUpEffect.prefab");
@@ -63,12 +62,12 @@ namespace BazaarIsMyHome
             ShrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab");
         }
 
-        public void Hook()
+        public override void Hook()
         {
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
         }
 
-        public void EnterBazaar()
+        public override void EnterBazaar()
         {
             if (ModConfig.EnableShrineHealing.Value)
             {
@@ -80,7 +79,7 @@ namespace BazaarIsMyHome
 
         private void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
-            if (ModConfig.EnableMod.Value && BazaarIsMyHome.instance.IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
                 if (self.name.StartsWith("ShrineHealing"))
                 {
@@ -185,7 +184,7 @@ namespace BazaarIsMyHome
             {
                 // 木灵
                 SpawnCard spawnCard = iscShrineHealing.WaitForCompletion();
-                GameObject gameObject = spawnCard.DoSpawn(new Vector3(-119f, -23f, -52f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, Common.DirectPlacement, Run.instance.runRNG)).spawnedInstance;
+                GameObject gameObject = spawnCard.DoSpawn(new Vector3(-119f, -23f, -52f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
                 gameObject.transform.eulerAngles = new Vector3(0.0f, 210f, 0.0f);
                 gameObject.GetComponent<PurchaseInteraction>().costType = CostTypeIndex.LunarCoin;
                 gameObject.GetComponent<PurchaseInteraction>().cost = ModConfig.PrayCost.Value * ModConfig.PenaltyCoefficient_Temp;
