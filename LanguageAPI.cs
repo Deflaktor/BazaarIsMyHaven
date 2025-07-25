@@ -1,10 +1,52 @@
-﻿using System;
+﻿using RoR2;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
-using RoR2;
 
 namespace BazaarIsMyHome
 {
+
+    public static class Tokens
+    {
+        internal static string LanguageRoot
+        {
+            get
+            {
+                return System.IO.Path.Combine(AssemblyDir, "Language");
+            }
+        }
+
+        internal static string AssemblyDir
+        {
+            get
+            {
+                return System.IO.Path.GetDirectoryName(BazaarIsMyHome.PluginInfo.Location);
+            }
+        }
+        public static void RegisterLanguageTokens()
+        {
+            On.RoR2.Language.SetFolders += Language_SetFolders;
+        }
+
+        private static void Language_SetFolders(On.RoR2.Language.orig_SetFolders orig, Language self, IEnumerable<string> newFolders)
+        {
+            if (Directory.Exists(LanguageRoot))
+            {
+                IEnumerable<string> second = Directory.EnumerateDirectories(System.IO.Path.Combine(new string[]
+                {
+                    LanguageRoot
+                }), self.name);
+                orig.Invoke(self, newFolders.Union(second));
+            }
+            else
+            {
+                orig.Invoke(self, newFolders);
+            }
+        }
+    }
+
     class LanguageAPI
     {
         public static string NEWT_PRAY_FIRST_TIME = "NEWT_PRAY_FIRST_TIME";
