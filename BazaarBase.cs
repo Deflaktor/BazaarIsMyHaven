@@ -1,6 +1,7 @@
 ﻿using RoR2;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -56,7 +57,7 @@ namespace BazaarIsMyHome
                 }
             }
         }
-        protected void DoSpawnGameObject(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<GameObject> card, int max)
+        protected virtual void DoSpawnGameObject(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<GameObject> card, int max)
         {
             int count = 0;
             if (ModConfig.SpawnCountByStage.Value)
@@ -104,6 +105,15 @@ namespace BazaarIsMyHome
         protected bool IsMultiplayer()
         {
             return PlayerCharacterMasterController.instances.Count > 1;
+        }
+        protected List<t> DisorderList<t>(List<t> TList)
+        {
+            List<t> NewList = new List<t>();
+            foreach (var item in TList)
+            {
+                NewList.Insert(RNG.Next(NewList.Count()), item);
+            }
+            return NewList;
         }
 
     }
