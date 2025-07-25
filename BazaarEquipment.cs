@@ -15,6 +15,7 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<GameObject> multiShopEquipmentTerminal;
 
         Dictionary<int, SpawnCardStruct> DicEquipments = new Dictionary<int, SpawnCardStruct>();
+        Dictionary<int, SpawnCardStruct> DicTriplEquipments = new Dictionary<int, SpawnCardStruct>();
 
         public override void Init()
         {
@@ -28,7 +29,7 @@ namespace BazaarIsMyHome
 
         public override void SetupBazaar()
         {
-            
+            SpawnEquipment();
         }
 
         public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
@@ -75,14 +76,12 @@ namespace BazaarIsMyHome
                 DicEquipments.Add(random[3], new SpawnCardStruct(new Vector3(-141.3541f, -21.2761f, -10.9000f), new Vector3(358.0f, 180.0f, 0.0f)));
                 DicEquipments.Add(random[4], new SpawnCardStruct(new Vector3(-138.9401f, -20.9378f, -8.87810f), new Vector3(355.0f, 100.0f, 0.0f)));
                 DicEquipments.Add(random[5], new SpawnCardStruct(new Vector3(-139.9517f, -20.8648f, -5.79960f), new Vector3(353.0f, 30.0f, 0.0f)));
-                //DicTriplEquipments.Add(random[0], new SpawnCardStruct(new Vector3(-142f, -22.0f, 0.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-                //DicTriplEquipments.Add(random[1], new SpawnCardStruct(new Vector3(-139f, -22.8f, -2.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-                //DicTriplEquipments.Add(random[2], new SpawnCardStruct(new Vector3(-136f, -22.5f, 0.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-                //DicTriplEquipments.Add(random[3], new SpawnCardStruct(new Vector3(-135f, -22.0f, 3.0f), new Vector3(0.0f, 72.0f, 0.0f)));
+                DicTriplEquipments.Add(random[0], new SpawnCardStruct(new Vector3(-142f, -22.0f, 0.0f), new Vector3(0.0f, 72.0f, 0.0f)));
+                DicTriplEquipments.Add(random[1], new SpawnCardStruct(new Vector3(-139f, -22.8f, -2.0f), new Vector3(0.0f, 72.0f, 0.0f)));
+                DicTriplEquipments.Add(random[2], new SpawnCardStruct(new Vector3(-136f, -22.5f, 0.0f), new Vector3(0.0f, 72.0f, 0.0f)));
+                DicTriplEquipments.Add(random[3], new SpawnCardStruct(new Vector3(-135f, -22.0f, 3.0f), new Vector3(0.0f, 72.0f, 0.0f)));
             }
         }
-
-
 
         private void SpawnEquipment()
         {
