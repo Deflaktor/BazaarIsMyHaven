@@ -7,26 +7,25 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using static BazaarIsMyHome.Common;
 
 namespace BazaarIsMyHome
 {
-    public class BazaarRestack
+    public class BazaarRestack : BazaarBase
     {
         AsyncOperationHandle<InteractableSpawnCard> iscShrineRestack;
-        public void Init()
+        public override void Init()
         {
             iscShrineRestack = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineRestack/iscShrineRestack.asset");
         }
 
-        public void Hook()
+        public override void Hook()
         {
             On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.PurchaseInteraction.ScaleCost += PurchaseInteraction_ScaleCost;
         }
 
-        public void EnterBazaar()
+        public override void EnterBazaar()
         {
             SpawnShrineRestack();
         }
@@ -34,14 +33,14 @@ namespace BazaarIsMyHome
         public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
         {
             orig(self);
-            if (ModConfig.EnableMod.Value && BazaarIsMyHome.instance.IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
             }
         }
 
         public void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
-            if (ModConfig.EnableMod.Value && BazaarIsMyHome.instance.IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
             {
                 
             }
