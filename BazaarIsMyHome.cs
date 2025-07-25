@@ -1,4 +1,4 @@
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using R2API.Utils;
@@ -89,6 +89,7 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<InteractableSpawnCard> iscShopPortal;
         AsyncOperationHandle<InteractableSpawnCard> iscShrineCleanse;
         AsyncOperationHandle<InteractableSpawnCard> iscScrapper;
+        AsyncOperationHandle<InteractableSpawnCard> iscDeepVoidPortalBattery;
         AsyncOperationHandle<GameObject> lunarShopTerminal;
         AsyncOperationHandle<GameObject> multiShopEquipmentTerminal;
         AsyncOperationHandle<GameObject> lunarCauldronWhiteToGreen;
@@ -123,7 +124,7 @@ namespace BazaarIsMyHome
             ];
 
             iscChest1 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest1/iscChest1.asset");
-            iscChest2 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest1/iscChest2.asset");
+            iscChest2 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest2/iscChest2.asset");
             iscGoldChest = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/GoldChest/iscGoldChest.asset");
 
             iscShrineRestack = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineRestack/iscShrineRestack.asset");
@@ -150,8 +151,6 @@ namespace BazaarIsMyHome
             TeamWarCryActivation = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/TeamWarCry/TeamWarCryActivation.prefab");
             LunarRerollEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarRecycler/LunarRerollEffect.prefab");
             TeleporterBeaconEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/Teleporter/TeleporterBeaconEffect.prefab");
-
-
 
             PluginInfo = Info;
             Tokens.RegisterLanguageTokens();
@@ -183,6 +182,46 @@ namespace BazaarIsMyHome
             On.RoR2.GlobalEventManager.OnCrit += ItemHandler.GlobalEventManager_OnCrit;
             On.RoR2.CharacterBody.RecalculateStats += ItemHandler.CharacterBody_RecalculateStats;
             R2API.Utils.CommandHelper.AddToConsoleWhenReady();
+
+            On.RoR2.Run.FixedUpdate += Run_FixedUpdate;
+        }
+
+        private GameObject testEquip;
+        private float rotate = 0f;
+        private void Run_FixedUpdate(On.RoR2.Run.orig_FixedUpdate orig, Run self)
+        {
+            orig(self);
+#if DEBUG
+            if (Input.GetKeyDown(KeyCode.F4))
+            {
+                foreach (PlayerCharacterMasterController pc in PlayerCharacterMasterController.instances)
+                {
+                    var user = pc.networkUser;
+                    var pos = pc.body.transform.position;
+                    var rot = pc.body.transform.eulerAngles;
+
+                    
+
+                    if (testEquip == null)
+                    {
+                        testEquip = Instantiate(multiShopEquipmentTerminal.WaitForCompletion(), pos, Quaternion.identity);
+                        testEquip.transform.eulerAngles = new Vector3(0f, rotate, 0f);
+                        testEquip.transform.localScale = new Vector3(1, 1, 1);
+                        NetworkServer.Spawn(testEquip);
+                    } else
+                    {
+                        testEquip.transform.position = new Vector3(pos.x, -23.56834f, pos.z);
+                        testEquip.transform.eulerAngles = new Vector3(0f, rotate, 0f);
+                        testEquip.transform.localScale = new Vector3(1, 1, 1);
+                        rotate += 10f;
+                        if (rotate >= 360)
+                            rotate = 0f;
+
+                        Logger.LogDebug($"Player pressed F4: (" + testEquip.transform.position.x + "," + testEquip.transform.position.y + "," + testEquip.transform.position.z + ") (" + testEquip.transform.eulerAngles.x + "," + testEquip.transform.eulerAngles.y + "," + testEquip.transform.eulerAngles.z + ")");
+                    }
+                }
+            }
+#endif
         }
 
         public void Start()
@@ -702,25 +741,21 @@ namespace BazaarIsMyHome
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
                     newPickupIndex = list[Random.Next(0, list.Count)];
-                    orig.Invoke(self, newPickupIndex, newHidden);
                 }
                 if (self.name.StartsWith("LunarCauldronRed"))
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
                     newPickupIndex = list[Random.Next(0, list.Count)];
-                    orig.Invoke(self, newPickupIndex, newHidden);
                 }
                 if (self.name.StartsWith("LunarCauldronWhite"))
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
                     newPickupIndex = list[Random.Next(0, list.Count)];
-                    orig.Invoke(self, newPickupIndex, newHidden);
                 }
                 if (self.name.StartsWith("DuplicatorBlue"))
                 {
                     List<PickupIndex> listLunarItem = Run.instance.availableLunarItemDropList;
                     newPickupIndex = listLunarItem[UnityEngine.Random.Range(0, listLunarItem.Count)];
-                    orig.Invoke(self, newPickupIndex, newHidden);
                 }
                 if (self.name.StartsWith("DuplicatorPurple"))
                 {
@@ -731,7 +766,6 @@ namespace BazaarIsMyHome
                     weightedSelection.AddChoice(Run.instance.availableVoidBossDropList, 25f);
                     List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
                     newPickupIndex = list[UnityEngine.Random.Range(0, list.Count)];
-                    orig.Invoke(self, newPickupIndex, newHidden);
                 }
             }
             orig(self, newPickupIndex, newHidden);
@@ -853,11 +887,12 @@ namespace BazaarIsMyHome
             
             if (ModConfig.NewtSecondLifeMode.Value == ShopKeep.DeathState.Tank)
             {
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("HealingPotion")), 1000);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Clover")), 20);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Medkit")), 100);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ParentEgg")), 10000);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("IncreaseHealing")), 100);
+                //body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("HealingPotion")), 1000);
+                //body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Clover")), 20);
+                //body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Medkit")), 100);
+                //body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ParentEgg")), 10000);
+                //body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("IncreaseHealing")), 100);
+
             }
             if (ModConfig.NewtSecondLifeMode.Value == ShopKeep.DeathState.Evil)
             {
@@ -919,9 +954,9 @@ namespace BazaarIsMyHome
                         if (ShopKeep.Body is null) FindShopkeeper();
                         //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BoostHp")), 10000 * 10000);
                         //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Pearl")), 10000 * 10000);
-                        ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ParentEgg")), 34 * 1000);
+                        //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ParentEgg")), 34 * 1000);
                         //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ShieldOnly")), 100*1000);
-                        ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Medkit")), 10000);
+                        //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Medkit")), 10000);
                         // 死亡状态 添加物品
                         if (ShopKeep.IsDeath)
                         {
@@ -933,7 +968,7 @@ namespace BazaarIsMyHome
                                         ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Ghost")), 1);
                                         break;
                                     case ShopKeep.DeathState.Tank:
-                                        ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BoostHp")), 10000 * 10000);
+                                        ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BoostHp")), 10);
                                         break;
                                     case ShopKeep.DeathState.Evil:
                                         AddItemToShopKeeper(ShopKeep.Body);
@@ -1087,7 +1122,7 @@ namespace BazaarIsMyHome
             if (!ModConfig.SeerStationAvailable.Value && ModConfig.EquipmentCount.Value <= 2)
             {
                 // left seer stand
-                DicEquipments.Add(0, new SpawnCardStruct(new Vector3(-133.9731f, -23.4f, -10.71112f), new Vector3(0f, 130.0f, 0.0f)));
+                DicEquipments.Add(0, new SpawnCardStruct(new Vector3(-133.9731f, -23.4f, -10.71112f), new Vector3(0f, 120.0f, 0.0f)));
                 // right seer stand
                 DicEquipments.Add(1, new SpawnCardStruct(new Vector3(-128.0793f, -23.4f, -7.056283f), new Vector3(0f, 160.0f, 0.0f)));
             }
@@ -1105,8 +1140,11 @@ namespace BazaarIsMyHome
                 //DicTriplEquipments.Add(random[3], new SpawnCardStruct(new Vector3(-135f, -22.0f, 3.0f), new Vector3(0.0f, 72.0f, 0.0f)));
             }
         }
+
+
         private void SetLunarShopTerminal()
         {
+            /*
             List<int> total = new List<int> { 0, 1, 2, 3, 4, 5 };
             List<int> random = new List<int>();
 
@@ -1117,11 +1155,71 @@ namespace BazaarIsMyHome
                 total.RemoveAt(index);
             }
             DicLunarShopTerminals.Add(random[0], new SpawnCardStruct(new Vector3(-90.8748f, -22.3210f, -49.7166f), new Vector3(0.0f, 250.0f, 0.0f)));
-            DicLunarShopTerminals.Add(random[1], new SpawnCardStruct(new Vector3(-90.7317f, -22.1151f, -53.4639f), new Vector3(0.0f, 240.0f, 0.0f), new Vector3(1.2f, 1.2f, 1.2f)));
+            DicLunarShopTerminals.Add(random[1], new SpawnCardStruct(new Vector3(-90.7317f, -22.1151f, -53.4639f), new Vector3(0.0f, 240.0f, 0.0f)));
             DicLunarShopTerminals.Add(random[2], new SpawnCardStruct(new Vector3(-87.8854f, -22.1132f, -53.3190f), new Vector3(0.0f, 180.0f, 0.0f)));
             DicLunarShopTerminals.Add(random[3], new SpawnCardStruct(new Vector3(-86.6861f, -22.9508f, -50.5742f), new Vector3(0.0f, 100.0f, 0.0f)));
-            DicLunarShopTerminals.Add(random[4], new SpawnCardStruct(new Vector3(-70.2474f, -24.1325f, -51.1947f), new Vector3(0.0f, 230.0f, 0.0f), new Vector3(1.8f, 1.8f, 1.8f)));
-            DicLunarShopTerminals.Add(random[5], new SpawnCardStruct(new Vector3(-76.9623f, -25.8940f, -41.4813f), new Vector3(0.0f, 120.0f, 0.0f), new Vector3(3.0f, 3.0f, 3.0f)));
+            DicLunarShopTerminals.Add(random[4], new SpawnCardStruct(new Vector3(-70.2474f, -24.1325f, -51.1947f), new Vector3(0.0f, 230.0f, 0.0f)));
+            DicLunarShopTerminals.Add(random[5], new SpawnCardStruct(new Vector3(-76.9623f, -25.8940f, -41.4813f), new Vector3(0.0f, 120.0f, 0.0f)));*/
+
+            Vector3 lunarTablePosition = new Vector3(-76.6438f, -24.0468f, -41.6449f);
+            const float orientation = 280f;
+            Vector3 lunarTableDroneShopPosition = new Vector3(-139.8156f, -21.8568f, 2.9263f);
+            const float droneTableOrientation = 16 0f
+
+            const float tableRadiusInner = 3.0f;
+            const float tableRadiusMiddle = 4.0f;
+            const float tableRadiusOuter = 5.0f;
+            const float tableStartAngleInner = 0f;
+            const float tableStartAngleMiddle = -10f;
+            const float tableStartAngleOuter = 8f;
+            const float tableEndAngleInner = 215f;
+            const float tableEndAngleMiddle = 230f;
+            const float tableEndAngleOuter = 234f;
+            const float minDistance = 19f;
+            const float innerCapacity = 5;//(int)(2 * Math.PI * tableRadiusInner * (tableEndAngleInner - tableStartAngleInner) / 360f / minDistance);
+            const float middleCapacity = 8;//(int)(2 * Math.PI * tableRadiusMiddle * (tableEndAngleMiddle - tableStartAngleMiddle) / 360f / minDistance);
+            const float outerCapacity = 10;//(int)(2 * Math.PI * tableRadiusOuter * (tableEndAngleOuter - tableStartAngleOuter) / 360f / minDistance);
+
+            List<Vector2> points = new List<Vector2>();
+            if (ModConfig.LunarShopTerminalCount.Value <= middleCapacity)
+            {
+                points = Lloyd.GenerateCirclePoints(tableRadiusMiddle, tableStartAngleMiddle, tableEndAngleMiddle, orientation, ModConfig.LunarShopTerminalCount.Value);
+            }
+            else
+            {
+                points.AddRange(Lloyd.GenerateCirclePoints(tableRadiusInner, tableStartAngleInner, tableEndAngleInner, orientation, 100));
+                points.AddRange(Lloyd.GenerateCirclePoints(tableRadiusOuter, tableStartAngleOuter, tableEndAngleOuter, orientation, 100));
+                points = Lloyd.LloydsAlgorithm(points, ModConfig.LunarShopTerminalCount.Value);
+            }
+            float scale = 1.0f;
+            switch(ModConfig.LunarShopTerminalCount.Value)
+            {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    scale = 1f;
+                    break;
+                case 5:
+                    scale = 0.95f;
+                    break;
+                case 6:
+                    scale = 0.9f;
+                    break;
+                case 7:
+                    scale = 0.85f;
+                    break;
+                case 8:
+                    scale = 0.8f;
+                    break;
+                default:
+                    scale = 0.75f;
+                    break;
+            }
+            for (int i = 0; i < points.Count; i++)
+            {
+                DicLunarShopTerminals.Add(i, new SpawnCardStruct(new Vector3(lunarTablePosition.x + points[i].x, lunarTablePosition.y, lunarTablePosition.z + points[i].y), new Vector3(0.0f, 250.0f + i * 10f / points.Count, 0.0f), new Vector3(scale, scale, scale)));
+            }
         }
         private void SetLunarPool()
         {
@@ -1661,7 +1759,6 @@ namespace BazaarIsMyHome
         public static ConfigEntry<int> ShrineRestackCost;
         public static ConfigEntry<int> ShrineRestackScalar;
 
-
         public static ConfigEntry<int> PrayCost;
         public static ConfigEntry<float> PrayNormalWeight;
         public static ConfigEntry<float> PrayEliteWeight;
@@ -1679,6 +1776,23 @@ namespace BazaarIsMyHome
 
         public static ConfigEntry<bool> EnableLunarShopTerminalInjection;
         public static ConfigEntry<int> LunarShopTerminalCost;
+        public static ConfigEntry<bool> EnableLunarShopStaticItems;
+        public static ConfigEntry<string> LunarShopTerminal1Item;
+        public static ConfigEntry<string> LunarShopTerminal2Item;
+        public static ConfigEntry<string> LunarShopTerminal3Item;
+        public static ConfigEntry<string> LunarShopTerminal4Item;
+        public static ConfigEntry<string> LunarShopTerminal5Item;
+        public static ConfigEntry<string> LunarShopTerminal6Item;
+        public static ConfigEntry<string> LunarShopTerminal7Item;
+        public static ConfigEntry<string> LunarShopTerminal8Item;
+        public static ConfigEntry<string> LunarShopTerminal9Item;
+        public static ConfigEntry<string> LunarShopTerminal10Item;
+        public static ConfigEntry<string> LunarShopTerminal11Item;
+        public static ConfigEntry<string> LunarShopTerminal12Item;
+        public static ConfigEntry<string> LunarShopTerminal13Item;
+        public static ConfigEntry<string> LunarShopTerminal14Item;
+        public static ConfigEntry<string> LunarShopTerminal15Item;
+        public static ConfigEntry<string> LunarShopTerminal16Item;
 
         public static ConfigEntry<bool> EnableSeerStationsInjection;
         public static ConfigEntry<bool> SeerStationAvailable;
@@ -1754,11 +1868,31 @@ namespace BazaarIsMyHome
 
                 EquipmentCount = config.Bind("04 Equipment主动装备", "EquipmentCount", 6, "Total generated value of equipments, max is 6, below zero is not enabled. \n月店主动装备的数量，最多6台，小于0不启用"); if (EquipmentCount.Value > 6) EquipmentCount.Value = 6;
 
-                LunarShopTerminalCount = config.Bind("05 Lunar月球装备", "LunarShopTerminalCount", 11, "Total generated value of LunarShopTerminal, max is 11, below zero is not enabled. \n月店月球装备的数量，最多11个，包括原有的5个，小于0不启用"); if (LunarShopTerminalCount.Value > 11) LunarShopTerminalCount.Value = 11;
+                LunarShopTerminalCount = config.Bind("05 Lunar月球装备", "LunarShopTerminalCount", 15, "Total generated value of LunarShopTerminal, max is 15, below zero is not enabled. \n月店月球装备的数量，最多11个，包括原有的5个，小于0不启用"); if (LunarShopTerminalCount.Value > 15) LunarShopTerminalCount.Value = 15;
                 EnableLunarShopTerminalInjection = config.Bind("05 Lunar月球装备", "EnableLunarShopTerminalInjection", true, "Enable LunarShopTerminal data modification.\n启用月球装备修改");
                 if (EnableLunarShopTerminalInjection.Value)
                 {
                     LunarShopTerminalCost = config.Bind("05 Lunar月球装备", "LunarShopTerminalCost", 2, "Price of Lunar\n月球装备价格"); LunarShopTerminalCost.Value = Math.Abs(LunarShopTerminalCost.Value);
+                }
+                EnableLunarShopStaticItems = config.Bind("05 Lunar月球装备", "EnableLunarShopStaticItems", true, "Enable LunarShop static items (non-randomized).");
+                if (EnableLunarShopStaticItems.Value)
+                {
+                    LunarShopTerminal1Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem1", "LunarPrimaryReplacement", "LunarShop static item 1");
+                    LunarShopTerminal2Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem2", "LunarSecondaryReplacement", "LunarShop static item 2");
+                    LunarShopTerminal3Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem3", "LunarSpecialReplacement", "LunarShop static item 3");
+                    LunarShopTerminal4Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem4", "AutoCastEquipment", "LunarShop static item 4");
+                    LunarShopTerminal5Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem5", "LunarDagger", "LunarShop static item 5");
+                    LunarShopTerminal6Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem6", "HalfSpeedDoubleHealth", "LunarShop static item 6");
+                    LunarShopTerminal7Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem7", "LunarSun", "LunarShop static item 7");
+                    LunarShopTerminal8Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem8", "LunarBadLuck", "LunarShop static item 8");
+                    LunarShopTerminal9Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem9", "LunarBadLuck", "LunarShop static item 9");
+                    LunarShopTerminal10Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem10", "LunarBadLuck", "LunarShop static item 10");
+                    LunarShopTerminal11Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem11", "ShieldOnly", "LunarShop static item 11");
+                    LunarShopTerminal12Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem12", "ShieldOnly", "LunarShop static item 12");
+                    LunarShopTerminal13Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem13", "ShieldOnly", "LunarShop static item 13");
+                    LunarShopTerminal14Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem14", "Light Flux Pauldron", "LunarShop static item 14");
+                    LunarShopTerminal15Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem15", "Light Flux Pauldron", "LunarShop static item 15");
+
                 }
 
                 EnableShrineRestack = config.Bind("06 ShrineRestack跌序", "EnableShrineRestack", true, "Enable shrinerestack.\n启用跌序");
