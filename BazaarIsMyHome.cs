@@ -32,7 +32,7 @@ namespace BazaarIsMyHome
         };
 
         
-        Dictionary<int, SpawnCardStruct> DicLunarPools = new Dictionary<int, SpawnCardStruct>();
+        
         Dictionary<int, SpawnCardStruct> DicGlodChests = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicBigChests = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicSmallChests = new Dictionary<int, SpawnCardStruct>();
@@ -45,21 +45,14 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<InteractableSpawnCard> iscGoldChest;
         
         AsyncOperationHandle<InteractableSpawnCard> iscShopPortal;
-        AsyncOperationHandle<InteractableSpawnCard> iscShrineCleanse;
+        
         AsyncOperationHandle<InteractableSpawnCard> iscDeepVoidPortalBattery;
         
 
         
         AsyncOperationHandle<GameObject> TeleporterBeaconEffect;
 
-        BazaarCauldron bazaarCauldron;
-        BazaarPrinter bazaarPrinter;
-        BazaarRestack bazaarRestack;
-        BazaarPrayer bazaarPrayer;
-        BazaarScrapper bazaarScrapper;
-        BazaarEquipment bazaarEquipment;
-        BazaarLunarShop bazaarLunarShop;
-
+        List<BazaarBase> bazaarMods = new List<BazaarBase>();
 
         public void Awake()
         {
@@ -67,28 +60,24 @@ namespace BazaarIsMyHome
             Log.Init(Logger);
             ModConfig.InitConfig(Config);
 
-            bazaarCauldron = new BazaarCauldron();
-            bazaarCauldron.Init();
-            bazaarPrinter = new BazaarPrinter();
-            bazaarPrinter.Init();
-            bazaarRestack = new BazaarRestack();
-            bazaarRestack.Init();
-            bazaarPrayer = new BazaarPrayer();
-            bazaarPrayer.Init();
-            bazaarScrapper = new BazaarScrapper();
-            bazaarScrapper.Init();
-            bazaarEquipment = new BazaarEquipment();
-            bazaarEquipment.Init();
-            bazaarLunarShop = new BazaarLunarShop();
-            bazaarLunarShop.Init();
+            bazaarMods.Add(new BazaarCauldron());
+            bazaarMods.Add(new BazaarPrinter());
+            bazaarMods.Add(new BazaarRestack());
+            bazaarMods.Add(new BazaarPrayer());
+            bazaarMods.Add(new BazaarScrapper());
+            bazaarMods.Add(new BazaarEquipment());
+            bazaarMods.Add(new BazaarLunarShop());
+            bazaarMods.Add(new BazaarCleansingPool());
 
-            bazaarCauldron.Hook();
-            bazaarPrinter.Hook();
-            bazaarRestack.Hook();
-            bazaarPrayer.Hook();
-            bazaarScrapper.Hook();
-            bazaarEquipment.Hook();
-            bazaarLunarShop.Hook();
+            foreach (var bazaarMod in bazaarMods)
+            {
+                bazaarMod.Init();
+            }
+            foreach (var bazaarMod in bazaarMods)
+            {
+                bazaarMod.Hook();
+            }
+
 
             // --- preload stuff ---
 
@@ -97,7 +86,7 @@ namespace BazaarIsMyHome
             iscGoldChest = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/GoldChest/iscGoldChest.asset");
             
             iscShopPortal = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/PortalShop/iscShopPortal.asset");
-            iscShrineCleanse = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineCleanse/iscShrineCleanse.asset");
+            
 
             
             
@@ -189,14 +178,11 @@ namespace BazaarIsMyHome
                         isEnableSacrifice = true;
                         RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, false);
                     }
-                    bazaarPrinter.SetupBazaar(); // 打印机
-                    bazaarCauldron.SetupBazaar(); // 大锅
-                    bazaarScrapper.SetupBazaar(); // 收割机
-                    bazaarEquipment.SetupBazaar(); // 主动装备
-                    bazaarLunarShop.SetupBazaar(); // 月球蓓蕾
-                    SpawnShrineCleanse(); // 月池
-                    bazaarRestack.SetupBazaar(); // 跌序
-                    bazaarPrayer.SetupBazaar();
+                    foreach (var bazaarMod in bazaarMods)
+                    {
+                        bazaarMod.SetupBazaar();
+                    }
+                    
                     SpawnDecorate(); // 装饰
                     if (isEnableSacrifice) RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, true);
                     #endregion
@@ -437,11 +423,6 @@ namespace BazaarIsMyHome
 
         #region 初始化设备
 
-        private void SetLunarPool()
-        {
-            DicLunarPools.Add(0, new SpawnCardStruct(new Vector3(-115.420f, -9.55f, -50.3600f), new Vector3(90.0f, 30.0f, 0.0f)));
-            DicLunarPools.Add(1, new SpawnCardStruct(new Vector3(-129.891f, -9.55f, -42.6537f), new Vector3(90.0f, 30.0f, 0.0f)));
-        }
         private void SetDecorate()
         {
             List<int> total = new List<int> { 0, 1, 2 };
@@ -491,16 +472,6 @@ namespace BazaarIsMyHome
 
         
 
-        private void SpawnShrineCleanse()
-        {
-            if (ModConfig.EnableShrineCleanse.Value)
-            {
-                // 月池
-                DicLunarPools.Clear();
-                SetLunarPool();
-                DoSpawnCard(DicLunarPools, iscShrineCleanse, DicLunarPools.Count); 
-            }
-        }
 
         private void SpawnDecorate()
         {
