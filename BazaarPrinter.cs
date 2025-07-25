@@ -19,7 +19,6 @@ namespace BazaarIsMyHome
         Dictionary<int, SpawnCardStruct> DicPrinters = new Dictionary<int, SpawnCardStruct>();
         public override void Init()
         {
-
             iscDuplicator = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Duplicator/iscDuplicator.asset");
             iscDuplicatorLarge = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/DuplicatorLarge/iscDuplicatorLarge.asset");
             iscDuplicatorMilitary = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/DuplicatorMilitary/iscDuplicatorMilitary.asset");
@@ -30,7 +29,6 @@ namespace BazaarIsMyHome
                 iscDuplicatorMilitary,
                 iscDuplicatorWild
             ];
-
         }
 
         public override void Hook()

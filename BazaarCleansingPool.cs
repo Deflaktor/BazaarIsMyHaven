@@ -30,6 +30,7 @@ namespace BazaarIsMyHome
         {
             SpawnShrineCleanse(); // 月池
         }
+
         private void SpawnShrineCleanse()
         {
             if (ModConfig.EnableShrineCleanse.Value)

@@ -18,7 +18,7 @@ using UnityEngine.SceneManagement;
 namespace BazaarIsMyHome
 {
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.Lunzir.BazaarIsMyHome", "BazaarIsMyHome", "1.3.1")]
+    [BepInPlugin("com.Lunzir.BazaarIsMyHome", "BazaarIsMyHome", "1.4.0")]
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync, VersionStrictness.DifferentModVersionsAreOk)]
     public class BazaarIsMyHome : BaseUnityPlugin
     {
