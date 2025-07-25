@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefaultProfilePath>C:\Users\xXBenutzerNameXx\AppData\Roaming\r2modmanPlus-local\RiskOfRain2\profiles\Default</DefaultProfilePath>
+    <ProfilePath>$(DefaultProfilePath)</ProfilePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\libs\**" />
+    <EmbeddedResource Remove="..\libs\**" />
+    <None Remove="..\libs\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.0.*">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <PackageReference Include="RiskOfRain2.GameLibs" Version="1.3.9-r.0" />
+    <PackageReference Include="UnityEngine.Modules" Version="2021.3.33" IncludeAssets="compile" />
+    <PackageReference Include="MMHOOK.RoR2" Version="2025.6.3">
+      <NoWarn>NU1701</NoWarn>
+    </PackageReference>
+    <PackageReference Include="R2API" Version="5.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="InLobbyConfig">
+      <HintPath>..\libs\InLobbyConfig.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="ShareSuite">
+      <HintPath>..\libs\ShareSuite.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="manifest.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    del /Q &quot;$(TargetDir)*.deps.json&quot;&#xD;&#xA;    del /Q &quot;$(TargetDir)*.pdb&quot;&#xD;&#xA;)&#xD;&#xA;xcopy /e /v /y &quot;$(TargetDir)&quot; &quot;$(DefaultProfilePath)\BepInEx\plugins\Def-$(ProjectName)\&quot;&#xD;&#xA;powershell.exe -Command &quot;Compress-Archive -Path '$(TargetDir)*' -DestinationPath '$(TargetDir)$(TargetName).zip' -Force&quot;&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    mkdir &quot;$(SolutionDir)releases&quot; /p&#xD;&#xA;    xcopy /Y /Q &quot;$(TargetDir)$(TargetName).zip&quot; &quot;$(SolutionDir)releases&quot;&#xD;&#xA;)" />
+  </Target>
+
+</Project>
