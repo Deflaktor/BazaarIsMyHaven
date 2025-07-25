@@ -20,11 +20,11 @@ namespace BazaarIsMyHome
     [BepInDependency("com.bepis.r2api")]
     [BepInPlugin("com.Lunzir.BazaarIsMyHome", "BazaarIsMyHome", "1.4.0")]
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync, VersionStrictness.DifferentModVersionsAreOk)]
-    public class BazaarIsMyHome : BaseUnityPlugin
+    public class Main : BaseUnityPlugin
     {
         public static PluginInfo PluginInfo;
         public static ItemHandler ItemHandler;
-        public static BazaarIsMyHome instance;
+        public static Main instance;
 
         List<BazaarBase> bazaarMods = new List<BazaarBase>();
 
