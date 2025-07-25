@@ -106,7 +106,7 @@ namespace BazaarIsMyHome
 
         public static void InitConfig(ConfigFile config)
         {
-            EnableMod = config.Bind("00 Setting设置", "EnableMod", true, "Enable Mod\n启用模组");
+            EnableMod = config.Bind("00 Setting设置", "Enabled", true, "Enable Mod\n启用模组");
             if (EnableMod.Value)
             {
                 EnableAutoOpenShop = config.Bind("00 Setting设置", "EnableAutoOpenShop", true, "Enable auto open shop portal. \n启用自动开商店传送门");
