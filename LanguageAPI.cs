@@ -22,7 +22,7 @@ namespace BazaarIsMyHome
         {
             get
             {
-                return System.IO.Path.GetDirectoryName(BazaarIsMyHome.PluginInfo.Location);
+                return System.IO.Path.GetDirectoryName(Main.PluginInfo.Location);
             }
         }
         public static void RegisterLanguageTokens()

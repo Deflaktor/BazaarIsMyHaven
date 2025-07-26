@@ -50,6 +50,7 @@ namespace BazaarIsMyHome
                     {
                         gameObject.GetComponent<PurchaseInteraction>().SetAvailable(false);
                     }
+
                 }
                 catch (Exception ex)
                 {
