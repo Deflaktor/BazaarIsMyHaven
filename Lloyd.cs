@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace BazaarIsMyHome
 {
@@ -26,7 +27,7 @@ namespace BazaarIsMyHome
             return points;
         }
 
-        public static List<Vector2> LloydsAlgorithm(List<Vector2> dataPoints, int k)
+        public static List<Vector2> Centroids(List<Vector2> dataPoints, int k)
         {
             // Step 1: Initialize centroids
             Vector2[] centroids = new Vector2[k];
@@ -105,5 +106,36 @@ namespace BazaarIsMyHome
             return mean;
         }
 
+        internal static List<Vector2> MapSamplesOrderToCentroids(List<Vector2> samples, List<Vector2> centroids)
+        {
+            List<(Vector2 centroid, int sampleIndex)> matchedCentroids = new List<(Vector2, int)>();
+
+            for (int i = 0; i < centroids.Count; i++)
+            {
+                Vector2 centroid = centroids[i];
+                float minDistance = float.MaxValue;
+                int nearestSampleIndex = -1;
+
+                for (int j = 0; j < samples.Count; j++)
+                {
+                    float distance = Vector2.SqrMagnitude(centroid - samples[j]);
+                    if (distance < minDistance)
+                    {
+                        minDistance = distance;
+                        nearestSampleIndex = j;
+                    }
+                }
+
+                matchedCentroids.Add((centroid, nearestSampleIndex));
+            }
+
+            // Now sort centroids by the index of their nearest sample in the original samples list
+            matchedCentroids.Sort((a, b) => a.sampleIndex.CompareTo(b.sampleIndex));
+
+            // Extract the centroids in that new order
+            List<Vector2> orderedCentroids = matchedCentroids.Select(pair => pair.centroid).ToList();
+
+            return orderedCentroids;
+        }
     }
 }
