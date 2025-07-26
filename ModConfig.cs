@@ -1,4 +1,4 @@
-using BepInEx.Configuration;
+﻿using BepInEx.Configuration;
 using RoR2;
 using UnityEngine;
 using R2API;
@@ -81,22 +81,7 @@ namespace BazaarIsMyHome
         public static ConfigEntry<bool> EnableLunarShopTerminalInjection;
         public static ConfigEntry<int> LunarShopTerminalCost;
         public static ConfigEntry<bool> EnableLunarShopStaticItems;
-        public static ConfigEntry<string> LunarShopTerminal1Item;
-        public static ConfigEntry<string> LunarShopTerminal2Item;
-        public static ConfigEntry<string> LunarShopTerminal3Item;
-        public static ConfigEntry<string> LunarShopTerminal4Item;
-        public static ConfigEntry<string> LunarShopTerminal5Item;
-        public static ConfigEntry<string> LunarShopTerminal6Item;
-        public static ConfigEntry<string> LunarShopTerminal7Item;
-        public static ConfigEntry<string> LunarShopTerminal8Item;
-        public static ConfigEntry<string> LunarShopTerminal9Item;
-        public static ConfigEntry<string> LunarShopTerminal10Item;
-        public static ConfigEntry<string> LunarShopTerminal11Item;
-        public static ConfigEntry<string> LunarShopTerminal12Item;
-        public static ConfigEntry<string> LunarShopTerminal13Item;
-        public static ConfigEntry<string> LunarShopTerminal14Item;
-        public static ConfigEntry<string> LunarShopTerminal15Item;
-        public static ConfigEntry<string> LunarShopTerminal16Item;
+        public static ConfigEntry<string> LunarShopItemsList;
 
         public static ConfigEntry<bool> EnableSeerStationsInjection;
         public static ConfigEntry<bool> SeerStationAvailable;
@@ -169,32 +154,15 @@ namespace BazaarIsMyHome
 
                 EquipmentCount = config.Bind("04 Equipment主动装备", "EquipmentCount", 6, "Total generated value of equipments, max is 6, below zero is not enabled. \n月店主动装备的数量，最多6台，小于0不启用"); if (EquipmentCount.Value > 6) EquipmentCount.Value = 6;
 
-                LunarShopTerminalCount = config.Bind("05 Lunar月球装备", "LunarShopTerminalCount", 15, "Total generated value of LunarShopTerminal, max is 15, below zero is not enabled. \n月店月球装备的数量，最多11个，包括原有的5个，小于0不启用"); if (LunarShopTerminalCount.Value > 15) LunarShopTerminalCount.Value = 15;
+                LunarShopTerminalCount = config.Bind("05 Lunar月球装备", "LunarShopTerminalCount", 5, "Total generated value of LunarShopTerminal, max is 15, below zero is not enabled. \n月店月球装备的数量，最多11个，包括原有的5个，小于0不启用"); if (LunarShopTerminalCount.Value > 100) LunarShopTerminalCount.Value = 100;
                 EnableLunarShopTerminalInjection = config.Bind("05 Lunar月球装备", "EnableLunarShopTerminalInjection", true, "Enable LunarShopTerminal data modification.\n启用月球装备修改");
                 if (EnableLunarShopTerminalInjection.Value)
                 {
                     LunarShopTerminalCost = config.Bind("05 Lunar月球装备", "LunarShopTerminalCost", 2, "Price of Lunar\n月球装备价格"); LunarShopTerminalCost.Value = Math.Abs(LunarShopTerminalCost.Value);
                 }
-                EnableLunarShopStaticItems = config.Bind("05 Lunar月球装备", "EnableLunarShopStaticItems", true, "Enable LunarShop static items (non-randomized).");
-                if (EnableLunarShopStaticItems.Value)
-                {
-                    LunarShopTerminal1Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem1", "LunarPrimaryReplacement", "LunarShop static item 1");
-                    LunarShopTerminal2Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem2", "LunarSecondaryReplacement", "LunarShop static item 2");
-                    LunarShopTerminal3Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem3", "LunarSpecialReplacement", "LunarShop static item 3");
-                    LunarShopTerminal4Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem4", "AutoCastEquipment", "LunarShop static item 4");
-                    LunarShopTerminal5Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem5", "LunarDagger", "LunarShop static item 5");
-                    LunarShopTerminal6Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem6", "HalfSpeedDoubleHealth", "LunarShop static item 6");
-                    LunarShopTerminal7Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem7", "LunarSun", "LunarShop static item 7");
-                    LunarShopTerminal8Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem8", "LunarBadLuck", "LunarShop static item 8");
-                    LunarShopTerminal9Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem9", "LunarBadLuck", "LunarShop static item 9");
-                    LunarShopTerminal10Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem10", "LunarBadLuck", "LunarShop static item 10");
-                    LunarShopTerminal11Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem11", "ShieldOnly", "LunarShop static item 11");
-                    LunarShopTerminal12Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem12", "ShieldOnly", "LunarShop static item 12");
-                    LunarShopTerminal13Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem13", "ShieldOnly", "LunarShop static item 13");
-                    LunarShopTerminal14Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem14", "Light Flux Pauldron", "LunarShop static item 14");
-                    LunarShopTerminal15Item = config.Bind("05 Lunar月球装备", "LunarShopStaticItem15", "Light Flux Pauldron", "LunarShop static item 15");
 
-                }
+                EnableLunarShopStaticItems = config.Bind("05 Lunar月球装备", "EnableLunarShopStaticItems", true, "Enable LunarShop static items (non-randomized).");
+                LunarShopItemsList = config.Bind("05 Lunar月球装备", "LunarShopItems", "", "List of items available at the LunarShop. Empty for default.");
 
                 EnableShrineRestack = config.Bind("06 ShrineRestack跌序", "EnableShrineRestack", true, "Enable shrinerestack.\n启用跌序");
                 if (EnableShrineRestack.Value)

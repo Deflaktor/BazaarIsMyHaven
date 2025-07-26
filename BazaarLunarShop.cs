@@ -1,4 +1,5 @@
-﻿using RoR2;
+﻿using BepInEx;
+using RoR2;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.UIElements;
 
 namespace BazaarIsMyHome
 {
@@ -18,7 +20,7 @@ namespace BazaarIsMyHome
 
         Dictionary<int, SpawnCardStruct> DicLunarShopTerminals = new Dictionary<int, SpawnCardStruct>();
         int LunarShopTerminalTotalCount = 0;
-        List<PurchaseInteraction> ObjectLunarShopTerminals = new List<PurchaseInteraction>();
+        List<PurchaseInteraction> ObjectLunarShopTerminals_All = new List<PurchaseInteraction>();
         List<PurchaseInteraction> ObjectLunarShopTerminals_Spawn = new List<PurchaseInteraction>();
 
         public override void Init()
@@ -34,6 +36,119 @@ namespace BazaarIsMyHome
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.PurchaseInteraction.ScaleCost += PurchaseInteraction_ScaleCost;
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
+
+            On.RoR2.Run.FixedUpdate += Run_FixedUpdate;
+        }
+
+        private float start = 0f;
+        private float end = 0f;
+
+        private void Run_FixedUpdate(On.RoR2.Run.orig_FixedUpdate orig, Run self)
+        {
+            orig(self);
+#if DEBUG
+            if (Input.GetKeyDown(KeyCode.F4))
+            {
+                foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
+                {
+                    if (obj.name.StartsWith("LunarShopTerminal"))
+                    {
+                        /*PickupDisplay[] pickupDisplays = obj.GetComponentsInChildren<PickupDisplay>();
+                        foreach (PickupDisplay pickup in pickupDisplays)
+                        {
+                            pickup.modelRenderer.enabled = false;
+                        }*/
+                        NetworkServer.Destroy(obj);
+                    }
+                }
+                Main.instance.Config.Reload();
+                ModConfig.InitConfig(Main.instance.Config);
+                Log.LogDebug("start: " + start + " end: " + end);
+                start += 5f;
+                SpawnLunarShopTerminal();
+            }
+            if (Input.GetKeyDown(KeyCode.F5))
+            {
+                foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
+                {
+                    if (obj.name.StartsWith("LunarShopTerminal"))
+                    {
+                        /*PickupDisplay[] pickupDisplays = obj.GetComponentsInChildren<PickupDisplay>();
+                        foreach (PickupDisplay pickup in pickupDisplays)
+                        {
+                            pickup.modelRenderer.enabled = false;
+                        }*/
+                        NetworkServer.Destroy(obj);
+                    }
+                }
+                Main.instance.Config.Reload();
+                ModConfig.InitConfig(Main.instance.Config);
+                Log.LogDebug("start: " + start + " end: " + end);
+                end += 5f;
+                SpawnLunarShopTerminal();
+            }
+            if (Input.GetKeyDown(KeyCode.F6))
+            {
+                foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
+                {
+                    if (obj.name.StartsWith("LunarShopTerminal"))
+                    {
+                        /*PickupDisplay[] pickupDisplays = obj.GetComponentsInChildren<PickupDisplay>();
+                        foreach (PickupDisplay pickup in pickupDisplays)
+                        {
+                            pickup.modelRenderer.enabled = false;
+                        }*/
+                        NetworkServer.Destroy(obj);
+                    }
+                }
+                Main.instance.Config.Reload();
+                ModConfig.InitConfig(Main.instance.Config);
+                Log.LogDebug("start: " + start + " end: " + end);
+                start = 0f;
+                end = 0f;
+                SpawnLunarShopTerminal();
+            }
+            if (Input.GetKeyDown(KeyCode.F7))
+            {
+                foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
+                {
+                    if (obj.name.StartsWith("LunarShopTerminal"))
+                    {
+                        /*PickupDisplay[] pickupDisplays = obj.GetComponentsInChildren<PickupDisplay>();
+                        foreach (PickupDisplay pickup in pickupDisplays)
+                        {
+                            pickup.modelRenderer.enabled = false;
+                        }*/
+                        NetworkServer.Destroy(obj);
+                    }
+                }
+                Main.instance.Config.Reload();
+                ModConfig.InitConfig(Main.instance.Config);
+                Log.LogDebug("start: " + start + " end: " + end);
+                start -= 5f;
+                SpawnLunarShopTerminal();
+            }
+            if (Input.GetKeyDown(KeyCode.F8))
+            {
+                foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
+                {
+                    if (obj.name.StartsWith("LunarShopTerminal"))
+                    {
+                        /*PickupDisplay[] pickupDisplays = obj.GetComponentsInChildren<PickupDisplay>();
+                        foreach (PickupDisplay pickup in pickupDisplays)
+                        {
+                            pickup.modelRenderer.enabled = false;
+                        }*/
+                        NetworkServer.Destroy(obj);
+                    }
+                }
+                Main.instance.Config.Reload();
+                ModConfig.InitConfig(Main.instance.Config);
+                Log.LogDebug("start: " + start + " end: " + end);
+                end -= 5f;
+                SpawnLunarShopTerminal();
+            }
+#endif
         }
 
         public override void SetupBazaar()
@@ -69,13 +184,13 @@ namespace BazaarIsMyHome
                         }
                     }
                 }
-                if (self.name.StartsWith("LunarShopTerminal"))
+                /*if (self.name.StartsWith("LunarShopTerminal"))
                 {
                     if (LunarShopTerminalTotalCount < 5)
                     {
-                        ObjectLunarShopTerminals.Add(self);
+                        ObjectLunarShopTerminals_All.Add(self);
                     }
-                }
+                }*/
 
                 // 切片
                 if (ModConfig.EnableLunarRecyclerInjection.Value || ModConfig.PenaltyCoefficient_Temp != 1)
@@ -90,6 +205,10 @@ namespace BazaarIsMyHome
                         {
                             self.cost = ModConfig.LunarRecyclerRerollCost.Value * ModConfig.PenaltyCoefficient_Temp;
                             self.Networkcost = ModConfig.LunarRecyclerRerollCost.Value * ModConfig.PenaltyCoefficient_Temp;
+                        }
+                        else
+                        {
+                            NetworkServer.Destroy(self.gameObject);
                         }
                     }
                 }
@@ -115,16 +234,16 @@ namespace BazaarIsMyHome
                 if (LunarShopTerminalTotalCount < 5)
                 {
                     // 先改成禁用
-                    ObjectLunarShopTerminals.ForEach(x => x.SetAvailable(false));
+                    ObjectLunarShopTerminals_All.ForEach(x => x.SetAvailable(false));
                     // 打乱List
-                    ObjectLunarShopTerminals = DisorderList(ObjectLunarShopTerminals);
+                    ObjectLunarShopTerminals_All = DisorderList(ObjectLunarShopTerminals_All);
                     // 逐个启用
                     for (int i = 0; i < LunarShopTerminalTotalCount; i++)
                     {
-                        ObjectLunarShopTerminals[i].SetAvailable(true);
+                        ObjectLunarShopTerminals_All[i].SetAvailable(true);
                     }
                     // 没启用的删除
-                    foreach (PurchaseInteraction interaction in ObjectLunarShopTerminals)
+                    foreach (PurchaseInteraction interaction in ObjectLunarShopTerminals_All)
                     {
                         if (!interaction.Networkavailable)
                         {
@@ -132,6 +251,30 @@ namespace BazaarIsMyHome
                         }
                     }
                 }
+
+
+                foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
+                {
+                    if (obj.name.StartsWith("LunarShopTerminal"))
+                    {
+                        /*PickupDisplay[] pickupDisplays = obj.GetComponentsInChildren<PickupDisplay>();
+                        foreach (PickupDisplay pickup in pickupDisplays)
+                        {
+                            pickup.modelRenderer.enabled = false;
+                        }*/
+                        NetworkServer.Destroy(obj);
+                    }
+                }
+                SpawnLunarShopTerminal();
+                Main.instance.StartCoroutine(RerollLunarShopTerminalDelayed());
+            }
+        }
+
+        private IEnumerator RerollLunarShopTerminalDelayed()
+        {
+            yield return new WaitForSeconds(1.0f);
+            foreach(var lunarShopTeminal in ObjectLunarShopTerminals_Spawn) { 
+                RerollLunarShopTerminal(lunarShopTeminal);
             }
         }
 
@@ -141,10 +284,10 @@ namespace BazaarIsMyHome
             {
                 if (self.name.StartsWith("LunarRecycler"))
                 {
-                    float time = 1f;
+                    float time = 0f;
                     foreach (PurchaseInteraction interaction in ObjectLunarShopTerminals_Spawn)
                     {
-                        BazaarIsMyHome.instance.StartCoroutine(DelayEffect(self, interaction, time));
+                        Main.instance.StartCoroutine(DelayEffect(interaction, time));
                         time = time + 0.1f;
                     }
                 }
@@ -198,24 +341,50 @@ namespace BazaarIsMyHome
             orig(self, newAvailable);
         }
 
-        IEnumerator DelayEffect(PurchaseInteraction self, PurchaseInteraction interaction, float time)
+        IEnumerator DelayEffect(PurchaseInteraction lunarShopTerminal, float time)
         {
             yield return new WaitForSeconds(time);
-            RerollLunarShopTerminal(self, interaction);
+            RerollLunarShopTerminal(lunarShopTerminal);
+            SpawnEffect(LunarRerollEffect, lunarShopTerminal.gameObject.transform.position + Vector3.up * 1f, new Color32(255, 255, 255, 255), 2f);
         }
 
-        private void RerollLunarShopTerminal(PurchaseInteraction self, PurchaseInteraction interaction)
+        private void RerollLunarShopTerminal(PurchaseInteraction lunarShopTerminal)
         {
-            WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>(8);
-            weightedSelection.AddChoice(Run.instance.availableLunarItemDropList, 50f);
-            weightedSelection.AddChoice(Run.instance.availableLunarEquipmentDropList, 50f);
-            List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
-            PickupDef pickupDef = PickupCatalog.GetPickupDef(list[UnityEngine.Random.Range(0, list.Count)]);
-
-            ShopTerminalBehavior shopTerminal = interaction.gameObject.GetComponent<ShopTerminalBehavior>();
-            shopTerminal.SetPickupIndex(pickupDef.pickupIndex);
-
-            SpawnEffect(LunarRerollEffect, interaction.gameObject.transform.position + Vector3.up * 1f, new Color32(255, 255, 255, 255), 2f);
+            PickupIndex pickupIndex;
+            var index = ObjectLunarShopTerminals_Spawn.IndexOf(lunarShopTerminal);
+            if (ModConfig.EnableLunarShopStaticItems.Value && index >= 0 && index <= ModConfig.LunarShopTerminalCount.Value)
+            {
+                string[] codes = ModConfig.LunarShopItemsList.Value.Split(',');
+                ItemIndex itemIndex = ItemCatalog.FindItemIndex(codes[index].Trim().ToLower());
+                pickupIndex = PickupCatalog.FindPickupIndex(itemIndex);
+            }
+            else if(!ModConfig.LunarShopItemsList.Value.IsNullOrWhiteSpace())
+            {
+                WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>(8);
+                List<PickupIndex> pickupIndexList = new List<PickupIndex>();
+                string[] codes = ModConfig.LunarShopItemsList.Value.Split(',');
+                foreach (string code in codes)
+                {
+                    ItemIndex itemIndex = ItemCatalog.FindItemIndex(code.Trim().ToLower());
+                    pickupIndexList.Add(PickupCatalog.FindPickupIndex(itemIndex));
+                }
+                weightedSelection.AddChoice(pickupIndexList, 50f);
+                List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
+                PickupDef pickupDef = PickupCatalog.GetPickupDef(list[UnityEngine.Random.Range(0, list.Count)]);
+                pickupIndex = pickupDef.pickupIndex;
+            }
+            else
+            {
+                WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>(8);
+                //weightedSelection.AddChoice(Run.instance.availableLunarItemDropList, 50f);
+                //weightedSelection.AddChoice(Run.instance.availableLunarEquipmentDropList, 50f);
+                weightedSelection.AddChoice(Run.instance.availableLunarCombinedDropList, 50f);
+                List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
+                PickupDef pickupDef = PickupCatalog.GetPickupDef(list[UnityEngine.Random.Range(0, list.Count)]);
+                pickupIndex = pickupDef.pickupIndex;
+            }
+            ShopTerminalBehavior shopTerminal = lunarShopTerminal.gameObject.GetComponent<ShopTerminalBehavior>();
+            shopTerminal.SetPickupIndex(pickupIndex);
         }
 
         private void SetLunarShopTerminal()
@@ -238,19 +407,19 @@ namespace BazaarIsMyHome
             DicLunarShopTerminals.Add(random[5], new SpawnCardStruct(new Vector3(-76.9623f, -25.8940f, -41.4813f), new Vector3(0.0f, 120.0f, 0.0f)));*/
 
             Vector3 lunarTablePosition = new Vector3(-76.6438f, -24.0468f, -41.6449f);
-            const float orientation = 280f;
+            float orientation = 280f;
             Vector3 lunarTableDroneShopPosition = new Vector3(-139.8156f, -21.8568f, 2.9263f);
             const float droneTableOrientation = 160f;
 
             const float tableRadiusInner = 3.0f;
             const float tableRadiusMiddle = 4.0f;
             const float tableRadiusOuter = 5.0f;
-            const float tableStartAngleInner = 0f;
-            const float tableStartAngleMiddle = -10f;
-            const float tableStartAngleOuter = 8f;
-            const float tableEndAngleInner = 215f;
-            const float tableEndAngleMiddle = 230f;
-            const float tableEndAngleOuter = 234f;
+            float tableStartAngleInner = 140f + start;
+            float tableStartAngleMiddle = 135f + start;
+            float tableStartAngleOuter = 123f + start;
+            float tableEndAngleInner = 330f + end;
+            float tableEndAngleMiddle = 325f + end;
+            float tableEndAngleOuter = 339f + end;
             const float minDistance = 19f;
             const float innerCapacity = 5;//(int)(2 * Math.PI * tableRadiusInner * (tableEndAngleInner - tableStartAngleInner) / 360f / minDistance);
             const float middleCapacity = 8;//(int)(2 * Math.PI * tableRadiusMiddle * (tableEndAngleMiddle - tableStartAngleMiddle) / 360f / minDistance);
@@ -263,9 +432,15 @@ namespace BazaarIsMyHome
             }
             else
             {
-                points.AddRange(Lloyd.GenerateCirclePoints(tableRadiusInner, tableStartAngleInner, tableEndAngleInner, orientation, 100));
-                points.AddRange(Lloyd.GenerateCirclePoints(tableRadiusOuter, tableStartAngleOuter, tableEndAngleOuter, orientation, 100));
-                points = Lloyd.LloydsAlgorithm(points, ModConfig.LunarShopTerminalCount.Value);
+                List<Vector2> samples = new List<Vector2>();
+                var innerSamples = Lloyd.GenerateCirclePoints(tableRadiusInner, tableStartAngleInner, tableEndAngleInner, orientation, 200);
+                var outerSamples = Lloyd.GenerateCirclePoints(tableRadiusOuter, tableStartAngleOuter, tableEndAngleOuter, orientation, 300);
+                outerSamples.Reverse();
+                samples.AddRange(innerSamples);
+                samples.AddRange(outerSamples);
+                List<Vector2> centroids = Lloyd.Centroids(samples, ModConfig.LunarShopTerminalCount.Value);
+                points = Lloyd.MapSamplesOrderToCentroids(samples, centroids);
+
             }
             float scale = 1.0f;
             switch (ModConfig.LunarShopTerminalCount.Value)
@@ -292,31 +467,31 @@ namespace BazaarIsMyHome
                     scale = 0.75f;
                     break;
             }
-            for (int i = 0; i < points.Count; i++)
-            {
+            for (int i = 0; i < points.Count; i++) { 
                 DicLunarShopTerminals.Add(i, new SpawnCardStruct(new Vector3(lunarTablePosition.x + points[i].x, lunarTablePosition.y, lunarTablePosition.z + points[i].y), new Vector3(0.0f, 250.0f + i * 10f / points.Count, 0.0f), new Vector3(scale, scale, scale)));
             }
         }
 
         private void SpawnLunarShopTerminal()
         {
-            ObjectLunarShopTerminals.Clear();
+            ObjectLunarShopTerminals_All.Clear();
             ObjectLunarShopTerminals_Spawn.Clear();
             LunarShopTerminalTotalCount = 0;
             if (ModConfig.LunarShopTerminalCount.Value > 0)
             {
 
-                //foreach (GameObject @object in UnityEngine.Object.FindObjectsOfType<GameObject>())
-                //{
-                //    if (@object.name.StartsWith("LunarShopTerminal"))
-                //    {
-                //        PickupDisplay[] pickupDisplays = @object.GetComponentsInChildren<PickupDisplay>();
-                //        foreach (PickupDisplay pickup in pickupDisplays)
-                //        {
-                //            pickup.modelRenderer.enabled = false;
-                //        }
-                //    }
-                //}
+                foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
+                {
+                    if (obj.name.StartsWith("LunarShopTerminal"))
+                    {
+                        /*PickupDisplay[] pickupDisplays = obj.GetComponentsInChildren<PickupDisplay>();
+                        foreach (PickupDisplay pickup in pickupDisplays)
+                        {
+                            pickup.modelRenderer.enabled = false;
+                        }*/
+                        NetworkServer.Destroy(obj);
+                    }
+                }
 
 
                 // 月球蓓蕾
@@ -331,27 +506,10 @@ namespace BazaarIsMyHome
             if (ModConfig.SpawnCountByStage.Value)
             {
                 count = SetCountbyGameStage(max, ModConfig.SpawnCountOffset.Value);
-                if (card.LocationName.EndsWith("LunarShopTerminal.prefab"))
-                {
-                    LunarShopTerminalTotalCount = count;
-                    if (count <= 5)
-                    {
-                        return;
-                    }
-                    else
-                    {
-                        count = LunarShopTerminalTotalCount - 5;
-                    }
-                }
             }
             else
             {
                 count = max;
-                if (card.LocationName.EndsWith("LunarShopTerminal.prefab"))
-                {
-                    LunarShopTerminalTotalCount = max;
-                    count = count - 5;
-                }
             }
             for (int i = 0; i < count; i++)
             {
