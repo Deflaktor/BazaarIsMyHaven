@@ -1,4 +1,4 @@
-﻿using BepInEx.Configuration;
+using BepInEx.Configuration;
 using RoR2;
 using UnityEngine;
 using R2API;
@@ -55,6 +55,7 @@ namespace BazaarIsMyHome
         public static ConfigEntry<float> CauldronPurpleWeight;
 
         public static ConfigEntry<bool> EnableShrineCleanse;
+        public static ConfigEntry<bool> ShrineCleaseGivesLunarCoins;
         public static ConfigEntry<bool> EnableShrineHealing;
 
         public static ConfigEntry<bool> EnableShrineRestack;
@@ -204,6 +205,7 @@ namespace BazaarIsMyHome
                 }
 
                 EnableShrineCleanse = config.Bind("07 CleanPool净化池", "EnableShrineCleanse", true, "Enable clean pool.(It's over Newt's head.)\n启用净化池，在纽特头上面");
+                ShrineCleaseGivesLunarCoins = config.Bind("07 CleanPool净化池", "ShrineCleanseGivesLunarCoins", true, "Instead of giving Pearls, the Cleansing Pool will give Lunar Coins inside the Bazaar.");
 
                 EnableShrineHealing = config.Bind("08 Pray祈祷", "EnablePray", true, "Enable pray.(The model is Shrinehealing)\n启用祈祷，模型是那个树灵神龛。");
                 if (EnableShrineHealing.Value)
