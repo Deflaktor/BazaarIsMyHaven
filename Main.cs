@@ -218,7 +218,7 @@ namespace BazaarIsMyHome
                     {
                         //Stage.instance.RespawnCharacter(body.master);
                         //body.name = "ShopkeeperBody";
-                        body.master.Respawn(body.footPosition, Quaternion.identity);
+                        //body.master.Respawn(body.footPosition, Quaternion.identity);
                         AddItemToShopKeeper(body);
                     }
                     else
@@ -290,6 +290,7 @@ namespace BazaarIsMyHome
                     if (ShopKeep.SpawnTime_Record == 0)
                     {
                         if (ShopKeep.Body is null) FindShopkeeper();
+                        ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ExtraLife")), 1000);
                         //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BoostHp")), 10000 * 10000);
                         //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Pearl")), 10000 * 10000);
                         //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ParentEgg")), 34 * 1000);
