@@ -18,6 +18,8 @@ using UnityEngine.SceneManagement;
 namespace BazaarIsMyHome
 {
     [BepInDependency("com.bepis.r2api")]
+    [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.funkfrog_sipondo.sharesuite", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin("com.Lunzir.BazaarIsMyHome", "BazaarIsMyHome", "1.4.0")]
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync, VersionStrictness.DifferentModVersionsAreOk)]
     public class Main : BaseUnityPlugin
@@ -93,7 +95,7 @@ namespace BazaarIsMyHome
                 {
                     foreach (SeerStationController seerStationController in self.seerStations)
                     {
-                        seerStationController.GetComponent<PurchaseInteraction>().available = ModConfig.SeerStationAvailable.Value;
+                        seerStationController.GetComponent<PurchaseInteraction>().available = ModConfig.SeerStationAvailable.Value && !ModConfig.ReplaceLunarSeersWithEquipment.Value;
                         if (ModConfig.SeerStationAvailable.Value)
                         {
                             seerStationController.GetComponent<PurchaseInteraction>().cost = ModConfig.SeerStationsCost.Value * ModConfig.PenaltyCoefficient_Temp;
@@ -175,6 +177,9 @@ namespace BazaarIsMyHome
             if (ModConfig.EnableMod.Value && ModConfig.EnableNoKickFromShop.Value)
             {
                 self.outer.SetNextStateToMain(); 
+            } else
+            {
+                orig(self);
             }
         }
         private void GlobalEventManager_OnHitAll(On.RoR2.GlobalEventManager.orig_OnHitAll orig, GlobalEventManager self, DamageInfo damageInfo, GameObject hitObject)
