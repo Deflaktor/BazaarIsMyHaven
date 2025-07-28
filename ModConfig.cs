@@ -26,6 +26,7 @@ namespace BazaarIsMyHome
         public static ConfigEntry<int> CauldronCount;
         public static ConfigEntry<int> ScrapperCount;
         public static ConfigEntry<int> EquipmentCount;
+        public static ConfigEntry<bool> ReplaceLunarSeersWithEquipment;
         public static ConfigEntry<int> LunarShopTerminalCount;
         public static ConfigEntry<int> RewardCount;
 
@@ -152,7 +153,8 @@ namespace BazaarIsMyHome
 
                 ScrapperCount = config.Bind("03 Scrapper收割机", "ScrapperCount", 4, "Total generated value of scrappers, max is 4, below zero is not enabled. \n月店收割机的数量，最多4台，小于0不启用"); if (ScrapperCount.Value > 4) ScrapperCount.Value = 4;
 
-                EquipmentCount = config.Bind("04 Equipment主动装备", "EquipmentCount", 6, "Total generated value of equipments, max is 6, below zero is not enabled. \n月店主动装备的数量，最多6台，小于0不启用"); if (EquipmentCount.Value > 6) EquipmentCount.Value = 6;
+                EquipmentCount = config.Bind("04 Equipment主动装备", "EquipmentCount", 3, "Total generated value of equipments, max is 3, below zero is not enabled. \n月店主动装备的数量，最多6台，小于0不启用"); if (EquipmentCount.Value > 3) EquipmentCount.Value = 3;
+                ReplaceLunarSeersWithEquipment = config.Bind("04 Equipment主动装备", "ReplaceLunarSeersWithEquipment", true, "Replaces the Lunar Seers with Equipment Terminals");
 
                 LunarShopTerminalCount = config.Bind("05 Lunar月球装备", "LunarShopTerminalCount", 5, "Total generated value of LunarShopTerminal, max is 15, below zero is not enabled. \n月店月球装备的数量，最多11个，包括原有的5个，小于0不启用"); if (LunarShopTerminalCount.Value > 100) LunarShopTerminalCount.Value = 100;
                 EnableLunarShopTerminalInjection = config.Bind("05 Lunar月球装备", "EnableLunarShopTerminalInjection", true, "Enable LunarShopTerminal data modification.\n启用月球装备修改");
