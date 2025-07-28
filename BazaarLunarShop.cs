@@ -268,6 +268,7 @@ namespace BazaarIsMyHome
                 SpawnLunarShopTerminal();
                 Main.instance.StartCoroutine(RerollLunarShopTerminalDelayed());
             }
+            orig(self);
         }
 
         private IEnumerator RerollLunarShopTerminalDelayed()
@@ -467,8 +468,9 @@ namespace BazaarIsMyHome
                     scale = 0.75f;
                     break;
             }
-            for (int i = 0; i < points.Count; i++) { 
-                DicLunarShopTerminals.Add(i, new SpawnCardStruct(new Vector3(lunarTablePosition.x + points[i].x, lunarTablePosition.y, lunarTablePosition.z + points[i].y), new Vector3(0.0f, 250.0f + i * 10f / points.Count, 0.0f), new Vector3(scale, scale, scale)));
+            for (int i = 0; i < points.Count; i++) {
+                //DicLunarShopTerminals.Add(i, new SpawnCardStruct(new Vector3(lunarTablePosition.x + points[i].x, lunarTablePosition.y, lunarTablePosition.z + points[i].y), new Vector3(0.0f, 250.0f + i * 10f / points.Count, 0.0f), new Vector3(scale, scale, scale)));
+                DicLunarShopTerminals.Add(i, new SpawnCardStruct(new Vector3(lunarTablePosition.x + points[i].x, lunarTablePosition.y, lunarTablePosition.z + points[i].y), new Vector3(0.0f, 250.0f + i * 10f / points.Count, 0.0f)));
             }
         }
 

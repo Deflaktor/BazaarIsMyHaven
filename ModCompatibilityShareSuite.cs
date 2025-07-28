@@ -53,6 +53,5 @@ namespace BazaarIsMyHome
             return plugin.GetFieldValue<ConfigEntry<bool>>("PrinterCauldronFixEnabled").Value;
         }
 
-
     }
 }
