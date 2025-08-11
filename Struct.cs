@@ -21,16 +21,18 @@ namespace BazaarIsMyHome
     }
     public class PlayerStruct
     {
-        public PlayerStruct(NetworkUser networkUser, int donateCount, int rewardCount = 0)
+        public PlayerStruct(PlayerCharacterMasterController master)
         {
-            NetworkUser = networkUser;
-            DonateCount = donateCount;
-            RewardCount = rewardCount;
+            Master = master;
+            DonateCount = 0;
+            RewardCount = 0;
+            LunarShopUseCount = 0;
         }
 
-        public NetworkUser NetworkUser { get; set; }
+        public PlayerCharacterMasterController Master { get; set; }
         public int DonateCount { get; set; }
         public int RewardCount { get; set; }
+        public int LunarShopUseCount { get; set; }
     }
     public class SpecialItemStruct
     {
@@ -45,17 +47,15 @@ namespace BazaarIsMyHome
         public int Count { get; set; }
         public bool IsUse { get; set; }
     }
-    public class CauldronHackedStruct
+    public class ShopKeep
     {
-        public CauldronHackedStruct(string name, int cost, CostTypeIndex costTypeIndex)
-        {
-            Name = name;
-            Cost = cost;
-            CostTypeIndex = costTypeIndex;
-        }
+        public static bool DiedAtLeastOnce { get; set; }
+        public static int DeathCount { get; set; }
+        public static CharacterBody Body { get; set; }
 
-        public string Name { get; set; }
-        public int Cost { get; set; }
-        public CostTypeIndex CostTypeIndex { get; set; }
+        public enum DeathState
+        {
+            Default, Tank, Ghost, Evil
+        }
     }
 }

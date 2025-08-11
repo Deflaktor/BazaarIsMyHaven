@@ -27,7 +27,10 @@ namespace BazaarIsMyHome
 
         public override void SetupBazaar()
         {
-            SpawnScrapper();
+            if(ModConfig.ScrapperSectionEnabled.Value)
+            {
+                SpawnScrapper();
+            }
         }
         private void SpawnScrapper()
         {

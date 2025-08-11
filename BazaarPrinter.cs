@@ -33,77 +33,52 @@ namespace BazaarIsMyHome
 
         public override void Hook()
         {
-            On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake; ;
             On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
         }
 
         public override void SetupBazaar()
         {
-            SpawnPrinters();
-        }
-
-        private void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, RoR2.PurchaseInteraction self)
-        {
-            orig(self);
-            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
+            if(ModConfig.PrinterSectionEnabled.Value)
             {
-                // 打印机
-                if (ModConfig.PrinterCount.Value > 0)
-                {
-                    if (self.name.StartsWith("Duplicator")
-                                || self.name.StartsWith("DuplicatorLarge")
-                                || self.name.StartsWith("DuplicatorMilitary")
-                                || self.name.StartsWith("DuplicatorWild"))
-                    {
-                        float w1, w2, w3, w4, w5, w6, total;
-                        w1 = ModConfig.PrinterTier1Weight.Value;
-                        w2 = ModConfig.PrinterTier2Weight.Value;
-                        w3 = ModConfig.PrinterTier3Weight.Value;
-                        w4 = ModConfig.PrinterTierBossWeight.Value;
-                        w5 = ModConfig.PrinterTierLunarWeight.Value;
-                        w6 = ModConfig.PrinterTierVoidWeight.Value;
-                        total = w1 + w2 + w3 + w4 + w5 + w6;
-                        if (total != 0)
-                        {
-                            double random = RNG.NextDouble() * total;
-                            if (random <= w1) { }
-                            else if (random <= w1 + w2) { }
-                            else if (random <= w1 + w2 + w3) { }
-                            else if (random <= w1 + w2 + w3 + w4) { }
-                            else if (random <= w1 + w2 + w3 + w4 + w5)
-                            {
-                                self.name = "DuplicatorBlue";
-                                self.costType = CostTypeIndex.LunarItemOrEquipment;
-                            }
-                            else
-                            {
-                                self.name = "DuplicatorPurple";
-                                self.costType = CostTypeIndex.RedItem;
-                            }
-                        }
-                    }
-                }
+                SpawnPrinters();
             }
         }
 
         private void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
         {
-            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.PrinterSectionEnabled.Value && IsCurrentMapInBazaar())
             {
-                if (self.name.StartsWith("DuplicatorBlue"))
+                if (self.name.StartsWith("Duplicator"))
                 {
-                    List<PickupIndex> listLunarItem = Run.instance.availableLunarItemDropList;
-                    newPickupIndex = listLunarItem[UnityEngine.Random.Range(0, listLunarItem.Count)];
-                }
-                if (self.name.StartsWith("DuplicatorPurple"))
-                {
-                    WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>(8);
-                    weightedSelection.AddChoice(Run.instance.availableVoidTier1DropList, 25f);
-                    weightedSelection.AddChoice(Run.instance.availableVoidTier2DropList, 25f);
-                    weightedSelection.AddChoice(Run.instance.availableVoidTier3DropList, 25f);
-                    weightedSelection.AddChoice(Run.instance.availableVoidBossDropList, 25f);
-                    List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
-                    newPickupIndex = list[UnityEngine.Random.Range(0, list.Count)];
+                    var nameWithoutDuplicatorPrefix = self.name.Substring("Duplicator".Length);
+                    var endsWithItemTier = Enum.TryParse(nameWithoutDuplicatorPrefix, out ItemTier itemTier);
+                    if (endsWithItemTier)
+                    {
+                        WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>();
+                        switch (itemTier)
+                        {
+                            case ItemTier.VoidTier1:
+                                weightedSelection.AddChoice(Run.instance.availableVoidTier1DropList, 25f);
+                                break;
+                            case ItemTier.VoidTier2:
+                                weightedSelection.AddChoice(Run.instance.availableVoidTier2DropList, 25f);
+                                break;
+                            case ItemTier.VoidTier3:
+                                weightedSelection.AddChoice(Run.instance.availableVoidTier3DropList, 25f);
+                                break;
+                            case ItemTier.VoidBoss:
+                                weightedSelection.AddChoice(Run.instance.availableVoidBossDropList, 25f);
+                                break;
+                            case ItemTier.NoTier:
+                                weightedSelection.AddChoice(Run.instance.availableVoidTier1DropList, 25f);
+                                weightedSelection.AddChoice(Run.instance.availableVoidTier2DropList, 25f);
+                                weightedSelection.AddChoice(Run.instance.availableVoidTier3DropList, 25f);
+                                weightedSelection.AddChoice(Run.instance.availableVoidBossDropList, 25f);
+                                break;
+                        }
+                        List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
+                        newPickupIndex = list[UnityEngine.Random.Range(0, list.Count)];
+                    }
                 }
             }
             orig(self, newPickupIndex, newHidden);
@@ -123,10 +98,39 @@ namespace BazaarIsMyHome
                     count = ModConfig.PrinterCount.Value;
                 for (int i = 0; i < count; i++)
                 {
-                    AsyncOperationHandle<InteractableSpawnCard> randomPrinter = GetRandomPrinter();
-                    SpawnCard spawnCard = randomPrinter.WaitForCompletion();
-                    GameObject printerOne = spawnCard.DoSpawn(DicPrinters[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
-                    printerOne.transform.eulerAngles = DicPrinters[i].Rotation;
+                    var tier = GetRandomPrinterTier();
+                    SpawnCard spawnCard = null;
+                    string nonDefaultName = null;
+                    switch (tier)
+                    {
+                        case ItemTier.Tier1:
+                            spawnCard = iscDuplicator.WaitForCompletion();
+                            break;
+                        case ItemTier.Tier2:
+                            spawnCard = iscDuplicatorLarge.WaitForCompletion();
+                            break;
+                        case ItemTier.Tier3:
+                            spawnCard = iscDuplicatorMilitary.WaitForCompletion();
+                            break;
+                        case ItemTier.Boss:
+                            spawnCard = iscDuplicatorWild.WaitForCompletion();
+                            break;
+                        case ItemTier.VoidTier1:
+                        case ItemTier.VoidTier2:
+                        case ItemTier.VoidTier3:
+                        case ItemTier.VoidBoss:
+                            spawnCard = iscDuplicatorMilitary.WaitForCompletion();
+                            nonDefaultName = "Duplicator" + tier.ToString();
+                            break;
+                        case ItemTier.NoTier:
+                            spawnCard = iscDuplicatorMilitary.WaitForCompletion();
+                            nonDefaultName = "DuplicatorVoid";
+                            break;
+                    }
+                    GameObject printer = spawnCard.DoSpawn(DicPrinters[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
+                    if (nonDefaultName != null)
+                        printer.name = nonDefaultName;
+                    printer.transform.eulerAngles = DicPrinters[i].Rotation;
                 }
             }
         }
@@ -152,19 +156,20 @@ namespace BazaarIsMyHome
             DicPrinters.Add(random[8], new SpawnCardStruct(new Vector3(-146f, -25.3f, -16.0f), new Vector3(0.0f, 100.0f, 0.0f)));
         }
 
-
-        private AsyncOperationHandle<InteractableSpawnCard> GetRandomPrinter()
+        private ItemTier GetRandomPrinterTier()
         {
-            float tier1 = ModConfig.PrinterTier1Weight.Value;
-            float tier2 = ModConfig.PrinterTier2Weight.Value;
-            float tier3 = ModConfig.PrinterTier3Weight.Value;
-            float boss = ModConfig.PrinterTierBossWeight.Value;
-            float total = tier1 + tier2 + tier3 + boss;
-            double d = RNG.NextDouble() * total;
-            if (d <= tier1) return PrintersCode[0];
-            else if (d <= tier1 + tier2) return PrintersCode[1];
-            else if (d <= tier1 + tier2 + tier3) return PrintersCode[2];
-            else return PrintersCode[3];
+            WeightedSelection<ItemTier> weightedSelection = new WeightedSelection<ItemTier>();
+            weightedSelection.AddChoice(ItemTier.Tier1, ModConfig.PrinterTier1Weight.Value);
+            weightedSelection.AddChoice(ItemTier.Tier2, ModConfig.PrinterTier2Weight.Value);
+            weightedSelection.AddChoice(ItemTier.Tier3, ModConfig.PrinterTier3Weight.Value);
+            weightedSelection.AddChoice(ItemTier.Boss, ModConfig.PrinterTierBossWeight.Value);
+            weightedSelection.AddChoice(ItemTier.VoidTier1, ModConfig.PrinterTierVoid1Weight.Value);
+            weightedSelection.AddChoice(ItemTier.VoidTier2, ModConfig.PrinterTierVoid2Weight.Value);
+            weightedSelection.AddChoice(ItemTier.VoidTier3, ModConfig.PrinterTierVoid3Weight.Value);
+            weightedSelection.AddChoice(ItemTier.VoidBoss, ModConfig.PrinterTierVoidBossWeight.Value);
+            weightedSelection.AddChoice(ItemTier.NoTier, ModConfig.PrinterTierVoidAllWeight.Value);
+            var tier = weightedSelection.Evaluate(UnityEngine.Random.value);
+            return tier;
         }
     }
 }

@@ -31,13 +31,15 @@ namespace BazaarIsMyHome
 
         public override void SetupBazaar()
         {
-            SpawnEquipment();
+            if(ModConfig.EquipmentSectionEnabled.Value) {
+                SpawnEquipment();
+            }
         }
 
         public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
         {
             orig(self);
-            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar())
             {
                 if (ModConfig.EquipmentCount.Value > 0)
                 {

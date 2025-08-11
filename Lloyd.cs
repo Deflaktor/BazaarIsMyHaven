@@ -32,7 +32,7 @@ namespace BazaarIsMyHome
             // Step 1: Initialize centroids
             Vector2[] centroids = new Vector2[k];
             HashSet<int> selectedIndices = new HashSet<int>();
-            System.Random rand = new System.Random();
+            System.Random rand = new System.Random(0);
 
             for (int i = 0; i < k; i++)
             {

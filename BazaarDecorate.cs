@@ -45,20 +45,12 @@ namespace BazaarIsMyHome
 
         public override void SetupBazaar()
         {
-            SpawnDecorate(); // 装饰
-
-            // 传送门
             if (ModConfig.EnableDecorate.Value)
             {
+                SpawnDecorate();
                 SpawnBluePortal();
-            }
-            // 门口特效 火把
-            if (ModConfig.EnableDecorate.Value)
-            {
-                // 门口
                 SpawnEffect(TeleporterBeaconEffect, new Vector3(-73.5143f, -22.2897f, 9.1621f), Color.blue, 1f);
                 SpawnEffect(TeleporterBeaconEffect, new Vector3(-57.0645f, -22.2698f, -0.5218f), Color.blue, 1f);
-                // 传送门位置
                 SpawnEffect(TeleporterBeaconEffect, new Vector3(15.7063f, -2.1074f, 2.5406f), Color.blue, 1f);
                 SpawnEffect(TeleporterBeaconEffect, new Vector3(2.5543f, -2.7093f, -8.7185f), Color.blue, 1f);
             }
@@ -66,13 +58,9 @@ namespace BazaarIsMyHome
 
         private void SpawnBluePortal()
         {
-            if (ModConfig.EnableDecorate.Value)
-            {
-                // 传送门
-                SpawnCard spawnCard = iscShopPortal.WaitForCompletion();
-                GameObject gameObject = spawnCard.DoSpawn(new Vector3(-135f, -23f, -60f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
-                gameObject.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f);
-            }
+            SpawnCard spawnCard = iscShopPortal.WaitForCompletion();
+            GameObject gameObject = spawnCard.DoSpawn(new Vector3(-135f, -23f, -60f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
+            gameObject.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f);
         }
 
         private void SetDecorate()
@@ -121,18 +109,14 @@ namespace BazaarIsMyHome
 
         private void SpawnDecorate()
         {
-            if (ModConfig.EnableDecorate.Value)
-            {
-                // 箱子
-                DicGlodChests.Clear();
-                DicBigChests.Clear();
-                DicSmallChests.Clear();
-                SetDecorate();
-                DoSpawnCard(DicGlodChests, iscGoldChest, DicGlodChests.Count);
-                DoSpawnCard(DicBigChests, iscChest2, DicBigChests.Count);
-                DoSpawnCard(DicSmallChests, iscChest1, DicSmallChests.Count);
-            }
+            DicGlodChests.Clear();
+            DicBigChests.Clear();
+            DicSmallChests.Clear();
+            SetDecorate();
 
+            DoSpawnCard(DicGlodChests, iscGoldChest, DicGlodChests.Count).ForEach((gameObject) => gameObject.GetComponent<PurchaseInteraction>().SetAvailable(false));
+            DoSpawnCard(DicBigChests, iscChest2, DicBigChests.Count).ForEach((gameObject) => gameObject.GetComponent<PurchaseInteraction>().SetAvailable(false));
+            DoSpawnCard(DicSmallChests, iscChest1, DicSmallChests.Count).ForEach((gameObject) => gameObject.GetComponent<PurchaseInteraction>().SetAvailable(false));
         }
     }
 }

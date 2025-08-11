@@ -18,7 +18,6 @@ namespace BazaarIsMyHome
         AsyncOperationHandle<GameObject> TeamWarCryActivation;
         AsyncOperationHandle<GameObject> ShrineUseEffect;
 
-        Dictionary<NetworkUserId, PlayerStruct> PlayerStructs = new Dictionary<NetworkUserId, PlayerStruct>();
         List<SpecialItemStruct> SpecialCodes = new List<SpecialItemStruct>
         {
             new SpecialItemStruct("BoostAttackSpeed", 10),
@@ -69,17 +68,16 @@ namespace BazaarIsMyHome
 
         public override void SetupBazaar()
         {
-            if (ModConfig.EnableShrineHealing.Value)
+            if (ModConfig.PrayerSectionEnabled.Value)
             {
                 InitPrayData();
-                PlayerStructs.Clear();
                 SpawnShrineHealing();
             }
         }
 
         private void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
-            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value & ModConfig.PrayerSectionEnabled.Value && IsCurrentMapInBazaar())
             {
                 if (self.name.StartsWith("ShrineHealing"))
                 {
@@ -89,26 +87,21 @@ namespace BazaarIsMyHome
                     CharacterBody characterBody = activator.GetComponent<CharacterBody>();
                     Inventory inventory = characterBody.inventory;
 
-                    PlayerStructs.TryGetValue(networkUser.id, out PlayerStruct playerStruct);
-                    if (playerStruct is null)
+                    var playerStruct = Main.instance.GetPlayerStruct(characterMaster.playerCharacterMasterController);
+                    if(playerStruct.DonateCount == 0)
                     {
-                        playerStruct = new PlayerStruct(networkUser, 1);
-                        PlayerStructs.Add(networkUser.id, playerStruct);
                         ChatHelper.ThanksTip(networkUser, characterBody);
                     }
-                    else
+                    playerStruct.DonateCount += 1; // 加一次捐赠次数
+                    if (playerStruct.DonateCount % 10 == 0) // 每满10次捐赠
                     {
-                        playerStruct.DonateCount += 1; // 加一次捐赠次数
-                        if (playerStruct.DonateCount % 10 == 0) // 每满10次捐赠
+                        playerStruct.RewardCount += 1;
+                        if (playerStruct.RewardCount <= ModConfig.PrayRewardCount.Value)
                         {
-                            playerStruct.RewardCount += 1;
-                            if (playerStruct.RewardCount <= ModConfig.RewardCount.Value)
-                            {
-                                GiftReward(self, networkUser, characterBody, inventory); // 给奖励
-                            }
+                            GiftReward(self, networkUser, characterBody, inventory); // 给奖励
                         }
                     }
-                    if (playerStruct.DonateCount <= (ModConfig.RewardCount.Value * 10))
+                    if (playerStruct.DonateCount <= (ModConfig.PrayRewardCount.Value * 10))
                     {
                         // 购买特效
                         SpawnEffect(ShrineUseEffect, self.transform.position, new Color32(64, 127, 255, 255), 5f);
@@ -180,21 +173,18 @@ namespace BazaarIsMyHome
 
         private void SpawnShrineHealing()
         {
-            if (ModConfig.EnableShrineHealing.Value)
-            {
-                // 木灵
-                SpawnCard spawnCard = iscShrineHealing.WaitForCompletion();
-                GameObject gameObject = spawnCard.DoSpawn(new Vector3(-119f, -23f, -52f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
-                gameObject.transform.eulerAngles = new Vector3(0.0f, 210f, 0.0f);
-                gameObject.GetComponent<PurchaseInteraction>().costType = CostTypeIndex.LunarCoin;
-                gameObject.GetComponent<PurchaseInteraction>().cost = ModConfig.PrayCost.Value * ModConfig.PenaltyCoefficient_Temp;
-                gameObject.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.PrayCost.Value * ModConfig.PenaltyCoefficient_Temp;
+            // 木灵
+            SpawnCard spawnCard = iscShrineHealing.WaitForCompletion();
+            GameObject gameObject = spawnCard.DoSpawn(new Vector3(-119f, -23f, -52f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
+            gameObject.transform.eulerAngles = new Vector3(0.0f, 210f, 0.0f);
+            gameObject.GetComponent<PurchaseInteraction>().costType = CostTypeIndex.LunarCoin;
+            gameObject.GetComponent<PurchaseInteraction>().cost = ModConfig.PrayCost.Value;
+            gameObject.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.PrayCost.Value;
 
-                //gameObject.GetComponent<ShrineHealingBehavior>().baseRadius = 80;
-                //gameObject.GetComponent<ShrineHealingBehavior>().radiusBonusPerPurchase = 0;
-                gameObject.GetComponent<ShrineHealingBehavior>().costMultiplierPerPurchase = 1;
-                gameObject.GetComponent<ShrineHealingBehavior>().maxPurchaseCount = int.MaxValue;
-            }
+            //gameObject.GetComponent<ShrineHealingBehavior>().baseRadius = 80;
+            //gameObject.GetComponent<ShrineHealingBehavior>().radiusBonusPerPurchase = 0;
+            gameObject.GetComponent<ShrineHealingBehavior>().costMultiplierPerPurchase = 1;
+            gameObject.GetComponent<ShrineHealingBehavior>().maxPurchaseCount = int.MaxValue;
         }
     }
 }

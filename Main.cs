@@ -20,7 +20,8 @@ namespace BazaarIsMyHome
     [BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.funkfrog_sipondo.sharesuite", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInPlugin("com.Lunzir.BazaarIsMyHome", "BazaarIsMyHome", "1.4.0")]
+    [BepInIncompatibility("com.Lunzir.BazaarLunarForEveryone")]
+    [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync, VersionStrictness.DifferentModVersionsAreOk)]
     public class Main : BaseUnityPlugin
     {
@@ -28,7 +29,21 @@ namespace BazaarIsMyHome
         public static ItemHandler ItemHandler;
         public static Main instance;
 
+        public const string PluginGUID = PluginAuthor + "." + PluginName;
+        public const string PluginAuthor = "com.Lunzir";
+        public const string PluginName = "BazaarIsMyHome";
+        public const string PluginVersion = "1.4.0";
+
         List<BazaarBase> bazaarMods = new List<BazaarBase>();
+        private readonly Dictionary<PlayerCharacterMasterController, PlayerStruct> playerStructs_ = new Dictionary<PlayerCharacterMasterController, PlayerStruct>();
+
+        public PlayerStruct GetPlayerStruct(PlayerCharacterMasterController master)
+        {
+            if(!playerStructs_.ContainsKey(master)) {
+                playerStructs_.Add(master, new PlayerStruct(master));
+            }
+            return playerStructs_[master];
+         }
 
         public void Awake()
         {
@@ -56,6 +71,9 @@ namespace BazaarIsMyHome
                 bazaarMod.Hook();
             }
 
+            var instancedPurchases = new InstancedPurchases();
+            instancedPurchases.Hook();
+
             ItemHandler = new ItemHandler();
             On.RoR2.Run.Start += Run_Start;
             // 预言地图
@@ -80,7 +98,7 @@ namespace BazaarIsMyHome
 
         private void Run_Start(On.RoR2.Run.orig_Start orig, Run self)
         {
-            ShopKeep.IsDeath = false;
+            ShopKeep.DiedAtLeastOnce = false;
             ShopKeep.Body = null;
             ItemHandler = new ItemHandler();
             orig(self);
@@ -91,26 +109,15 @@ namespace BazaarIsMyHome
         {
             if (ModConfig.EnableMod.Value)
             {
-                if ((ModConfig.EnableSeerStationsInjection.Value || ModConfig.PenaltyCoefficient_Temp != 1))
+                if (ModConfig.LunarSeerSectionEnabled.Value)
                 {
                     foreach (SeerStationController seerStationController in self.seerStations)
                     {
                         seerStationController.GetComponent<PurchaseInteraction>().available = ModConfig.SeerStationAvailable.Value && !ModConfig.ReplaceLunarSeersWithEquipment.Value;
                         if (ModConfig.SeerStationAvailable.Value)
                         {
-                            seerStationController.GetComponent<PurchaseInteraction>().cost = ModConfig.SeerStationsCost.Value * ModConfig.PenaltyCoefficient_Temp;
-                            seerStationController.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.SeerStationsCost.Value * ModConfig.PenaltyCoefficient_Temp; 
-                        }
-                    }
-                }
-                else
-                {
-                    if (ModConfig.PenaltyCoefficient_Temp != 1)
-                    {
-                        foreach (SeerStationController seerStationController in self.seerStations)
-                        {
-                            seerStationController.GetComponent<PurchaseInteraction>().cost *= ModConfig.PenaltyCoefficient_Temp;
-                            seerStationController.GetComponent<PurchaseInteraction>().Networkcost *= ModConfig.PenaltyCoefficient_Temp;
+                            seerStationController.GetComponent<PurchaseInteraction>().cost = ModConfig.SeerStationsCost.Value;
+                            seerStationController.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.SeerStationsCost.Value; 
                         }
                     }
                 }
@@ -125,8 +132,8 @@ namespace BazaarIsMyHome
             {
                 Config.Reload();
                 ModConfig.InitConfig(Config);
-                ShopKeep.SpawnTime_Record = 0;
-                ModConfig.RerolledCount = 0;
+                ShopKeep.DeathCount = 0;
+                playerStructs_.Clear();
 
                 if (NetworkServer.active)
                 {
@@ -162,22 +169,26 @@ namespace BazaarIsMyHome
         }
         private void TeleporterInteraction_Start(On.RoR2.TeleporterInteraction.orig_Start orig, TeleporterInteraction self)
         {
+            orig(self);
             if (ModConfig.EnableMod.Value && ModConfig.EnableAutoOpenShop.Value)
             {
-                orig(self);
                 self.shouldAttemptToSpawnShopPortal = true;
-            }
-            else
-            {
-                orig(self);
             }
         }
         private void KickFromShop_FixedUpdate(On.EntityStates.NewtMonster.KickFromShop.orig_FixedUpdate orig, EntityStates.NewtMonster.KickFromShop self)
         {
             if (ModConfig.EnableMod.Value && ModConfig.EnableNoKickFromShop.Value)
             {
-                self.outer.SetNextStateToMain(); 
-            } else
+                if (ModConfig.NewtSecondLifeMode.Value == ShopKeep.DeathState.Evil)
+                {
+                    // TODO
+                }
+                else
+                {
+                }
+                self.outer.SetNextStateToMain();
+            }
+            else
             {
                 orig(self);
             }
@@ -216,70 +227,79 @@ namespace BazaarIsMyHome
                 //ChatHelper.Send($"victim = {victim}");
                 if (victim.Contains("ShopkeeperBody"))
                 {
-                    ShopKeep.IsDeath = true;
+                    ShopKeep.DiedAtLeastOnce = true;
                     //ChatHelper.SpawnTime_Record++;
-                    ShopKeep.SpawnTime_Record++;
-                    if (ModConfig.EnableNewtNoDie.Value)
+                    ShopKeep.DeathCount++;
+                    if (ModConfig.NewtSecondLifeMode.Value == ShopKeep.DeathState.Default)
                     {
-                        //Stage.instance.RespawnCharacter(body.master);
-                        //body.name = "ShopkeeperBody";
-                        //body.master.Respawn(body.footPosition, Quaternion.identity);
-                        AddItemToShopKeeper(body);
-                    }
-                    else
-                    {
-                        ChatHelper.ShowNewtDeath();
+                        if(ModConfig.EnableLines.Value)
+                        {
+                            ChatHelper.ShowNewtDeath();
+                        }
                         //string card = "Spawncards/InteractableSpawncard/iscScavLunarbackpack";
                         //DoSpawnCard(card, new Vector3(-122.7888f, -22.3505f, -45.7878f));
                         //DoSpawnCard(card, new Vector3(-125.9958f, -22.4272f, -42.6213f));
                         //Vector3 vector3 = body.footPosition;
                         //ChatHelper.Send($"死亡位置：{vector3.x},{vector3.y},{vector3.z}");
                     }
-                    
+                    else
+                    {
+                        AddItemToShopKeeper(body);
+                    }
                 }
             }
         }
         private void AddItemToShopKeeper(CharacterBody body)
         {
-            //body.teamComponent.teamIndex = TeamIndex.Monster;
+            switch (ModConfig.NewtSecondLifeMode.Value)
+            {
+                case ShopKeep.DeathState.Ghost:
+                    ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Ghost")), 1);
+                    ShopKeep.Body.AddBuff(RoR2Content.Buffs.HiddenInvincibility);
+                    break;
+                case ShopKeep.DeathState.Tank:
+                    var healthBoost = 10 * (int)Math.Pow(2, ShopKeep.DeathCount) - 10 * (int)Math.Pow(2, ShopKeep.DeathCount - 1);
+                    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BoostHp")), healthBoost);
+                    break;
+                case ShopKeep.DeathState.Evil:
+                    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Thorns")), 1);
+                    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BurnNearby")), 1);
+                    break;
+                default:
+                    break;
+            }
+            //if (ModConfig.NewtSecondLifeMode.Value == ShopKeep.DeathState.Evil)
+            //{
             
-            if (ModConfig.NewtSecondLifeMode.Value == ShopKeep.DeathState.Tank)
-            {
-                //body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("HealingPotion")), 1000);
-                //body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Clover")), 20);
-                //body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Medkit")), 100);
-                //body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ParentEgg")), 10000);
-                //body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("IncreaseHealing")), 100);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("StrengthenBurn")), 1);
 
-            }
-            if (ModConfig.NewtSecondLifeMode.Value == ShopKeep.DeathState.Evil)
-            {
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("HealingPotion")), 1000); // 强力万能药
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Thorns")), 100);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Clover")), 100);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Medkit")), 100);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("NearbyDamageBonus")), 100);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("StickyBomb")), 50);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("StunChanceOnHit")), 50);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("CaptainDefenseMatrix")), 1);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ExplodeOnDeath")), 100);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("SlowOnHit")), 10);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("StrengthenBurn")), 1);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ImmuneToDebuff")), 1);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BearVoid")), 1);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BurnNearby")), 1);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("InvadingDoppelganger")), 1);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("AutoCastEquipment")), 5);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("EquipmentMagazine")), 10);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("CritGlasses")), 20);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Syringe")), 100);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Phasing")), 100);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ParentEgg")), 10000);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BarrierOnOverHeal")), 100);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("IncreaseHealing")), 100);
-                body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Crowbar")), 10);
-                body.inventory.SetEquipmentIndex(EquipmentCatalog.FindEquipmentIndex("EliteVoidEquipment"));
-            }
+
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("HealingPotion")), 1000);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Thorns")), 100);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Clover")), 100);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Medkit")), 100);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("NearbyDamageBonus")), 100);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("StickyBomb")), 50);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("StunChanceOnHit")), 50);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("CaptainDefenseMatrix")), 1);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ExplodeOnDeath")), 100);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("SlowOnHit")), 10);
+                
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ImmuneToDebuff")), 1);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BearVoid")), 1);
+                
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("InvadingDoppelganger")), 1);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("AutoCastEquipment")), 5);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("EquipmentMagazine")), 10);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("CritGlasses")), 20);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Syringe")), 100);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Phasing")), 100);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ParentEgg")), 10000);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BarrierOnOverHeal")), 100);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("IncreaseHealing")), 100);
+            //    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Crowbar")), 10);
+            //    body.inventory.SetEquipmentIndex(EquipmentCatalog.FindEquipmentIndex("EliteVoidEquipment"));
+            //}
         }
 
         private void SpawnState_OnEnter(On.EntityStates.NewtMonster.SpawnState.orig_OnEnter orig, EntityStates.NewtMonster.SpawnState self)
@@ -292,48 +312,18 @@ namespace BazaarIsMyHome
                     // 欢迎语
                     StartCoroutine(ShopWelcomeWord());
 
-                    if (ShopKeep.SpawnTime_Record == 0)
+                    if (ShopKeep.Body is null) FindShopkeeper();
+
+                    if (ModConfig.NewtSecondLifeMode.Value != ShopKeep.DeathState.Default)
                     {
-                        if (ShopKeep.Body is null) FindShopkeeper();
                         ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ExtraLife")), 1000);
-                        //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BoostHp")), 10000 * 10000);
-                        //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Pearl")), 10000 * 10000);
-                        //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ParentEgg")), 34 * 1000);
-                        //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ShieldOnly")), 100*1000);
-                        //ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Medkit")), 10000);
-                        // 死亡状态 添加物品
-                        if (ShopKeep.IsDeath)
-                        {
-                            if (ModConfig.EnableNewtNoDie.Value)
-                            {
-                                switch (ModConfig.NewtSecondLifeMode.Value)
-                                {
-                                    case ShopKeep.DeathState.Ghost:
-                                        ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Ghost")), 1);
-                                        break;
-                                    case ShopKeep.DeathState.Tank:
-                                        ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BoostHp")), 10);
-                                        break;
-                                    case ShopKeep.DeathState.Evil:
-                                        AddItemToShopKeeper(ShopKeep.Body);
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
-                        } 
+                        ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("CutHp")), 200);
                     }
-
-
                 }
             }
             catch(Exception ex)
             {
                 Logger.LogError(ex);
-            }
-            finally
-            {
-
             }
             orig(self);
         }
@@ -361,7 +351,6 @@ namespace BazaarIsMyHome
                 }
             }
         }
-        // 打乱 泛型列表项目
 
         private bool IsCurrentMapInBazaar()
         {
