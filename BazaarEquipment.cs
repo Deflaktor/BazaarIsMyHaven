@@ -1,5 +1,6 @@
 ﻿using RoR2;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,8 @@ namespace BazaarIsMyHome
 
         Dictionary<int, SpawnCardStruct> DicEquipmentsLunarSeer = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicEquipments = new Dictionary<int, SpawnCardStruct>();
+        PlayerCharacterMasterController currentActivator = null;
+        PickupIndex placeEquipment = PickupIndex.none;
 
         public override void Init()
         {
@@ -27,6 +30,8 @@ namespace BazaarIsMyHome
         public override void Hook()
         {
             On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
+            On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
+            On.RoR2.ShopTerminalBehavior.DropPickup += ShopTerminalBehavior_DropPickup;
         }
 
         public override void SetupBazaar()
@@ -47,11 +52,91 @@ namespace BazaarIsMyHome
                     if (self.name.StartsWith("MultiShopEquipmentTerminal"))
                     {
                         //ChatHelper.Send("一台主动装备已修改");
-                        self.cost = 0;
-                        self.Networkcost = 0;
+                        self.cost = ModConfig.EquipmentCost.Value;
+                        self.Networkcost = ModConfig.EquipmentCost.Value;
                         //self.costType = CostTypeIndex.PercentHealth;
                     }
                 }
+            }
+        }
+
+        private void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
+        {
+            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar())
+            {
+                if (self.name.StartsWith("MultiShopEquipmentTerminal"))
+                {
+                    var playerCharacterMasterController = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
+                    try { 
+                        currentActivator = playerCharacterMasterController;
+                        orig(self, activator);
+                        return;
+                    }
+                    finally
+                    {
+                        currentActivator = null;
+                    }
+                }
+            }
+            orig(self, activator);
+            //if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar())
+            //{
+            //    if (self.name.StartsWith("MultiShopEquipmentTerminal"))
+            //    {
+            //        // in case the player places an equipment on the terminal
+            //        if (placeEquipment != PickupIndex.none)
+            //        {
+            //            var shopTerminal = self.GetComponent<ShopTerminalBehavior>();
+            //            shopTerminal.SetHasBeenPurchased(false);
+            //            shopTerminal.SetPickupIndex(placeEquipment);
+            //            self.SetAvailable(true);
+            //        }
+            //    }
+            //}
+            //currentActivator = null;
+        }
+
+        private void ShopTerminalBehavior_DropPickup(On.RoR2.ShopTerminalBehavior.orig_DropPickup orig, ShopTerminalBehavior self)
+        {
+            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && self.name.StartsWith("MultiShopEquipmentTerminal"))
+            {
+                if (!NetworkServer.active)
+                {
+                    Debug.LogWarning("[Server] function 'System.Void RoR2.ShopTerminalBehavior::DropPickup()' called on client");
+                    return;
+                }
+                var body = currentActivator.master.GetBody();
+                if (body != null)
+                {
+                    var pickupDef = PickupCatalog.GetPickupDef(self.CurrentPickupIndex());
+                    if (pickupDef.itemIndex != ItemIndex.None)
+                    {
+                        PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, PickupCatalog.GetPickupDef(self.CurrentPickupIndex()).itemIndex);
+                        currentActivator.master.inventory.GiveItem(pickupDef.itemIndex);
+                        self.SetHasBeenPurchased(newHasBeenPurchased: true);
+                        self.SetNoPickup();
+                    }
+                    else if (pickupDef.equipmentIndex != EquipmentIndex.None)
+                    {
+                        if(currentActivator.master.inventory.GetEquipmentIndex() != EquipmentIndex.None)
+                        {
+                            var placeEquipment = PickupCatalog.FindPickupIndex(currentActivator.master.inventory.GetEquipmentIndex());
+                            self.SetPickupIndex(placeEquipment);
+                            var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
+                            purchaseInteraction.SetAvailable(true);
+                        }
+                        else
+                        {
+                            self.SetHasBeenPurchased(newHasBeenPurchased: true);
+                            self.SetNoPickup();
+                        }
+                        currentActivator.master.inventory.SetEquipmentIndex(pickupDef.equipmentIndex);
+                    }
+                }
+            }
+            else
+            {
+                orig(self);
             }
         }
 
@@ -90,10 +175,23 @@ namespace BazaarIsMyHome
                 DicEquipmentsLunarSeer.Clear();
                 DicEquipments.Clear();
                 SetEquipment();
-                if (ModConfig.ReplaceLunarSeersWithEquipment.Value){ 
-                    DoSpawnGameObject(DicEquipmentsLunarSeer, multiShopEquipmentTerminal, 2);
+                var gameObjects = new List<GameObject>();
+                if (ModConfig.ReplaceLunarSeersWithEquipment.Value){
+                    gameObjects.AddRange(DoSpawnGameObject(DicEquipmentsLunarSeer, multiShopEquipmentTerminal, 2));
                 }
-                DoSpawnGameObject(DicEquipments, multiShopEquipmentTerminal, ModConfig.EquipmentCount.Value);
+                gameObjects.AddRange(DoSpawnGameObject(DicEquipments, multiShopEquipmentTerminal, ModConfig.EquipmentCount.Value));
+
+                gameObjects.ForEach(gameObject => {
+                    var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
+                    var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
+                    if(ModConfig.EquipmentInstanced.Value) {
+                        var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
+                        instancedPurchase.original.available = purchaseInteraction.available;
+                        instancedPurchase.original.pickupIndex = shopTerminalBehavior.pickupIndex;
+                        instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
+                    }
+                    // purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
+                });
             }
         }
     }

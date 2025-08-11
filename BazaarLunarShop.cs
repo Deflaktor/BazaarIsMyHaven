@@ -25,6 +25,8 @@ namespace BazaarIsMyHome
         int currentLunarShopStaticItemIndex = 0;
         int lunarRecyclerRerolledCount = 0;
         List<PurchaseInteraction> ObjectLunarShopTerminals_Spawn = new List<PurchaseInteraction>();
+        PlayerCharacterMasterController currentActivator = null;
+        Dictionary<PurchaseInteraction, List<PlayerCharacterMasterController>> whichStallsHaveBeenBoughtOnce = new Dictionary<PurchaseInteraction, List<PlayerCharacterMasterController>>();
 
         public override void Init()
         {
@@ -47,11 +49,6 @@ namespace BazaarIsMyHome
             On.RoR2.ShopTerminalBehavior.DropPickup += ShopTerminalBehavior_DropPickup;
         }
 
-        private void ShopTerminalBehavior_DropPickup(On.RoR2.ShopTerminalBehavior.orig_DropPickup orig, ShopTerminalBehavior self)
-        {
-            orig(self);
-        }
-
         public override void SetupBazaar()
         {
             if (ModConfig.LunarRecyclerSectionEnabled.Value)
@@ -60,10 +57,10 @@ namespace BazaarIsMyHome
             }
             if(ModConfig.LunarShopSectionEnabled.Value) {
                 currentLunarShopStaticItemIndex = 0;
+                whichStallsHaveBeenBoughtOnce.Clear();
                 SpawnLunarShopTerminal();
             }
         }
-
 
         public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
         {
@@ -117,6 +114,15 @@ namespace BazaarIsMyHome
                         ChatHelper.LunarShopTerminalUsesLeft(playerCharacterMasterController, usesLeft);
                         return;
                     }
+                    try { 
+                        currentActivator = playerCharacterMasterController;
+                        orig(self, activator);
+                        return;
+                    }
+                    finally
+                    {
+                        currentActivator = null;
+                    }
                 }
                 if (self.name.StartsWith("LunarRecycler"))
                 {
@@ -141,9 +147,13 @@ namespace BazaarIsMyHome
                     var playerStruct = Main.instance.GetPlayerStruct(playerCharacterMasterController);
                     if (self.name.StartsWith("LunarShopTerminal"))
                     {
-                        playerStruct.LunarShopUseCount++;
-                        var usesLeft = ModConfig.LunarShopBuyLimit.Value - playerStruct.LunarShopUseCount;
-                        ChatHelper.LunarShopTerminalUsesLeft(playerCharacterMasterController, usesLeft);
+                        if (!whichStallsHaveBeenBoughtOnce.TryGetValue(self, out List<PlayerCharacterMasterController> buyers) || !buyers.Contains(playerCharacterMasterController))
+                        {
+                            playerStruct.LunarShopUseCount++;
+                            var usesLeft = ModConfig.LunarShopBuyLimit.Value - playerStruct.LunarShopUseCount;
+                            ChatHelper.LunarShopTerminalUsesLeft(playerCharacterMasterController, usesLeft);
+                            whichStallsHaveBeenBoughtOnce[self].Add(playerCharacterMasterController);
+                        }
                     }
                     if (self.name.StartsWith("LunarRecycler"))
                     {
@@ -176,6 +186,50 @@ namespace BazaarIsMyHome
                 }
             }
             orig(self, newAvailable);
+        }
+        private void ShopTerminalBehavior_DropPickup(On.RoR2.ShopTerminalBehavior.orig_DropPickup orig, ShopTerminalBehavior self)
+        {
+            if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && self.name.StartsWith("LunarShopTerminal"))
+            {
+                if (!NetworkServer.active)
+                {
+                    Debug.LogWarning("[Server] function 'System.Void RoR2.ShopTerminalBehavior::DropPickup()' called on client");
+                    return;
+                }
+                var body = currentActivator.master.GetBody();
+                if (body != null)
+                {
+                    var pickupDef = PickupCatalog.GetPickupDef(self.CurrentPickupIndex());
+                    if (pickupDef.itemIndex != ItemIndex.None)
+                    {
+                        PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, PickupCatalog.GetPickupDef(self.CurrentPickupIndex()).itemIndex);
+                        currentActivator.master.inventory.GiveItem(pickupDef.itemIndex);
+
+                        self.SetHasBeenPurchased(newHasBeenPurchased: true);
+                        self.SetNoPickup();
+                    } 
+                    else if (pickupDef.equipmentIndex != EquipmentIndex.None)
+                    {
+                        if (currentActivator.master.inventory.GetEquipmentIndex() != EquipmentIndex.None)
+                        {
+                            var placeEquipment = PickupCatalog.FindPickupIndex(currentActivator.master.inventory.GetEquipmentIndex());
+                            self.SetPickupIndex(placeEquipment);
+                            var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
+                            purchaseInteraction.SetAvailable(true);
+                        }
+                        else
+                        {
+                            self.SetHasBeenPurchased(newHasBeenPurchased: true);
+                            self.SetNoPickup();
+                        }
+                        currentActivator.master.inventory.SetEquipmentIndex(pickupDef.equipmentIndex);
+                    }
+                }
+            }
+            else
+            {
+                orig(self);
+            }
         }
 
         IEnumerator DelayEffect(PurchaseInteraction lunarShopTerminal, float time, bool spawnEffect)
@@ -360,14 +414,18 @@ namespace BazaarIsMyHome
             var gameObjects = DoSpawnGameObject(DicLunarShopTerminals, lunarShopTerminal, ModConfig.LunarShopTerminalCount.Value);
             gameObjects.ForEach(gameObject => {
                 gameObject.name = "LunarShopTerminal";
-                var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
                 var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
                 var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
-                instancedPurchase.originalAvailable = purchaseInteraction.available;
-                instancedPurchase.originalPickupIndex = shopTerminalBehavior.pickupIndex;
-                instancedPurchase.originalHasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
-                purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
+                if (ModConfig.LunarShopInstanced.Value)
+                {
+                    var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
+                    instancedPurchase.original.available = purchaseInteraction.available;
+                    instancedPurchase.original.pickupIndex = shopTerminalBehavior.pickupIndex;
+                    instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
+                }
+                // purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
                 ObjectLunarShopTerminals_Spawn.Add(purchaseInteraction);
+                whichStallsHaveBeenBoughtOnce.Add(purchaseInteraction, new List<PlayerCharacterMasterController>());
                 Main.instance.StartCoroutine(DelayEffect(purchaseInteraction, 0.1f, false));
             });
         }
