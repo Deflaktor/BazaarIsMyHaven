@@ -54,6 +54,9 @@ namespace BazaarIsMyHome
         // equipment
         public static ConfigEntry<bool> EquipmentSectionEnabled;
         public static ConfigEntry<int> EquipmentCount;
+        public static ConfigEntry<bool> EquipmentInstanced;
+        public static ConfigEntry<int> EquipmentCost;
+        public static ConfigEntry<bool> EquipmentBuyToInventory;
 
         // lunarShop
         public static ConfigEntry<bool> LunarShopSectionEnabled;
@@ -62,6 +65,8 @@ namespace BazaarIsMyHome
         public static ConfigEntry<int> LunarShopBuyLimit;
         public static ConfigEntry<bool> EnableLunarShopStaticItems;
         public static ConfigEntry<string> LunarShopItemsList;
+        public static ConfigEntry<bool> LunarShopInstanced;
+        public static ConfigEntry<bool> LunarShopBuyToInventory;
 
         // lunarRecycler
         public static ConfigEntry<bool> LunarRecyclerSectionEnabled;
@@ -137,6 +142,9 @@ namespace BazaarIsMyHome
 
             EquipmentSectionEnabled = config.Bind("04 Equipment", "SectionEnabled", true, "Enables/Disables Equipment Section");
             EquipmentCount = config.Bind("04 Equipment", "EquipmentCount", 3, "Total generated value of equipments, max is 3, below zero is not enabled. \n月店主动装备的数量，最多6台，小于0不启用"); if (EquipmentCount.Value > 3) EquipmentCount.Value = 3;
+            EquipmentInstanced = config.Bind("04 Equipment", "EquipmentInstanced", true, "Allows each player to buy equipment independently.");
+            EquipmentCost = config.Bind("04 Equipment", "EquipmentCost", 0, "How much an equipment costs money.");
+            EquipmentBuyToInventory = config.Bind("04 Equipment", "EquipmentBuyToInventory", true, "Whether the items should go directly into the inventory instead of dropping on the ground first.");
 
             LunarShopSectionEnabled = config.Bind("05 LunarShop", "SectionEnabled", true, "Enables/Disables LunarShop Section");
             LunarShopTerminalCount = config.Bind("05 LunarShop", "LunarShopTerminalCount", 5, "Total generated value of LunarShopTerminal, max is 20, below zero is not enabled. \n月店月球装备的数量，最多11个，包括原有的5个，小于0不启用"); if (LunarShopTerminalCount.Value > 20) LunarShopTerminalCount.Value = 20;
@@ -146,6 +154,8 @@ namespace BazaarIsMyHome
             var items = "LunarPrimaryReplacement, LunarSecondaryReplacement, LunarSpecialReplacement, AutoCastEquipment, LunarDagger, HalfSpeedDoubleHealth, LunarSun, LunarBadLuck, LunarBadLuck, LunarBadLuck, ShieldOnly, ShieldOnly, ShieldOnly, HalfAttackSpeedHalfCooldowns, HalfAttackSpeedHalfCooldowns, RandomDamageZone, Tonic";
             var itemTiersString = "Tier1, Tier2, Tier3, Lunar, Boss, VoidTier1, VoidTier2, VoidTier3, VoidBoss";
             LunarShopItemsList = config.Bind("05 LunarShop", "LunarShopItems", items, $"List of items available at the LunarShop, separated by comma. Must be internal names as defined in https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/ or item tiers ({itemTiersString}).");
+            LunarShopInstanced = config.Bind("05 LunarShop", "LunarShopInstanced", true, "Allows each player to buy items from the LunarShop independently.");
+            LunarShopBuyToInventory = config.Bind("05 LunarShop", "LunarShopBuyToInventory", true, "Whether the items should go directly into the inventory instead of dropping on the ground first.");
 
             LunarRecyclerSectionEnabled = config.Bind("06 LunarRecycler", "SectionEnabled", true, "Enables/Disables LunarRecycler Section");
             LunarRecyclerAvailable = config.Bind("06 LunarRecycler", "LunarRecyclerAvailable", true, "Enable Lunar Recycler.\n切片能否购买？");

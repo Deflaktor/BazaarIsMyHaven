@@ -2,6 +2,7 @@
 using MonoMod.Cil;
 using RoR2;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -11,7 +12,7 @@ namespace BazaarIsMyHome
 {
     public partial class InstancedPurchases
     {
-        public PlayerCharacterMasterController current;
+        public PlayerCharacterMasterController currentInteractor;
 
         public void Hook()
         {
@@ -19,19 +20,22 @@ namespace BazaarIsMyHome
             IL.RoR2.ShopTerminalBehavior.OnSerialize += ShopTerminalBehavior_OnSerialize;
             On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
-            On.RoR2.ShopTerminalBehavior.SetNoPickup += ShopTerminalBehavior_SetNoPickup;
+            //On.RoR2.ShopTerminalBehavior.SetNoPickup += ShopTerminalBehavior_SetNoPickup;
             On.RoR2.ShopTerminalBehavior.SetHasBeenPurchased += ShopTerminalBehavior_SetHasBeenPurchased;
-            IL.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.PurchaseInteraction.GetInteractability += PurchaseInteraction_GetInteractability;
+            On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
+            On.RoR2.ShopTerminalBehavior.CurrentPickupIndex += ShopTerminalBehavior_CurrentPickupIndex;
+            IL.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionEnd;
         }
 
         private Interactability PurchaseInteraction_GetInteractability(On.RoR2.PurchaseInteraction.orig_GetInteractability orig, PurchaseInteraction self, Interactor activator)
         {
             if (!activator.hasAuthority && self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
             {
-                var purchased = instancedPurchase.purchases.Get(activator.GetComponent<CharacterBody>().master.playerCharacterMasterController, false);
+                PlayerCharacterMasterController pc = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
+                var instancedPurchaseAvailable = instancedPurchase.GetOrOriginal(pc).available;
                 var availableBackup = self.available;
-                self.available = !purchased;
+                self.available = instancedPurchaseAvailable;
                 var interactability = orig(self, activator);
                 self.available = availableBackup;
                 return interactability;
@@ -39,61 +43,42 @@ namespace BazaarIsMyHome
             return orig(self, activator);
         }
 
-        private void PurchaseInteraction_OnInteractionBegin(ILContext il)
+        private void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
+        {
+            try { 
+                currentInteractor = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
+                orig(self, activator);
+
+                if (currentInteractor.hasAuthority)
+                {
+                    UpdateShopForServer(self.gameObject, currentInteractor);
+                }
+                else
+                {
+                    UpdateShopForClient(self.gameObject, currentInteractor);
+                }
+
+            } finally {
+                currentInteractor = null;
+            }
+        }
+
+        private void PurchaseInteraction_OnInteractionEnd(ILContext il)
         {
             HookHelper.HookEndOfMethod(il, (PurchaseInteraction self, Interactor activator) =>
             {
-                if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
-                {
-                    if (activator.hasAuthority)
-                    {
-                        CloseShopForServer(self.gameObject);
-                    }
-                    else
-                    {
-                        var playerCharacterMasterController = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
-                        instancedPurchase.purchases[playerCharacterMasterController] = true;
-                        instancedPurchase.playerCharacterMasterController = playerCharacterMasterController;
-
-                        var purchaseInteractionDirtyBitsBackup = self.m_SyncVarDirtyBits;
-                        self.m_SyncVarDirtyBits |= 4u; // available
-                        if (self.gameObject.TryGetComponent(out ShopTerminalBehavior shopTerminalBehavior))
-                        {
-                            var shopTerminalBehaviorDirtyBitsBackup = shopTerminalBehavior.m_SyncVarDirtyBits;
-                            shopTerminalBehavior.m_SyncVarDirtyBits |= 1u; // pickupIndex
-                            shopTerminalBehavior.m_SyncVarDirtyBits |= 4u; // hasBeenPurchased
-
-                            CloseShopForClient(self.gameObject, playerCharacterMasterController);
-
-                            shopTerminalBehavior.m_SyncVarDirtyBits = shopTerminalBehaviorDirtyBitsBackup;
-                        }
-                        else
-                        {
-                            CloseShopForClient(self.gameObject, playerCharacterMasterController);
-                        }
-                        self.m_SyncVarDirtyBits = purchaseInteractionDirtyBitsBackup;
-                        
-                        instancedPurchase.playerCharacterMasterController = null;
-                        //var purchased = instancedPurchase.purchases.Get(playerCharacterMasterController, false);
-                        //var availableBackup = self.available;
-                        //self.available = false;
-                        //if (self.gameObject.TryGetComponent(out ShopTerminalBehavior shopTerminalBehavior))
-                        //{
-                        //    var hasBeenPurchasedBackup = shopTerminalBehavior.hasBeenPurchased;
-                        //    var pickupIndexBackup = shopTerminalBehavior.pickupIndex;
-                        //    shopTerminalBehavior.hasBeenPurchased = true;
-                        //    shopTerminalBehavior.pickupIndex = PickupIndex.none;
-                        //    CloseShopForClient(self.gameObject, playerCharacterMasterController);
-                        //    shopTerminalBehavior.hasBeenPurchased = hasBeenPurchasedBackup;
-                        //    shopTerminalBehavior.pickupIndex = pickupIndexBackup;
-                        //}
-                        //else
-                        //{
-                        //    CloseShopForClient(self.gameObject, playerCharacterMasterController);
-                        //}
-                        //self.available = availableBackup;
-                    }
-                }
+                //if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
+                //{
+                //    var playerCharacterMasterController = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
+                //    if (activator.hasAuthority)
+                //    {
+                //        UpdateShopForServer(self.gameObject, playerCharacterMasterController);
+                //    }
+                //    else
+                //    {
+                //        UpdateShopForClient(self.gameObject, playerCharacterMasterController);
+                //    }
+                //}
             });
         }
 
@@ -101,10 +86,18 @@ namespace BazaarIsMyHome
         {
             if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
             {
-                //if (!newHasBeenPurchased)
-                //{
-                //    orig(self, newHasBeenPurchased);
-                //}
+                if (currentInteractor != null)
+                {
+                    instancedPurchase.GetOrCreate(currentInteractor).hasBeenPurchased = newHasBeenPurchased;
+                    UpdateShop(self.gameObject, currentInteractor);
+                }
+                else
+                {
+                    instancedPurchase.original.hasBeenPurchased = newHasBeenPurchased;
+                    orig(self, newHasBeenPurchased);
+                    return;
+                    // self.hasBeenPurchased = newHasBeenPurchased;
+                }
             }
             else
             {
@@ -112,26 +105,40 @@ namespace BazaarIsMyHome
             }
         }
 
-        private void ShopTerminalBehavior_SetNoPickup(On.RoR2.ShopTerminalBehavior.orig_SetNoPickup orig, ShopTerminalBehavior self)
-        {
-            if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
-            {
-
-            }
-            else
-            {
-                orig(self);
-            }
-        }
+        //private void ShopTerminalBehavior_SetNoPickup(On.RoR2.ShopTerminalBehavior.orig_SetNoPickup orig, ShopTerminalBehavior self)
+        //{
+        //    if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
+        //    {
+        //        if(currentInteractor != null)
+        //        {
+        //            instancedPurchase.GetOrOriginal(currentInteractor).pickupIndex = PickupIndex.none;
+        //        }
+        //        else
+        //        {
+        //            self.pickupIndex = PickupIndex.none;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        orig(self);
+        //    }
+        //}
 
         private void PurchaseInteraction_SetAvailable(On.RoR2.PurchaseInteraction.orig_SetAvailable orig, PurchaseInteraction self, bool newAvailable)
         {
             if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
             {
-                //if(newAvailable)
-                //{
-                //    orig(self, newAvailable);
-                //}
+                if (currentInteractor != null) {
+                    instancedPurchase.GetOrCreate(currentInteractor).available = newAvailable;
+                    UpdateShop(self.gameObject, currentInteractor);
+                }
+                else
+                {
+                    instancedPurchase.original.available = newAvailable;
+                    orig(self, newAvailable);
+                    return;
+                    //self.available = newAvailable;
+                }
             }
             else
             {
@@ -141,14 +148,36 @@ namespace BazaarIsMyHome
 
         private void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
         {
-            if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
+            if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase) && NetworkServer.active)
             {
-                if(newPickupIndex != PickupIndex.none) {
-                    // changing pickup is fine, but we do not want to set the pickup to none for everyone
-                    instancedPurchase.originalPickupIndex = newPickupIndex;
+                if (currentInteractor != null)
+                {
+                    instancedPurchase.GetOrCreate(currentInteractor).pickupIndex = newPickupIndex;
+                    instancedPurchase.GetOrCreate(currentInteractor).hidden = newHidden;
+                    UpdateShop(self.gameObject, currentInteractor);
+                }
+                else
+                {
+                    instancedPurchase.original.pickupIndex = newPickupIndex;
+                    instancedPurchase.original.hidden = newHidden;
+                    orig(self, newPickupIndex, newHidden);
+                    return;
+                    //self.pickupIndex = newPickupIndex;
+                    //self.hidden = newHidden;
                 }
             }
-            orig(self, newPickupIndex, newHidden);
+            else
+            {
+                orig(self, newPickupIndex, newHidden);
+            }
+        }
+        private PickupIndex ShopTerminalBehavior_CurrentPickupIndex(On.RoR2.ShopTerminalBehavior.orig_CurrentPickupIndex orig, ShopTerminalBehavior self)
+        {
+            if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase) && NetworkServer.active)
+            {
+                return instancedPurchase.GetOrOriginal(currentInteractor).pickupIndex;
+            }
+            return orig(self);
         }
 
         private void ShopTerminalBehavior_OnSerialize(ILContext il)
@@ -161,14 +190,7 @@ namespace BazaarIsMyHome
                 {
                     if(shopTerminalBehavior.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
                     {
-                        if(instancedPurchase.playerCharacterMasterController != null && instancedPurchase.purchases.Get(instancedPurchase.playerCharacterMasterController))
-                        {
-                            return PickupIndex.none;
-                        }
-                        else
-                        {
-                            return instancedPurchase.originalPickupIndex;
-                        }
+                        return instancedPurchase.GetOrOriginal(instancedPurchase.pcClient).pickupIndex;
                     }
                     // vanilla
                     return shopTerminalBehavior.pickupIndex;
@@ -182,14 +204,7 @@ namespace BazaarIsMyHome
                 {
                     if (shopTerminalBehavior.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
                     {
-                        if (instancedPurchase.playerCharacterMasterController != null && instancedPurchase.purchases.Get(instancedPurchase.playerCharacterMasterController))
-                        {
-                            return true;
-                        }
-                        else
-                        {
-                            return instancedPurchase.originalHasBeenPurchased;
-                        }
+                        return instancedPurchase.GetOrOriginal(instancedPurchase.pcClient).hasBeenPurchased;
                     }
                     // vanilla
                     return shopTerminalBehavior.hasBeenPurchased;
@@ -207,14 +222,7 @@ namespace BazaarIsMyHome
                 {
                     if (purchaseInteraction.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
                     {
-                        if (instancedPurchase.playerCharacterMasterController != null && instancedPurchase.purchases.Get(instancedPurchase.playerCharacterMasterController))
-                        {
-                            return false;
-                        }
-                        else
-                        {
-                            return instancedPurchase.originalAvailable;
-                        }
+                        return instancedPurchase.GetOrOriginal(instancedPurchase.pcClient).available;
                     }
                     // vanilla
                     return purchaseInteraction.available;
@@ -222,33 +230,63 @@ namespace BazaarIsMyHome
             }
         }
 
-
-        private void CloseShopForServer(GameObject gameObject)
+        private void UpdateShop(GameObject gameObject, PlayerCharacterMasterController pc)
         {
+            if (currentInteractor == null)
+            {
+                Log.LogError("Internal Error: During UpdateShop it is expected that currentInteractor is not null. Either the game code has changed or there is an incompatibility with another mod.");
+            }
+            if (currentInteractor.hasAuthority)
+            {
+                UpdateShopForServer(gameObject, currentInteractor);
+            }
+            //else
+            //{
+            //    UpdateShopForClient(gameObject, currentInteractor);
+            //}
+        }
+
+        private void UpdateShopForServer(GameObject gameObject, PlayerCharacterMasterController pc)
+        {
+            var instancedPurchase = gameObject.GetComponent<InstancedPurchase>();
             var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
             var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
 
-            purchaseInteraction.available = false;
-            var pickupIndexBackup = shopTerminalBehavior.pickupIndex;
-            shopTerminalBehavior.pickupIndex = PickupIndex.none;
-            shopTerminalBehavior.hasBeenPurchased = true;
-            shopTerminalBehavior.UpdatePickupDisplayAndAnimations();
-            shopTerminalBehavior.pickupIndex = pickupIndexBackup;
+            purchaseInteraction.available = instancedPurchase.GetOrOriginal(pc).available;
 
-            if (shopTerminalBehavior.pickupDisplay != null)
-            {
-                shopTerminalBehavior.pickupDisplay.SetPickupIndex(PickupIndex.none, shopTerminalBehavior.hidden);
-            }
+            shopTerminalBehavior.hasBeenPurchased = instancedPurchase.GetOrOriginal(pc).hasBeenPurchased;
+            shopTerminalBehavior.pickupIndex = instancedPurchase.GetOrOriginal(pc).pickupIndex;
+            shopTerminalBehavior.UpdatePickupDisplayAndAnimations();
+            //if (shopTerminalBehavior.pickupDisplay != null)
+            //{
+            //    shopTerminalBehavior.pickupDisplay.SetPickupIndex(PickupIndex.none, shopTerminalBehavior.hidden);
+            //}
+            // shopTerminalBehavior.pickupIndex = instancedPurchase.original.pickupIndex;
         }
 
-        private void CloseShopForClient(GameObject shop, PlayerCharacterMasterController playerCharacterMasterController)
+        private void UpdateShopForClient(GameObject shop, PlayerCharacterMasterController pc)
         {
             if (shop.TryGetComponent(out InstancedPurchase instancedPurchase))
             {
+                // set which properties we want to sync
+                var syncVarDirtyBitsBackups = new Dictionary<NetworkBehaviour, uint>();
+                if (shop.TryGetComponent(out ShopTerminalBehavior shopTerminalBehavior))
+                {
+                    syncVarDirtyBitsBackups[shopTerminalBehavior] = shopTerminalBehavior.m_SyncVarDirtyBits;
+                    shopTerminalBehavior.m_SyncVarDirtyBits |= 1u; // pickupIndex
+                    shopTerminalBehavior.m_SyncVarDirtyBits |= 4u; // hasBeenPurchased
+                }
+                if (shop.TryGetComponent(out PurchaseInteraction purchaseInteraction))
+                {
+                    syncVarDirtyBitsBackups[purchaseInteraction] = purchaseInteraction.m_SyncVarDirtyBits;
+                    purchaseInteraction.m_SyncVarDirtyBits |= 4u; // available
+                }
+
                 NetworkWriter updateWriter = new NetworkWriter();
-                instancedPurchase.playerCharacterMasterController = playerCharacterMasterController;
+                instancedPurchase.pcClient = pc;
 
                 var shopNetworkIdentity = shop.GetComponent<NetworkIdentity>();
+
                 for (int j = 0; j < NetworkServer.numChannels; j++)
                 {
                     updateWriter.StartMessage(MsgType.UpdateVars);
@@ -260,17 +298,20 @@ namespace BazaarIsMyHome
                         NetworkBehaviour networkBehaviour = behavioursOfSameChannel[k];
                         if (networkBehaviour.OnSerialize(updateWriter, initialState: false))
                         {
-                            // networkBehaviour.ClearAllDirtyBits();
+                            // restore m_SyncVarDirtyBits
+                            if(syncVarDirtyBitsBackups.TryGetValue(networkBehaviour, out uint syncVarDirtyBitsBackup)) {
+                                networkBehaviour.m_SyncVarDirtyBits = syncVarDirtyBitsBackup;
+                            }
                             flag = true;
                         }
                     }
                     if (flag)
                     {
                         updateWriter.FinishMessage();
-                        playerCharacterMasterController.networkUser.connectionToClient.SendWriter(updateWriter, j);
+                        pc.networkUser.connectionToClient.SendWriter(updateWriter, j);
                     }
                 }
-                instancedPurchase.playerCharacterMasterController = null;
+                instancedPurchase.pcClient = null;
             }
         }
     }
