@@ -25,19 +25,19 @@ namespace BazaarIsMyHome
 
         public override void SetupBazaar()
         {
-            SpawnShrineRestack();
+            if (ModConfig.ShrineRestackSectionEnabled.Value)
+            {
+                SpawnShrineRestack();
+            }
         }
 
         private void PurchaseInteraction_ScaleCost(On.RoR2.PurchaseInteraction.orig_ScaleCost orig, PurchaseInteraction self, float scalar)
         {
-            if (ModConfig.EnableMod.Value)
+            if (ModConfig.EnableMod.Value && ModConfig.ShrineRestackSectionEnabled.Value)
             {
                 if (self.name.StartsWith("ShrineRestack"))
                 {
-                    if (ModConfig.EnableShrineRestack.Value)
-                    {
-                        scalar = (float)ModConfig.ShrineRestackScalar.Value;
-                    }
+                    scalar = (float)ModConfig.ShrineRestackScalar.Value;
                 }
             }
             orig(self, scalar);
@@ -45,21 +45,12 @@ namespace BazaarIsMyHome
 
         private void SpawnShrineRestack()
         {
-            if (ModConfig.EnableShrineRestack.Value)
-            {
-                // 跌序
-                SpawnCard spawnCard = iscShrineRestack.WaitForCompletion();
-                GameObject shrinerestackOne = spawnCard.DoSpawn(new Vector3(-130f, -24f, -40f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
-                shrinerestackOne.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f);
-                shrinerestackOne.GetComponent<ShrineRestackBehavior>().maxPurchaseCount = ModConfig.ShrineRestackMaxCount.Value;
-                shrinerestackOne.GetComponent<PurchaseInteraction>().cost = ModConfig.ShrineRestackCost.Value;
-                shrinerestackOne.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.ShrineRestackCost.Value;
-                if (ModConfig.PenaltyCoefficient_Temp != 1)
-                {
-                    shrinerestackOne.GetComponent<PurchaseInteraction>().cost *= ModConfig.PenaltyCoefficient_Temp;
-                    shrinerestackOne.GetComponent<ShrineRestackBehavior>().costMultiplierPerPurchase = ModConfig.PenaltyCoefficient_Temp;
-                }
-            }
+            SpawnCard spawnCard = iscShrineRestack.WaitForCompletion();
+            GameObject shrinerestackOne = spawnCard.DoSpawn(new Vector3(-130f, -24f, -40f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
+            shrinerestackOne.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f);
+            shrinerestackOne.GetComponent<ShrineRestackBehavior>().maxPurchaseCount = ModConfig.ShrineRestackMaxCount.Value;
+            shrinerestackOne.GetComponent<PurchaseInteraction>().cost = ModConfig.ShrineRestackCost.Value;
+            shrinerestackOne.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.ShrineRestackCost.Value;
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using RoR2;
+﻿using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using RoR2;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,11 +34,13 @@ namespace BazaarIsMyHome
         //    obj.transform.eulerAngles = default;
         //}
 
-        protected void DoSpawnCard(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<InteractableSpawnCard> card, int max)
+
+        protected List<GameObject> DoSpawnCard(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<InteractableSpawnCard> card, int max)
         {
             int count = 0;
             if (ModConfig.SpawnCountByStage.Value) count = SetCountbyGameStage(max, ModConfig.SpawnCountOffset.Value);
             else count = max;
+            List<GameObject> result = new List<GameObject>();
             for (int i = 0; i < count; i++)
             {
                 try
@@ -44,21 +48,16 @@ namespace BazaarIsMyHome
                     SpawnCard spawnCard = card.WaitForCompletion();
                     GameObject gameObject = spawnCard.DoSpawn(keyValuePairs[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
                     gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
-                    gameObject.transform.localScale = (Vector3)keyValuePairs[i].Scale;
-
-                    if (card.LocationName.EndsWith("iscGoldChest.asset") || card.LocationName.EndsWith("iscChest1.asset") || card.LocationName.EndsWith("iscChest2.asset"))
-                    {
-                        gameObject.GetComponent<PurchaseInteraction>().SetAvailable(false);
-                    }
-
+                    result.Add(gameObject);
                 }
                 catch (Exception ex)
                 {
                     Log.LogDebug($"{card} 出现问题了");
                 }
             }
+            return result;
         }
-        protected virtual void DoSpawnGameObject(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<GameObject> card, int max)
+        protected virtual List<GameObject> DoSpawnGameObject(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<GameObject> card, int max)
         {
             int count = 0;
             if (ModConfig.SpawnCountByStage.Value)
@@ -69,13 +68,15 @@ namespace BazaarIsMyHome
             {
                 count = max;
             }
+            List<GameObject> result = new List<GameObject>();
             for (int i = 0; i < count; i++)
             {
                 GameObject gameObject = GameObject.Instantiate(card.WaitForCompletion(), keyValuePairs[i].Position, Quaternion.identity);
                 gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
-                gameObject.transform.localScale = (Vector3)keyValuePairs[i].Scale;
                 NetworkServer.Spawn(gameObject);
+                result.Add(gameObject);
             }
+            return result;
         }
 
         public static void SpawnEffect(AsyncOperationHandle<GameObject> effect, Vector3 position, Color32 color, float scale = 1f)
@@ -107,6 +108,15 @@ namespace BazaarIsMyHome
         {
             return PlayerCharacterMasterController.instances.Count > 1;
         }
+        protected T GetRandom<T>(List<T> list, T defaultValue)
+        {
+            if (list == null || list.Count == 0)
+            {
+                return defaultValue;
+            }
+            return list[RNG.Next(list.Count)];
+        }
+
         protected List<t> DisorderList<t>(List<t> TList)
         {
             List<t> NewList = new List<t>();

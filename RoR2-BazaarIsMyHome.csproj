@@ -40,6 +40,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Language\en\newtdialog.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="manifest.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

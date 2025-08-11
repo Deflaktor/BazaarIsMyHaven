@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 
 namespace BazaarIsMyHome
 {
@@ -18,7 +19,59 @@ namespace BazaarIsMyHome
                 return Language.GetString("SHOPKEEPER_BODY_NAME");
             }
         }
-        private static string GetDeathState() => ShopKeep.IsDeath ? $"({Language.GetString(LanguageAPI.NEWT_DEATH_STATE)})" : "";
+
+        private const string GrayColor = "7e91af";
+        private const string RedColor = "ed4c40";
+        private const string LunarColor = "5cb1ed";
+        // Red (previously bc2525) / Blue / Yellow / Green / Orange / Cyan / Pink / Deep Purple
+        private static readonly string[] PlayerColors =
+            {"f23030", "2083fc", "f1f41a", "4dc344", "f27b0c", "3cdede", "db46bd", "9400ea"};
+        private static string GetPlayerColor(PlayerCharacterMasterController controllerMaster)
+        {
+            var playerLocation = PlayerCharacterMasterController.instances.IndexOf(controllerMaster);
+            return PlayerColors[playerLocation % PlayerColors.Length];
+        }
+
+        public static void ItemAlreadyBought()
+        {
+            Send(Language.GetString("LUNAR_POD_ALREADY_PURCHASED"));
+        }
+
+        public static void LunarShopTerminalUsesLeft(PlayerCharacterMasterController playerCharacterMasterController, int usesLeft)
+        {
+            var playerColor = GetPlayerColor(playerCharacterMasterController);
+            var body = playerCharacterMasterController.master.GetBody();
+            if(usesLeft > 1)
+            {
+                Send($"<color=#{playerColor}>{body.GetUserName()}</color> <color=#{GrayColor}>can use a shop terminal</color> <color=#{RedColor}>{usesLeft}</color> <color=#{GrayColor}>more times.</color>");
+            }
+            else if (usesLeft == 1)
+            {
+                Send($"<color=#{playerColor}>{body.GetUserName()}</color> <color=#{GrayColor}>can use a shop terminal</color> <color=#{RedColor}>{usesLeft}</color> <color=#{GrayColor}>more time.</color>");
+            }
+            else
+            {
+                Send($"<color=#{playerColor}>{body.GetUserName()}</color> <color=#{GrayColor}>can no longer use shop terminals.</color>");
+            }
+        }
+
+        public static void LunarRecyclerUsesLeft(int usesLeft)
+        {
+            if (usesLeft > 1)
+            {
+                Send($"The <color=#{LunarColor}>Lunar Recycler</color> <color=#{GrayColor}>can be used</color> <color=#{RedColor}>{usesLeft}</color> <color=#{GrayColor}>more times.</color>");
+            }
+            else if (usesLeft == 1)
+            {
+                Send($"The <color=#{LunarColor}>Lunar Recycler</color> <color=#{GrayColor}>can be used</color> <color=#{RedColor}>{usesLeft}</color> <color=#{GrayColor}>more time.</color>");
+            }
+            else
+            {
+                Send($"The <color=#{LunarColor}>Lunar Recycler</color> <color=#{GrayColor}>can no longer be used.</color>");
+            }
+        }
+
+        private static string GetDeathState() => ShopKeep.DiedAtLeastOnce ? $"({Language.GetString(LanguageAPI.NEWT_DEATH_STATE)})" : "";
 
         // 不知道是否有更好的写法
         public static void ThanksTip(NetworkUser networkUser, CharacterBody characterBody)
@@ -46,7 +99,7 @@ namespace BazaarIsMyHome
             int r = Random.Next(length);
             if (r < length)
             {
-                if (!ShopKeep.IsDeath) Send(Language.GetStringFormatted(LanguageAPI.NEWT_WELCOME_WORD[r], NewtName));
+                if (!ShopKeep.DiedAtLeastOnce) Send(Language.GetStringFormatted(LanguageAPI.NEWT_WELCOME_WORD[r], NewtName));
                 else Send(Language.GetStringFormatted(LanguageAPI.NEWT_ANGRY_WELCOME_WORD[r], NewtName, GetDeathState()));
             }
         }
@@ -61,7 +114,7 @@ namespace BazaarIsMyHome
             int r = Random.Next(length * RandomCapacity);
             if (r < length)
             {
-                if (!ShopKeep.IsDeath) Send(Language.GetStringFormatted(LanguageAPI.NEWT_ATTACKED_WORD[r], NewtName));
+                if (!ShopKeep.DiedAtLeastOnce) Send(Language.GetStringFormatted(LanguageAPI.NEWT_ATTACKED_WORD[r], NewtName));
             }
         }
         public static void Send(string message)
@@ -72,16 +125,5 @@ namespace BazaarIsMyHome
             });
         }
        
-    }
-    class ShopKeep
-    {
-        public static bool IsDeath { get; set; }
-        public static int SpawnTime_Record { get; set; }
-        public static CharacterBody Body { get; set; }
-
-        public enum DeathState
-        {
-            Ghost, Tank, Evil
-        }
     }
 }

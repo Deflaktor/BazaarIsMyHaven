@@ -26,6 +26,7 @@
 		"NEWT_ATTACKED_WORD_7": "<style=cWorldEvent>{0}: You will pay for what you did.</style>",
 		"NEWT_ATTACKED_WORD_8": "<style=cWorldEvent>{0}: You are too sensitivity! It's already the day break outside. You can phone me while I am at home. </style>",
 		"NEWT_ATTACKED_WORD_9": "<style=cWorldEvent>{0}: Press Alt + F4 to get the latest steam game sale, the lowest 250% off.</style>",
-		"NEWT_ATTACKED_WORD_10": "<style=cWorldEvent>{0}: You know what? You're playing with fire.</style>"
+		"NEWT_ATTACKED_WORD_10": "<style=cWorldEvent>{0}: You know what? You're playing with fire.</style>",
+		"LUNAR_POD_ALREADY_PURCHASED": "<style=cUserSetting>This stall has already been bought.</style>"
 	} 
 }
