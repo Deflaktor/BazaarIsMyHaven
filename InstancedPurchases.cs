@@ -20,12 +20,10 @@ namespace BazaarIsMyHome
             IL.RoR2.ShopTerminalBehavior.OnSerialize += ShopTerminalBehavior_OnSerialize;
             On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
-            //On.RoR2.ShopTerminalBehavior.SetNoPickup += ShopTerminalBehavior_SetNoPickup;
             On.RoR2.ShopTerminalBehavior.SetHasBeenPurchased += ShopTerminalBehavior_SetHasBeenPurchased;
             On.RoR2.PurchaseInteraction.GetInteractability += PurchaseInteraction_GetInteractability;
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.ShopTerminalBehavior.CurrentPickupIndex += ShopTerminalBehavior_CurrentPickupIndex;
-            IL.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionEnd;
         }
 
         private Interactability PurchaseInteraction_GetInteractability(On.RoR2.PurchaseInteraction.orig_GetInteractability orig, PurchaseInteraction self, Interactor activator)
@@ -61,25 +59,6 @@ namespace BazaarIsMyHome
             } finally {
                 currentInteractor = null;
             }
-        }
-
-        private void PurchaseInteraction_OnInteractionEnd(ILContext il)
-        {
-            HookHelper.HookEndOfMethod(il, (PurchaseInteraction self, Interactor activator) =>
-            {
-                //if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
-                //{
-                //    var playerCharacterMasterController = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
-                //    if (activator.hasAuthority)
-                //    {
-                //        UpdateShopForServer(self.gameObject, playerCharacterMasterController);
-                //    }
-                //    else
-                //    {
-                //        UpdateShopForClient(self.gameObject, playerCharacterMasterController);
-                //    }
-                //}
-            });
         }
 
         private void ShopTerminalBehavior_SetHasBeenPurchased(On.RoR2.ShopTerminalBehavior.orig_SetHasBeenPurchased orig, ShopTerminalBehavior self, bool newHasBeenPurchased)
@@ -246,17 +225,20 @@ namespace BazaarIsMyHome
             //}
         }
 
-        private void UpdateShopForServer(GameObject gameObject, PlayerCharacterMasterController pc)
+        private void UpdateShopForServer(GameObject shop, PlayerCharacterMasterController pc)
         {
-            var instancedPurchase = gameObject.GetComponent<InstancedPurchase>();
-            var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
-            var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
-
-            purchaseInteraction.available = instancedPurchase.GetOrOriginal(pc).available;
-
-            shopTerminalBehavior.hasBeenPurchased = instancedPurchase.GetOrOriginal(pc).hasBeenPurchased;
-            shopTerminalBehavior.pickupIndex = instancedPurchase.GetOrOriginal(pc).pickupIndex;
-            shopTerminalBehavior.UpdatePickupDisplayAndAnimations();
+            if (shop.TryGetComponent(out InstancedPurchase instancedPurchase)) {
+                if (shop.TryGetComponent(out PurchaseInteraction purchaseInteraction))
+                {
+                    purchaseInteraction.available = instancedPurchase.GetOrOriginal(pc).available;
+                }
+                if (shop.TryGetComponent(out ShopTerminalBehavior shopTerminalBehavior))
+                {
+                    shopTerminalBehavior.hasBeenPurchased = instancedPurchase.GetOrOriginal(pc).hasBeenPurchased;
+                    shopTerminalBehavior.pickupIndex = instancedPurchase.GetOrOriginal(pc).pickupIndex;
+                    shopTerminalBehavior.UpdatePickupDisplayAndAnimations();
+                }
+            }
             //if (shopTerminalBehavior.pickupDisplay != null)
             //{
             //    shopTerminalBehavior.pickupDisplay.SetPickupIndex(PickupIndex.none, shopTerminalBehavior.hidden);
