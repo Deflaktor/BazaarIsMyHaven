@@ -131,7 +131,6 @@ namespace BazaarIsMyHome
             if (ModConfig.EnableMod.Value)
             {
                 Config.Reload();
-                ModConfig.InitConfig(Config);
                 ShopKeep.DeathCount = 0;
                 playerStructs_.Clear();
 

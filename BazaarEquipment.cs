@@ -98,7 +98,7 @@ namespace BazaarIsMyHome
 
         private void ShopTerminalBehavior_DropPickup(On.RoR2.ShopTerminalBehavior.orig_DropPickup orig, ShopTerminalBehavior self)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && self.name.StartsWith("MultiShopEquipmentTerminal"))
+            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && IsCurrentMapInBazaar() && self.name.StartsWith("MultiShopEquipmentTerminal"))
             {
                 if (!NetworkServer.active)
                 {

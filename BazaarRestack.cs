@@ -33,7 +33,7 @@ namespace BazaarIsMyHome
 
         private void PurchaseInteraction_ScaleCost(On.RoR2.PurchaseInteraction.orig_ScaleCost orig, PurchaseInteraction self, float scalar)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.ShrineRestackSectionEnabled.Value)
+            if (ModConfig.EnableMod.Value && ModConfig.ShrineRestackSectionEnabled.Value && IsCurrentMapInBazaar())
             {
                 if (self.name.StartsWith("ShrineRestack"))
                 {

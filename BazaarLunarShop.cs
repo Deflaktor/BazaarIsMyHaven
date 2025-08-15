@@ -167,7 +167,7 @@ namespace BazaarIsMyHome
 
         private void PurchaseInteraction_ScaleCost(On.RoR2.PurchaseInteraction.orig_ScaleCost orig, PurchaseInteraction self, float scalar)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerAvailable.Value)
+            if (ModConfig.EnableMod.Value && ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerAvailable.Value && IsCurrentMapInBazaar())
             {
                 if (self.name.StartsWith("LunarRecycler"))
                 {
@@ -178,7 +178,7 @@ namespace BazaarIsMyHome
         }
         private void PurchaseInteraction_SetAvailable(On.RoR2.PurchaseInteraction.orig_SetAvailable orig, PurchaseInteraction self, bool newAvailable)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerAvailable.Value)
+            if (ModConfig.EnableMod.Value && ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerAvailable.Value && IsCurrentMapInBazaar())
             {
                 if (self.name.StartsWith("LunarRecycler"))
                 {
@@ -189,7 +189,7 @@ namespace BazaarIsMyHome
         }
         private void ShopTerminalBehavior_DropPickup(On.RoR2.ShopTerminalBehavior.orig_DropPickup orig, ShopTerminalBehavior self)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && self.name.StartsWith("LunarShopTerminal"))
+            if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && IsCurrentMapInBazaar() && self.name.StartsWith("LunarShopTerminal"))
             {
                 if (!NetworkServer.active)
                 {
