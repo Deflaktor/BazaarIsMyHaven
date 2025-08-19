@@ -1,29 +1,12 @@
-[![Support Lunzir](https://img.shields.io/badge/Support-Lunzir-ff6482)](https://ko-fi.com/lunzir0325)
-[![支持我](https://img.shields.io/badge/Support-支持我-ff6482)](http://note.youdao.com/noteshare?id=0f269e09eb25d7f00285e815a48f835d&sub=28F42AE4219D453FB3E383B0A4ECA9FB)
-*QQ：409790315*
-*E-mail: 409790315@qq.com*
-# RoR2-BazaarIsMyHome 
-- [√] Server - side
-- [√] Client - side
-- [√] Shopping
-- [√] Unmodded
+# BazaarIsMyHaven
 
-Welcome to my home, no war, no disease, just peace and love. My home has more printers, cauldrons, scrapers, equipments, lunar, clean pool, shrines restack. You can adjust these in the configuration file. With mod [BazaarLunarForEveryone](https://thunderstore.io/package/Lunzir2/BazaarLunarForEveryone/), can limit each person to restack one times (also do with equiment). No need unmoded , client and server are available.
+This mod is a rewrite of the excellent [BazaarIsMyHaven](https://thunderstore.io/package/Lunzir2/BazaarIsMyHaven/) mod by Lunzir. This is a server-side mod, as such only the host needs it.
 
-English not my first language, hope you can understand what I am mean. : }
+## Capabilities
 
-我的私藏mod，在月店增加多台打印机、大锅、收割机、主动装备、月仓、净化池、秩序。有中文配置文件。搭配[BazaarLunarForEveryone](https://thunderstore.io/package/Lunzir2/BazaarLunarForEveryone/)可以限制每个人只秩序一次，还有主动装备也是。房主或专用服务器有mod即可。
+- Have anywhere between 1 and 
 
----
-
-如果觉得不错就这样吧，开发不易，灵感不易，几十kb的大小，一个小问题可能要重复打开游戏关闭游戏重启游戏等待进入测试问题重写代码保存运行打开游戏关闭游戏重启游戏等待进入测试问题重写代码保存运行打开游戏关闭游戏重启游戏等待进入测试问题重写代码保存运行打开游戏关闭游戏重启游戏等待进入测试问题重写代码保存运行打开游戏关闭游戏重启游戏等待进入测试问题重写代码保存运行打开游戏关闭游戏重启游戏等待进入测试问题重写代码保存运行，n次调试换来成果。不免还会出错，又重写从第一步开始打开游戏关闭游戏重启游戏等待进入测试问题重写代码保存运行打开游戏关闭游戏重启游戏等待进入测试问题重写代码保存运行打开游戏关闭游戏重启游戏等待进入测试问题重写代码保存运行打开游戏关闭游戏重启游戏等待进入测试问题重写代码保存运行打开游戏关闭游戏重启游戏等待进入测试问题重写代码保存运行。长期挂着笔记本主板烫死了，并不会有那么多人那么多时间用爱发电去做这样的事情，如果有就是傻逼，我说我自己。
-
-听说疫情还要封到月底，从年底到现在，断断续续，对生活好无望，害，寄，祝各位安好无忧。 
-（外国人看到上面的字会不会以为是乱码
-
-2022年3月21日
-
-## Config Settings 默认配置
+## Config Settings
 | Setting| Default Value| 
 |:-------|:-------:|
 [00 Setting设置]|
@@ -135,62 +118,10 @@ ITEM_WARCRYONCOMBAT_NAME|ITEM_WARCRYONCOMBAT_NAME|Trigger effect: +50% movement 
 
 ## What's Next 以后的想法
 - [ ] Increase the probability of something good depending on the difficulty of the level. 根据关卡难度提升好东西的概率
-- [ ]  Recycle can reroll custom LunarShopBud. 切片翻滚包含所有月球蓓蕾，目前只有原本的5个在滚，有点难不一定能做到
-- [ ]  Developing new mods, and three other ideas that have something to do with Newt. 开发新的mod，还有三个想法都和商人有点关系。
+- [ ] Recycle can reroll custom LunarShopBud. 切片翻滚包含所有月球蓓蕾，目前只有原本的5个在滚，有点难不一定能做到
+- [ ] Developing new mods, and three other ideas that have something to do with Newt. 开发新的mod，还有三个想法都和商人有点关系。
 
 
 ## Known issues 已知问题
 - Although no need for unmoded, for players who have not installed the same mod, some labels are not correctly displayed and will not affect normal use. For example, moon bud physical size, shrinehealing price tag is displayed as money, the actual cost of lunar coins. 虽然不需要unmoded，但是未安装同样mod的玩家，一些标签不能准确显示，但不影响正常使用。比如月球蓓蕾实体大小，树灵价格标签显示为金钱，实际是花费月币。
 - Equipment price is currently set to 0, there is no better way to change the price type so far. 主动装备价格目前设置成0，目前没有找到办法修改价格类型。
-
-
-## Changelog 更新日志
-#### 1.3.0 2022年4月20日 v1.2.3.1
-- Pray special items are now has optional, added parameter`PrayarList`in the configuration file.  祈祷特殊物品现在改成可选择项，在配置文件中更改PrayPeculiarList参数
-- The Lunar Hub now contains the original 5, and use the recycle will also affect custom parts. 出售的月球装备现在包含原来的5个，一共11个，同时使用切片也会影响自定义的部分。
-#### 1.2.39 2022年4月6日 v1.2.2.0
-- Fixed some errors when entering the bazaar. 修复一些错误当进入商店的时候。
-#### 1.2.38 2022年4月3日 v1.2.2.0
-- Provides prayer pool information. 提供祈祷物品池信息。
-- Fixed doppelganger items repaired only 4% damage. The bonus to HP remains the same, 10 times. Artifact of ShadowClone will not be affected. 修复复仇道具伤害只有4%，复仇神器不会受影响。
-- Fixed Wicked Ring can not reduce skill CD, but only the host works... 修复邪恶的戒指不能减技能CD，不过只能主机能用。
-- Fixed some logic bugs. 修复一些逻辑错误
-#### 1.2.33 2022年4月2日 v1.2.2.0
-- Test upload language pack. 测试上传语言包 
-#### 1.2.32 2022年3月31日 v1.2.2.0
-- Fixed infinite refresh crash when merchant is attacked by void ghostfire. 修复商人受到虚空鬼火攻击导致无限刷新死机。
-#### 1.2.31 2022年3月30日 v1.2.2.0
-- De-Update the language pack. 重新更新语言包。 
-#### 1.2.3 2022年3月28日 v1.2.2.0
-- Added configuration parameter NewtSecondLifeMode, give more HP to Newt.  商人血比以前多一点点，至少很难死。新增配置参数NewtSecondLifeMode，商人死后的形态恶魔，还是变成无辜的灵魂。
-- Added Newt LanguageAPI 完善商人说话，增加多国语言包
-#### 1.2.2 2022年3月24日 v1.2.2.0
-- Fixed errors when the value set to 0, and other logic issues. 修复数值为0时的错误，和其他逻辑问题
-#### 1.2.1 2022年3月22日 v1.2.2.0
-- Fixed error when the number of prints is 0. 修复打印数量为0时候出错
-- Fixed newt's speak function not being turned off. 修复纽特说话功能不能关
-#### 1.2.0 2022年3月21日
-- Added yellow cauldron, blue cauldron, purple cauldron. 新增玩具黄色大锅，蓝色大锅、紫色大锅。
-- Added blue printer, purple printer. 新增玩具蓝色打印机、紫色打印机。
-- Added auto open shop, yeah, I know mods already exist that do the same thing. 新增自动开商店，如果有相同功能的mod不影响使用，害怕就关了吧。
-- Added no shoper kick out. 新增商人防踢，如果有相同功能的mod不影响使用，害怕就关了吧。
-- Added shoper no longer die. Please do not kill viciously. There will be punishment now. 新增商人死亡一次会变身同时拥有装备，你可能被打死甚至团灭，请不要恶意杀死，现在会有惩罚。
-- Added some AI for Newt, she can speak now. 给商人加点人工(zhi zhang)AI，被攻击时候的台词。
-- Added data for modifying lunar, seerstation, and recycle , such as price, frequency, available, etc. 新增可修改月球装备、切片、预言地图的数据，如价格、次数、可否购买等
-- Added some effects. 增加一些特效
-- The above functions can be adjusted in the configuration file. 以上功能都可再配置文件里面调整。
-- It's sad to said. The configuration file has been changed and needs to be regenerated. 配置文件里的命名发生改变，需要重新生成。
-#### 1.1.1 
-- Prayer has been added again. 祈祷功能已重新添加
-- Fixed an issue with setting the maximum number. 修复设置最大数量的问题
-- Update to R2API-4.1.1. 更新至框架R2API-4.1.1
-#### 1.1.0 2022年3月18日
-- Add a new feature, pray to the shrinehealing for special items with lunar coins. 新增玩具，向树灵神龛祈祷获得特别物品，同时改成用月币供奉。
-- Fixed white cauldron only get one items which install mod [ShareSuite](https://thunderstore.io/package/FunkFrog-and-Sipondo/ShareSuite)  when attribute PrinterCauldronFixEnabled set to true. 修复白色大锅只获得一件物品，当使用共享mod。
-- Some code and configuration file adjustments. 根据自己心情适当调整源代码和配置
-- 记录不能搬砖的21天，月底来临，房租水电何去何从。
-#### 1.0.1
-- Forgot to add configuration information 补充一些配置信息
-#### 1.0.0
-- First Release 首发
-

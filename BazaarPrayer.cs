@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     public class BazaarPrayer : BazaarBase
     {

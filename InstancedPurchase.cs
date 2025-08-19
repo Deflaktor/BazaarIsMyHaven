@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     public class InstancedPurchase : MonoBehaviour
     {

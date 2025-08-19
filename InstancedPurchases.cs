@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UIElements.Collections;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     public partial class InstancedPurchases
     {

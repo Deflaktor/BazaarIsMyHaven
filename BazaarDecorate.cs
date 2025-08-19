@@ -8,7 +8,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     public class BazaarDecorate : BazaarBase
     {
