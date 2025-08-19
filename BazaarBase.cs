@@ -9,7 +9,7 @@ using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     public abstract class BazaarBase
     {

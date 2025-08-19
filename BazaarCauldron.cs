@@ -8,7 +8,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     public class BazaarCauldron : BazaarBase
     {
@@ -47,7 +47,7 @@ namespace BazaarIsMyHome
         public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
         {
             orig(self);
-            if (ModConfig.EnableMod.Value && ModConfig.CauldronSectionEnabled.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.CauldronSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("LunarCauldron, WhiteToGreen")) {
                     self.cost = ModConfig.CauldronWhiteToGreenCost.Value;
@@ -68,7 +68,7 @@ namespace BazaarIsMyHome
 
         public void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.CauldronSectionEnabled.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.CauldronSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("LunarCauldron, RedToWhite Variant"))
                 {
@@ -85,7 +85,7 @@ namespace BazaarIsMyHome
 
         public void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.CauldronSectionEnabled.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.CauldronSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("LunarCauldronGreen"))
                 {

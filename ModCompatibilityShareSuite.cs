@@ -1,4 +1,4 @@
-﻿using BazaarIsMyHome;
+﻿using BazaarIsMyHaven;
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     public static class ModCompatibilityShareSuite
     {

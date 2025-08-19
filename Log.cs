@@ -1,6 +1,6 @@
 ﻿using BepInEx.Logging;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     internal static class Log
     {

@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using static ak.wwise.core;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     public static class ModCompatibilityBiggerBazaar
     {

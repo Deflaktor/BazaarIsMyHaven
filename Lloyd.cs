@@ -6,7 +6,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Profiling;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     public class Lloyd
     {

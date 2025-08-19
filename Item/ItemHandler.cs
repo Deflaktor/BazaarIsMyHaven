@@ -1,6 +1,6 @@
 ﻿using RoR2;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     public class ItemHandler
     {

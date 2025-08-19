@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     [BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
@@ -30,9 +30,9 @@ namespace BazaarIsMyHome
         public static Main instance;
 
         public const string PluginGUID = PluginAuthor + "." + PluginName;
-        public const string PluginAuthor = "com.Lunzir";
-        public const string PluginName = "BazaarIsMyHome";
-        public const string PluginVersion = "1.4.0";
+        public const string PluginAuthor = "Def";
+        public const string PluginName = "BazaarIsMyHaven";
+        public const string PluginVersion = "1.0.0";
 
         List<BazaarBase> bazaarMods = new List<BazaarBase>();
         private readonly Dictionary<PlayerCharacterMasterController, PlayerStruct> playerStructs_ = new Dictionary<PlayerCharacterMasterController, PlayerStruct>();

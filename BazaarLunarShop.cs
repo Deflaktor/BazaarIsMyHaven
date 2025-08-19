@@ -12,7 +12,7 @@ using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UIElements;
 
-namespace BazaarIsMyHome
+namespace BazaarIsMyHaven
 {
     public class BazaarLunarShop : BazaarBase
     {
