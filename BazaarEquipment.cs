@@ -44,7 +44,7 @@ namespace BazaarIsMyHaven
         public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
         {
             orig(self);
-            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (ModConfig.EquipmentCount.Value > 0)
                 {
@@ -62,7 +62,7 @@ namespace BazaarIsMyHaven
 
         private void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("MultiShopEquipmentTerminal"))
                 {
@@ -98,7 +98,7 @@ namespace BazaarIsMyHaven
 
         private void ShopTerminalBehavior_DropPickup(On.RoR2.ShopTerminalBehavior.orig_DropPickup orig, ShopTerminalBehavior self)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && IsCurrentMapInBazaar() && self.name.StartsWith("MultiShopEquipmentTerminal"))
+            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("MultiShopEquipmentTerminal"))
             {
                 if (!NetworkServer.active)
                 {

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace BazaarIsMyHaven
@@ -77,7 +78,7 @@ namespace BazaarIsMyHaven
 
         private void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
-            if (ModConfig.EnableMod.Value & ModConfig.PrayerSectionEnabled.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value & ModConfig.PrayerSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("ShrineHealing"))
                 {

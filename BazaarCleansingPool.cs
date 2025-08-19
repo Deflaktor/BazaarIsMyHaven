@@ -49,7 +49,7 @@ namespace BazaarIsMyHaven
 
         private void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.CleansingPoolSectionEnabled.Value && ModConfig.ShrineCleaseGivesLunarCoins.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.CleansingPoolSectionEnabled.Value && ModConfig.ShrineCleaseGivesLunarCoins.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("ShrineCleanse"))
                 {
