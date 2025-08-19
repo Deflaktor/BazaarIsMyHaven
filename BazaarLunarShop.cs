@@ -65,7 +65,7 @@ namespace BazaarIsMyHaven
         public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
         {
             orig(self);
-            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if(ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopTerminalCost.Value >= 0) 
                 {
@@ -101,7 +101,7 @@ namespace BazaarIsMyHaven
 
         public void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if(self.name.StartsWith("LunarShopTerminal"))
                 {
@@ -141,7 +141,7 @@ namespace BazaarIsMyHaven
         {
             HookHelper.HookEndOfMethod(il, (PurchaseInteraction self, Interactor activator) =>
             {
-                if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && IsCurrentMapInBazaar())
+                if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
                 {
                     var playerCharacterMasterController = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
                     var playerStruct = Main.instance.GetPlayerStruct(playerCharacterMasterController);
@@ -167,7 +167,7 @@ namespace BazaarIsMyHaven
 
         private void PurchaseInteraction_ScaleCost(On.RoR2.PurchaseInteraction.orig_ScaleCost orig, PurchaseInteraction self, float scalar)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerAvailable.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerAvailable.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("LunarRecycler"))
                 {
@@ -178,7 +178,7 @@ namespace BazaarIsMyHaven
         }
         private void PurchaseInteraction_SetAvailable(On.RoR2.PurchaseInteraction.orig_SetAvailable orig, PurchaseInteraction self, bool newAvailable)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerAvailable.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerAvailable.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("LunarRecycler"))
                 {
@@ -189,7 +189,7 @@ namespace BazaarIsMyHaven
         }
         private void ShopTerminalBehavior_DropPickup(On.RoR2.ShopTerminalBehavior.orig_DropPickup orig, ShopTerminalBehavior self)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && IsCurrentMapInBazaar() && self.name.StartsWith("LunarShopTerminal"))
+            if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("LunarShopTerminal"))
             {
                 if (!NetworkServer.active)
                 {

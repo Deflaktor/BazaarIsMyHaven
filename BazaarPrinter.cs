@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace BazaarIsMyHaven
@@ -46,7 +47,7 @@ namespace BazaarIsMyHaven
 
         private void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.PrinterSectionEnabled.Value && IsCurrentMapInBazaar())
+            if (ModConfig.EnableMod.Value && ModConfig.PrinterSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("Duplicator"))
                 {
