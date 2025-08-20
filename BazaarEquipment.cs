@@ -16,7 +16,6 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> multiShopEquipmentTerminal;
         //AsyncOperationHandle<InteractableSpawnCard> iscTripleShopEquipment;
 
-        Dictionary<int, SpawnCardStruct> DicEquipmentsLunarSeer = new Dictionary<int, SpawnCardStruct>();
         Dictionary<int, SpawnCardStruct> DicEquipments = new Dictionary<int, SpawnCardStruct>();
         PlayerCharacterMasterController currentActivator = null;
         PickupIndex placeEquipment = PickupIndex.none;
@@ -79,59 +78,46 @@ namespace BazaarIsMyHaven
                 }
             }
             orig(self, activator);
-            //if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar())
-            //{
-            //    if (self.name.StartsWith("MultiShopEquipmentTerminal"))
-            //    {
-            //        // in case the player places an equipment on the terminal
-            //        if (placeEquipment != PickupIndex.none)
-            //        {
-            //            var shopTerminal = self.GetComponent<ShopTerminalBehavior>();
-            //            shopTerminal.SetHasBeenPurchased(false);
-            //            shopTerminal.SetPickupIndex(placeEquipment);
-            //            self.SetAvailable(true);
-            //        }
-            //    }
-            //}
-            //currentActivator = null;
         }
 
         private void ShopTerminalBehavior_DropPickup(On.RoR2.ShopTerminalBehavior.orig_DropPickup orig, ShopTerminalBehavior self)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("MultiShopEquipmentTerminal"))
+            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("MultiShopEquipmentTerminal"))
             {
-                if (!NetworkServer.active)
-                {
-                    Debug.LogWarning("[Server] function 'System.Void RoR2.ShopTerminalBehavior::DropPickup()' called on client");
-                    return;
-                }
-                var body = currentActivator.master.GetBody();
-                if (body != null)
-                {
-                    var pickupDef = PickupCatalog.GetPickupDef(self.CurrentPickupIndex());
-                    if (pickupDef.itemIndex != ItemIndex.None)
+                if(ModConfig.EquipmentBuyToInventory.Value) { 
+                    var body = currentActivator.master.GetBody();
+                    if (body != null)
                     {
-                        PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, PickupCatalog.GetPickupDef(self.CurrentPickupIndex()).itemIndex);
-                        currentActivator.master.inventory.GiveItem(pickupDef.itemIndex);
-                        self.SetHasBeenPurchased(newHasBeenPurchased: true);
-                        self.SetNoPickup();
-                    }
-                    else if (pickupDef.equipmentIndex != EquipmentIndex.None)
-                    {
-                        if(currentActivator.master.inventory.GetEquipmentIndex() != EquipmentIndex.None)
+                        var pickupDef = PickupCatalog.GetPickupDef(self.CurrentPickupIndex());
+                        if (pickupDef.itemIndex != ItemIndex.None)
                         {
-                            var placeEquipment = PickupCatalog.FindPickupIndex(currentActivator.master.inventory.GetEquipmentIndex());
-                            self.SetPickupIndex(placeEquipment);
-                            var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
-                            purchaseInteraction.SetAvailable(true);
-                        }
-                        else
-                        {
+                            PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, PickupCatalog.GetPickupDef(self.CurrentPickupIndex()).itemIndex);
+                            currentActivator.master.inventory.GiveItem(pickupDef.itemIndex);
                             self.SetHasBeenPurchased(newHasBeenPurchased: true);
                             self.SetNoPickup();
                         }
-                        currentActivator.master.inventory.SetEquipmentIndex(pickupDef.equipmentIndex);
+                        else if (pickupDef.equipmentIndex != EquipmentIndex.None)
+                        {
+                            if(currentActivator.master.inventory.GetEquipmentIndex() != EquipmentIndex.None)
+                            {
+                                var placeEquipment = PickupCatalog.FindPickupIndex(currentActivator.master.inventory.GetEquipmentIndex());
+                                self.SetPickupIndex(placeEquipment);
+                                var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
+                                purchaseInteraction.SetAvailable(true);
+                            }
+                            else
+                            {
+                                self.SetHasBeenPurchased(newHasBeenPurchased: true);
+                                self.SetNoPickup();
+                            }
+                            currentActivator.master.inventory.SetEquipmentIndex(pickupDef.equipmentIndex);
+                        }
                     }
+                }
+                else
+                {
+                    orig(self);
+                    self.SetNoPickup();
                 }
             }
             else
@@ -143,6 +129,15 @@ namespace BazaarIsMyHaven
         private void SetEquipment()
         {
             List<int> total = new List<int> { 0, 1, 2 };
+            if(ModConfig.ReplaceLunarSeersWithEquipment.Value)
+            { 
+                total = new List<int> { 2, 3, 4 };
+
+                // left seer stand
+                DicEquipments.Add(0, new SpawnCardStruct(new Vector3(-133.9731f, -23.4f, -10.71112f), new Vector3(0f, 120.0f, 0.0f)));
+                // right seer stand
+                DicEquipments.Add(1, new SpawnCardStruct(new Vector3(-128.0793f, -23.4f, -7.056283f), new Vector3(0f, 160.0f, 0.0f)));
+            }
             List<int> random = new List<int>();
             while (total.Count > 0)
             {
@@ -150,18 +145,7 @@ namespace BazaarIsMyHaven
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
-            // left seer stand
-            DicEquipmentsLunarSeer.Add(0, new SpawnCardStruct(new Vector3(-133.9731f, -23.4f, -10.71112f), new Vector3(0f, 120.0f, 0.0f)));
-            // right seer stand
-            DicEquipmentsLunarSeer.Add(1, new SpawnCardStruct(new Vector3(-128.0793f, -23.4f, -7.056283f), new Vector3(0f, 160.0f, 0.0f)));
 
-            //DicEquipments.Add(random[0], new SpawnCardStruct(new Vector3(-128.9115f, -23.1756f, -24.6339f), new Vector3(350.0f, 90.0f, 0.0f)));
-            //DicEquipments.Add(random[1], new SpawnCardStruct(new Vector3(-131.3281f, -23.0673f, -21.9982f), new Vector3(353.0f, 0.0f, 0.0f)));
-            //DicEquipments.Add(random[2], new SpawnCardStruct(new Vector3(-132.8414f, -22.6963f, -26.6293f), new Vector3(353.0f, 220.0f, 0.0f)));
-            //DicEquipments.Add(random[3], new SpawnCardStruct(new Vector3(-141.3541f, -21.2761f, -10.9000f), new Vector3(358.0f, 180.0f, 0.0f)));
-            //DicEquipments.Add(random[4], new SpawnCardStruct(new Vector3(-138.9401f, -20.9378f, -8.87810f), new Vector3(355.0f, 100.0f, 0.0f)));
-            //DicEquipments.Add(random[5], new SpawnCardStruct(new Vector3(-139.9517f, -20.8648f, -5.79960f), new Vector3(353.0f, 30.0f, 0.0f)));
-            // DicTriplEquipments.Add(random[0], new SpawnCardStruct(new Vector3(-142f, -22.0f, 0.0f), new Vector3(0.0f, 72.0f, 0.0f)));
             DicEquipments.Add(random[0], new SpawnCardStruct(new Vector3(-139.5818f, -23.561f, -1.7491f), new Vector3(0.0f, 175.0f, 0.0f)));
             DicEquipments.Add(random[1], new SpawnCardStruct(new Vector3(-136.5639f, -23.7163f, -0.5618f), new Vector3(0.0f, 145.0f, 0.0f)));
             DicEquipments.Add(random[2], new SpawnCardStruct(new Vector3(-134.82f, -23.36f, 1.85f), new Vector3(0.0f, 105.0f, 0.0f)));
@@ -172,16 +156,19 @@ namespace BazaarIsMyHaven
             if (ModConfig.EquipmentCount.Value > 0)
             {
                 // 主动装备
-                DicEquipmentsLunarSeer.Clear();
                 DicEquipments.Clear();
                 SetEquipment();
-                var gameObjects = new List<GameObject>();
-                if (ModConfig.ReplaceLunarSeersWithEquipment.Value){
-                    gameObjects.AddRange(DoSpawnGameObject(DicEquipmentsLunarSeer, multiShopEquipmentTerminal, 2));
-                }
-                gameObjects.AddRange(DoSpawnGameObject(DicEquipments, multiShopEquipmentTerminal, ModConfig.EquipmentCount.Value));
 
-                gameObjects.ForEach(gameObject => {
+                var count = ModConfig.EquipmentCount.Value;
+                if (!ModConfig.ReplaceLunarSeersWithEquipment.Value && count > 3)
+                {
+                    count = 3;
+                }
+                if (ModConfig.ReplaceLunarSeersWithEquipment.Value && count > 5) {
+                    count = 5;
+                }
+
+                DoSpawnGameObject(DicEquipments, multiShopEquipmentTerminal, count).ForEach(gameObject => {
                     var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
                     var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
                     if(ModConfig.EquipmentInstanced.Value) {
@@ -190,7 +177,6 @@ namespace BazaarIsMyHaven
                         instancedPurchase.original.pickupIndex = shopTerminalBehavior.pickupIndex;
                         instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
                     }
-                    // purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
                 });
             }
         }

@@ -12,7 +12,8 @@ namespace BazaarIsMyHaven
 {
     public class BazaarPrayer : BazaarBase
     {
-        AsyncOperationHandle<InteractableSpawnCard> iscShrineHealing;
+        //AsyncOperationHandle<InteractableSpawnCard> iscShrineHealing;
+        AsyncOperationHandle<GameObject> BlueprintStation;
 
         AsyncOperationHandle<GameObject> LevelUpEffect;
         AsyncOperationHandle<GameObject> MoneyPackPickupEffect;
@@ -55,7 +56,8 @@ namespace BazaarIsMyHaven
 
         public override void Init()
         {
-            iscShrineHealing = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineHealing/iscShrineHealing.asset");
+            // iscShrineHealing = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineHealing/iscShrineHealing.asset");
+            BlueprintStation = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/BlueprintStation.prefab");
             LevelUpEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/LevelUpEffect.prefab");
             MoneyPackPickupEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/BonusGoldPackOnKill/MoneyPackPickupEffect.prefab");
             TeamWarCryActivation = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/TeamWarCry/TeamWarCryActivation.prefab");
@@ -80,7 +82,7 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.EnableMod.Value & ModConfig.PrayerSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
-                if (self.name.StartsWith("ShrineHealing"))
+                if (self.name.StartsWith("BlueprintStation"))
                 {
                     //HasBeenDonate = true;
                     NetworkUser networkUser = Util.LookUpBodyNetworkUser(activator.gameObject);
@@ -91,7 +93,7 @@ namespace BazaarIsMyHaven
                     var playerStruct = Main.instance.GetPlayerStruct(characterMaster.playerCharacterMasterController);
                     if(playerStruct.DonateCount == 0)
                     {
-                        ChatHelper.ThanksTip(networkUser, characterBody);
+                        ChatHelper.ThanksTip(networkUser, characterMaster.playerCharacterMasterController);
                     }
                     playerStruct.DonateCount += 1; // 加一次捐赠次数
                     if (playerStruct.DonateCount % 10 == 0) // 每满10次捐赠
@@ -134,15 +136,15 @@ namespace BazaarIsMyHaven
             if (random <= w1)
             {
                 WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>(8);
-                weightedSelection.AddChoice(Run.instance.availableTier1DropList, 100f);
-                weightedSelection.AddChoice(Run.instance.availableTier2DropList, 60f);
-                weightedSelection.AddChoice(Run.instance.availableTier3DropList, 10f);
+                weightedSelection.AddChoice(Run.instance.availableTier1DropList, 0.60f);
+                weightedSelection.AddChoice(Run.instance.availableTier2DropList, 0.35f);
+                weightedSelection.AddChoice(Run.instance.availableTier3DropList, 0.05f);
                 List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
                 PickupDef pickupDef = PickupCatalog.GetPickupDef(list[UnityEngine.Random.Range(0, list.Count)]);
                 inventory.GiveItem((pickupDef != null) ? pickupDef.itemIndex : ItemIndex.None, 1);
                 // 特效
                 PurchaseInteraction.CreateItemTakenOrb(self.gameObject.transform.position, characterBody.gameObject, pickupDef.itemIndex);
-                ChatHelper.ThanksTip(networkUser, characterBody, pickupDef);
+                ChatHelper.ThanksTip(networkUser, characterBody.master.playerCharacterMasterController, pickupDef);
             }
             else if (random <= w1 + w2)
             {
@@ -155,7 +157,7 @@ namespace BazaarIsMyHaven
                     PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(IsHasEquip), characterBody.gameObject.transform.position + Vector3.up * 1.5f, Vector3.up * 20f + self.transform.forward * 2f);
                 inventory.SetEquipmentIndex(equipIndex); // 为了获得文本，其实可以用GiveEquipmentString()
 
-                ChatHelper.ThanksTip(networkUser, characterBody, equipmentDef);
+                ChatHelper.ThanksTip(networkUser, characterBody.master.playerCharacterMasterController, equipmentDef);
             }
             else
             {
@@ -165,7 +167,7 @@ namespace BazaarIsMyHaven
                 inventory.GiveItem(itemDef, specialItemStruct.Count);
                 // 特效
                 PurchaseInteraction.CreateItemTakenOrb(self.gameObject.transform.position, characterBody.gameObject, itemIndex);
-                ChatHelper.ThanksTip(networkUser, characterBody, itemDef, specialItemStruct.Count);
+                ChatHelper.ThanksTip(networkUser, characterBody.master.playerCharacterMasterController, itemDef, specialItemStruct.Count);
             }
             SpawnEffect(LevelUpEffect, self.transform.position, new Color32(255, 255, 255, 255), 3f);
             SpawnEffect(MoneyPackPickupEffect, self.transform.position, new Color32(255, 255, 255, 255), 3f);
@@ -174,18 +176,14 @@ namespace BazaarIsMyHaven
 
         private void SpawnShrineHealing()
         {
-            // 木灵
-            SpawnCard spawnCard = iscShrineHealing.WaitForCompletion();
-            GameObject gameObject = spawnCard.DoSpawn(new Vector3(-119f, -23f, -52f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
-            gameObject.transform.eulerAngles = new Vector3(0.0f, 210f, 0.0f);
-            gameObject.GetComponent<PurchaseInteraction>().costType = CostTypeIndex.LunarCoin;
+            GameObject gameObject = GameObject.Instantiate(BlueprintStation.WaitForCompletion(), new Vector3(-117.1011f, -24.1373f, -48.4219f), Quaternion.identity);
+            // RoR2/Base/WarCryOnMultiKill/WarCryEffect.prefab: -17.2625f
+
+            gameObject.transform.eulerAngles = new Vector3(0.0f, 300f, 0.0f);
             gameObject.GetComponent<PurchaseInteraction>().cost = ModConfig.PrayCost.Value;
             gameObject.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.PrayCost.Value;
 
-            //gameObject.GetComponent<ShrineHealingBehavior>().baseRadius = 80;
-            //gameObject.GetComponent<ShrineHealingBehavior>().radiusBonusPerPurchase = 0;
-            gameObject.GetComponent<ShrineHealingBehavior>().costMultiplierPerPurchase = 1;
-            gameObject.GetComponent<ShrineHealingBehavior>().maxPurchaseCount = int.MaxValue;
+            NetworkServer.Spawn(gameObject);
         }
     }
 }

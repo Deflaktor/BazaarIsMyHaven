@@ -84,25 +84,6 @@ namespace BazaarIsMyHaven
             }
         }
 
-        //private void ShopTerminalBehavior_SetNoPickup(On.RoR2.ShopTerminalBehavior.orig_SetNoPickup orig, ShopTerminalBehavior self)
-        //{
-        //    if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
-        //    {
-        //        if(currentInteractor != null)
-        //        {
-        //            instancedPurchase.GetOrOriginal(currentInteractor).pickupIndex = PickupIndex.none;
-        //        }
-        //        else
-        //        {
-        //            self.pickupIndex = PickupIndex.none;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        orig(self);
-        //    }
-        //}
-
         private void PurchaseInteraction_SetAvailable(On.RoR2.PurchaseInteraction.orig_SetAvailable orig, PurchaseInteraction self, bool newAvailable)
         {
             if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
@@ -116,7 +97,6 @@ namespace BazaarIsMyHaven
                     instancedPurchase.original.available = newAvailable;
                     orig(self, newAvailable);
                     return;
-                    //self.available = newAvailable;
                 }
             }
             else
@@ -131,18 +111,17 @@ namespace BazaarIsMyHaven
             {
                 if (currentInteractor != null)
                 {
+                    // someone is interacting with the shop terminal -> set the pickup index only for the interactor
                     instancedPurchase.GetOrCreate(currentInteractor).pickupIndex = newPickupIndex;
                     instancedPurchase.GetOrCreate(currentInteractor).hidden = newHidden;
                     UpdateShop(self.gameObject, currentInteractor);
                 }
                 else
                 {
+                    // no one is interacting with the shop terminal -> host sets the pickup index
                     instancedPurchase.original.pickupIndex = newPickupIndex;
                     instancedPurchase.original.hidden = newHidden;
                     orig(self, newPickupIndex, newHidden);
-                    return;
-                    //self.pickupIndex = newPickupIndex;
-                    //self.hidden = newHidden;
                 }
             }
             else
@@ -219,10 +198,6 @@ namespace BazaarIsMyHaven
             {
                 UpdateShopForServer(gameObject, currentInteractor);
             }
-            //else
-            //{
-            //    UpdateShopForClient(gameObject, currentInteractor);
-            //}
         }
 
         private void UpdateShopForServer(GameObject shop, PlayerCharacterMasterController pc)
@@ -239,11 +214,6 @@ namespace BazaarIsMyHaven
                     shopTerminalBehavior.UpdatePickupDisplayAndAnimations();
                 }
             }
-            //if (shopTerminalBehavior.pickupDisplay != null)
-            //{
-            //    shopTerminalBehavior.pickupDisplay.SetPickupIndex(PickupIndex.none, shopTerminalBehavior.hidden);
-            //}
-            // shopTerminalBehavior.pickupIndex = instancedPurchase.original.pickupIndex;
         }
 
         private void UpdateShopForClient(GameObject shop, PlayerCharacterMasterController pc)
