@@ -39,26 +39,27 @@ namespace BazaarIsMyHaven
             return "f27b0c";
         }
 
-        public static void ItemAlreadyBought()
+        private static string GetColoredPlayerName(PlayerCharacterMasterController playerCharacterMasterController)
         {
-            Send(Language.GetString("LUNAR_POD_ALREADY_PURCHASED"));
+            var playerColor = GetPlayerColor(playerCharacterMasterController);
+            var body = playerCharacterMasterController.master.GetBody();
+            return $"<color=#{playerColor}>{body.GetUserName()}</color>";
         }
 
         public static void LunarShopTerminalUsesLeft(PlayerCharacterMasterController playerCharacterMasterController, int usesLeft)
         {
-            var playerColor = GetPlayerColor(playerCharacterMasterController);
-            var body = playerCharacterMasterController.master.GetBody();
+            var coloredPlayerName = GetColoredPlayerName(playerCharacterMasterController);
             if(usesLeft > 1)
             {
-                Send($"<color=#{playerColor}>{body.GetUserName()}</color> <color=#{GrayColor}>can use a shop terminal</color> <color=#{RedColor}>{usesLeft}</color> <color=#{GrayColor}>more times.</color>");
+                Send($"{coloredPlayerName} <color=#{GrayColor}>can use a shop terminal</color> <color=#{RedColor}>{usesLeft}</color> <color=#{GrayColor}>more times.</color>");
             }
             else if (usesLeft == 1)
             {
-                Send($"<color=#{playerColor}>{body.GetUserName()}</color> <color=#{GrayColor}>can use a shop terminal</color> <color=#{RedColor}>{usesLeft}</color> <color=#{GrayColor}>more time.</color>");
+                Send($"{coloredPlayerName}  <color=#{GrayColor}>can use a shop terminal</color> <color=#{RedColor}>{usesLeft}</color> <color=#{GrayColor}>more time.</color>");
             }
             else
             {
-                Send($"<color=#{playerColor}>{body.GetUserName()}</color> <color=#{GrayColor}>can no longer use shop terminals.</color>");
+                Send($"{coloredPlayerName} <color=#{GrayColor}>can no longer use shop terminals.</color>");
             }
         }
 
@@ -78,26 +79,26 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private static string GetDeathState() => ShopKeep.DiedAtLeastOnce ? $"({Language.GetString(LanguageAPI.NEWT_DEATH_STATE)})" : "";
+        private static string GetDeathState() => ShopKeep.DiedAtLeastOnce ? $" ({Language.GetString(LanguageAPI.NEWT_DEATH_STATE)})" : "";
 
         // 不知道是否有更好的写法
-        public static void ThanksTip(NetworkUser networkUser, CharacterBody characterBody)
+        public static void ThanksTip(NetworkUser networkUser, PlayerCharacterMasterController pc)
         {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_FIRST_TIME, NewtName, GetDeathState(), string.Format("[{0}]{1}", characterBody.GetDisplayName(), networkUser.userName)));
+            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_FIRST_TIME, NewtName, GetDeathState(), GetColoredPlayerName(pc)));
         }
-        public static void ThanksTip(NetworkUser networkUser, CharacterBody characterBody, EquipmentDef equipmentDef)
+        public static void ThanksTip(NetworkUser networkUser, PlayerCharacterMasterController pc, EquipmentDef equipmentDef)
         {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_NORMAL, NewtName, GetDeathState(), string.Format("[{0}]{1}", characterBody.GetDisplayName(), networkUser.userName), Language.GetString(equipmentDef.nameToken)));
-        }
-
-        public static void ThanksTip(NetworkUser networkUser, CharacterBody characterBody, PickupDef pickupDef)
-        {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_ELITE, NewtName, GetDeathState(), string.Format("[{0}]{1}", characterBody.GetDisplayName(), networkUser.userName), Language.GetString(pickupDef.nameToken)));
+            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_NORMAL, NewtName, GetDeathState(), GetColoredPlayerName(pc), Language.GetString(equipmentDef.nameToken)));
         }
 
-        public static void ThanksTip(NetworkUser networkUser, CharacterBody characterBody, ItemDef itemDef, int count)
+        public static void ThanksTip(NetworkUser networkUser, PlayerCharacterMasterController pc, PickupDef pickupDef)
         {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_PECULIAR, NewtName, GetDeathState(), string.Format("[{0}]{1}", characterBody.GetDisplayName(), networkUser.userName), string.Format("{0} x {1}", Language.GetString(itemDef.nameToken), count)));
+            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_ELITE, NewtName, GetDeathState(), GetColoredPlayerName(pc), Language.GetString(pickupDef.nameToken)));
+        }
+
+        public static void ThanksTip(NetworkUser networkUser, PlayerCharacterMasterController pc, ItemDef itemDef, int count)
+        {
+            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_PECULIAR, NewtName, GetDeathState(), GetColoredPlayerName(pc), string.Format("{0} x {1}", Language.GetString(itemDef.nameToken), count)));
         }
 
         public static void WelcomeWord()
