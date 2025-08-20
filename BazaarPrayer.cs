@@ -178,6 +178,8 @@ namespace BazaarIsMyHaven
             gameObject.transform.eulerAngles = new Vector3(0.0f, 300f, 0.0f);
             gameObject.GetComponent<PurchaseInteraction>().cost = ModConfig.PrayCost.Value;
             gameObject.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.PrayCost.Value;
+            gameObject.GetComponent<PurchaseInteraction>().contextToken = "NEWT_STATUE_CONTEXT";
+            gameObject.GetComponent<PurchaseInteraction>().NetworkcontextToken = "NEWT_STATUE_CONTEXT";
 
             NetworkServer.Spawn(gameObject);
         }
