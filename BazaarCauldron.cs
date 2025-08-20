@@ -110,7 +110,6 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.CauldronCount.Value > 0)
             {
-                // 大锅
                 DicCauldrons.Clear();
                 SetCauldron();
                 int count = 0;
@@ -126,6 +125,7 @@ namespace BazaarIsMyHaven
                 }
             }
         }
+
         private void SetCauldron()
         {
             List<int> total = new List<int> { 0, 1, 2, 3, 4, 5, 6 };
@@ -171,10 +171,10 @@ namespace BazaarIsMyHaven
 
         private AsyncOperationHandle<GameObject> GetRandomLunarCauldron()
         {
-            float w_g = ModConfig.CauldronGreenWeight.Value;
-            float g_r = ModConfig.CauldronRedWeight.Value;
-            float g_w = ModConfig.CauldronWhiteWeight.Value;
-            float total = w_g + g_r + g_w;
+            float w_g = ModConfig.CauldronGreenToRedWeight.Value;
+            float g_r = ModConfig.CauldronRedToWhite.Value;
+            float r_w = ModConfig.CauldronWhiteToGreenWeight.Value;
+            float total = w_g + g_r + r_w;
             double d = RNG.NextDouble() * total;
             if (d <= w_g) return LunarCauldronsCode[0];
             else if (d <= w_g + g_r) return LunarCauldronsCode[1];

@@ -55,7 +55,7 @@ namespace BazaarIsMyHaven
 
         public enum DeathState
         {
-            Default, Tank, Ghost, Evil
+            Default, Tank, Ghost, Hostile
         }
     }
 }

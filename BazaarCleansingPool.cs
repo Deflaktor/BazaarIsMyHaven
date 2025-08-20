@@ -33,11 +33,6 @@ namespace BazaarIsMyHaven
         public override void Hook()
         {
             On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
-
-            if (ModCompatibilityShareSuite.enabled)
-            {
-                // ModCompatibilityShareSuite.AddPickupEventHandler(NonShareableItemCheck);
-            }
         }
 
         public override void SetupBazaar()
@@ -62,16 +57,6 @@ namespace BazaarIsMyHaven
                 }
             }
             orig(self, newPickupIndex, newHidden);
-        }
-
-
-        private bool NonShareableItemCheck(GenericPickupController pickup, CharacterBody picker)
-        {
-            //if (ModConfig.EnableMod.Value && ModConfig.ShrineCleaseGivesLunarCoins.Value && IsCurrentMapInBazaar())
-            // return !pickup.TryGetComponent<NonShareableItem>(out _);
-            return pickup.pickupIndex != PickupCatalog.FindPickupIndex(RoR2Content.MiscPickups.LunarCoin.miscPickupIndex);
-            // item shareable
-            return true;
         }
 
         private void SpawnShrineCleanse()

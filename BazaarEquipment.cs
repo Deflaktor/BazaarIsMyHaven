@@ -47,13 +47,10 @@ namespace BazaarIsMyHaven
             {
                 if (ModConfig.EquipmentCount.Value > 0)
                 {
-                    // 主动装备
                     if (self.name.StartsWith("MultiShopEquipmentTerminal"))
                     {
-                        //ChatHelper.Send("一台主动装备已修改");
                         self.cost = ModConfig.EquipmentCost.Value;
                         self.Networkcost = ModConfig.EquipmentCost.Value;
-                        //self.costType = CostTypeIndex.PercentHealth;
                     }
                 }
             }
@@ -155,7 +152,6 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.EquipmentCount.Value > 0)
             {
-                // 主动装备
                 DicEquipments.Clear();
                 SetEquipment();
 

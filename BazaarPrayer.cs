@@ -84,7 +84,6 @@ namespace BazaarIsMyHaven
             {
                 if (self.name.StartsWith("BlueprintStation"))
                 {
-                    //HasBeenDonate = true;
                     NetworkUser networkUser = Util.LookUpBodyNetworkUser(activator.gameObject);
                     CharacterMaster characterMaster = activator.GetComponent<CharacterBody>().master;
                     CharacterBody characterBody = activator.GetComponent<CharacterBody>();
@@ -95,18 +94,17 @@ namespace BazaarIsMyHaven
                     {
                         ChatHelper.ThanksTip(networkUser, characterMaster.playerCharacterMasterController);
                     }
-                    playerStruct.DonateCount += 1; // 加一次捐赠次数
-                    if (playerStruct.DonateCount % 10 == 0) // 每满10次捐赠
+                    playerStruct.DonateCount += 1;
+                    if (playerStruct.DonateCount % 10 == 0)
                     {
                         playerStruct.RewardCount += 1;
-                        if (playerStruct.RewardCount <= ModConfig.PrayRewardCount.Value)
+                        if (playerStruct.RewardCount <= ModConfig.PrayRewardLimit.Value)
                         {
-                            GiftReward(self, networkUser, characterBody, inventory); // 给奖励
+                            GiftReward(self, networkUser, characterBody, inventory);
                         }
                     }
-                    if (playerStruct.DonateCount <= (ModConfig.PrayRewardCount.Value * 10))
+                    if (playerStruct.DonateCount <= (ModConfig.PrayRewardLimit.Value * 10))
                     {
-                        // 购买特效
                         SpawnEffect(ShrineUseEffect, self.transform.position, new Color32(64, 127, 255, 255), 5f);
                         networkUser.DeductLunarCoins((uint)self.Networkcost);
                     }
@@ -118,7 +116,6 @@ namespace BazaarIsMyHaven
         }
         private void InitPrayData()
         {
-            //SpecialCodes 
             SpecialCodes.ForEach(x => x.IsUse = false);
             string[] codes = ModConfig.PrayPeculiarList.Value.Split(',');
             for (int i = 0; i < codes.Length; i++)
@@ -142,7 +139,7 @@ namespace BazaarIsMyHaven
                 List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
                 PickupDef pickupDef = PickupCatalog.GetPickupDef(list[UnityEngine.Random.Range(0, list.Count)]);
                 inventory.GiveItem((pickupDef != null) ? pickupDef.itemIndex : ItemIndex.None, 1);
-                // 特效
+
                 PurchaseInteraction.CreateItemTakenOrb(self.gameObject.transform.position, characterBody.gameObject, pickupDef.itemIndex);
                 ChatHelper.ThanksTip(networkUser, characterBody.master.playerCharacterMasterController, pickupDef);
             }
@@ -153,9 +150,9 @@ namespace BazaarIsMyHaven
                 EquipmentIndex IsHasEquip = inventory.GetEquipmentIndex();
                 EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(equipIndex);
 
-                if (IsHasEquip != EquipmentIndex.None) // 如果玩家身上有主动装备，掉落出来
+                if (IsHasEquip != EquipmentIndex.None)
                     PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(IsHasEquip), characterBody.gameObject.transform.position + Vector3.up * 1.5f, Vector3.up * 20f + self.transform.forward * 2f);
-                inventory.SetEquipmentIndex(equipIndex); // 为了获得文本，其实可以用GiveEquipmentString()
+                inventory.SetEquipmentIndex(equipIndex);
 
                 ChatHelper.ThanksTip(networkUser, characterBody.master.playerCharacterMasterController, equipmentDef);
             }
@@ -165,7 +162,6 @@ namespace BazaarIsMyHaven
                 ItemIndex itemIndex = ItemCatalog.FindItemIndex(specialItemStruct.Name);
                 ItemDef itemDef = ItemCatalog.GetItemDef(itemIndex);
                 inventory.GiveItem(itemDef, specialItemStruct.Count);
-                // 特效
                 PurchaseInteraction.CreateItemTakenOrb(self.gameObject.transform.position, characterBody.gameObject, itemIndex);
                 ChatHelper.ThanksTip(networkUser, characterBody.master.playerCharacterMasterController, itemDef, specialItemStruct.Count);
             }
