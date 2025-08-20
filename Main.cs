@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using R2API.Utils;
@@ -26,7 +26,6 @@ namespace BazaarIsMyHaven
     public class Main : BaseUnityPlugin
     {
         public static PluginInfo PluginInfo;
-        public static ItemHandler ItemHandler;
         public static Main instance;
 
         public const string PluginGUID = PluginAuthor + "." + PluginName;
@@ -74,25 +73,15 @@ namespace BazaarIsMyHaven
             var instancedPurchases = new InstancedPurchases();
             instancedPurchases.Hook();
 
-            ItemHandler = new ItemHandler();
             On.RoR2.Run.Start += Run_Start;
-            // 预言地图
             On.RoR2.BazaarController.SetUpSeerStations += BazaarController_SetUpSeerStations;
-            // 生成设施
             On.RoR2.BazaarController.Awake += BazaarController_Awake;
             On.RoR2.SceneDirector.Start += SceneDirector_Start;
-            // 自动商店
             On.RoR2.TeleporterInteraction.Start += TeleporterInteraction_Start;
-            // 防商人踢
             On.EntityStates.NewtMonster.KickFromShop.FixedUpdate += KickFromShop_FixedUpdate;
-            // 打商人
             On.RoR2.GlobalEventManager.OnHitAll += GlobalEventManager_OnHitAll;
-            // 记录商人死亡状态
             On.RoR2.CharacterMaster.OnBodyDeath += CharacterMaster_OnBodyDeath;
             On.EntityStates.NewtMonster.SpawnState.OnEnter += SpawnState_OnEnter;
-            // 物品重写
-            On.RoR2.GlobalEventManager.OnCrit += ItemHandler.GlobalEventManager_OnCrit;
-            On.RoR2.CharacterBody.RecalculateStats += ItemHandler.CharacterBody_RecalculateStats;
             R2API.Utils.CommandHelper.AddToConsoleWhenReady();
         }
 
@@ -100,7 +89,6 @@ namespace BazaarIsMyHaven
         {
             ShopKeep.DiedAtLeastOnce = false;
             ShopKeep.Body = null;
-            ItemHandler = new ItemHandler();
             orig(self);
         }
 
