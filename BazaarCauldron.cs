@@ -171,9 +171,9 @@ namespace BazaarIsMyHaven
 
         private AsyncOperationHandle<GameObject> GetRandomLunarCauldron()
         {
-            float w_g = ModConfig.CauldronGreenToRedWeight.Value;
-            float g_r = ModConfig.CauldronRedToWhite.Value;
-            float r_w = ModConfig.CauldronWhiteToGreenWeight.Value;
+            float w_g = ModConfig.CauldronWhiteToGreenWeight.Value;
+            float g_r = ModConfig.CauldronGreenToRedWeight.Value;
+            float r_w = ModConfig.CauldronRedToWhiteWeight.Value;
             float total = w_g + g_r + r_w;
             double d = RNG.NextDouble() * total;
             if (d <= w_g) return LunarCauldronsCode[0];
