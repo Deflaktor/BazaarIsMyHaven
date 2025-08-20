@@ -15,6 +15,10 @@ namespace BazaarIsMyHaven
         {
             List<Vector2> points = new List<Vector2>();
             float angleStep = (endAngle - startAngle) / (numberOfPoints - 1);
+            if (numberOfPoints <= 1)
+            {
+                angleStep = 0;
+            }
 
             for (int i = 0; i < numberOfPoints; i++)
             {
