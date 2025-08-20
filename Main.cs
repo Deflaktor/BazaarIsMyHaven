@@ -14,6 +14,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
 namespace BazaarIsMyHaven
 {
@@ -33,6 +34,7 @@ namespace BazaarIsMyHaven
         public const string PluginName = "BazaarIsMyHaven";
         public const string PluginVersion = "1.0.0";
 
+        private static System.Random Random = new System.Random();
         List<BazaarBase> bazaarMods = new List<BazaarBase>();
         private readonly Dictionary<PlayerCharacterMasterController, PlayerStruct> playerStructs_ = new Dictionary<PlayerCharacterMasterController, PlayerStruct>();
 
@@ -55,7 +57,7 @@ namespace BazaarIsMyHaven
             bazaarMods.Add(new BazaarCauldron());
             bazaarMods.Add(new BazaarPrinter());
             bazaarMods.Add(new BazaarRestack());
-            bazaarMods.Add(new BazaarPrayer());
+            bazaarMods.Add(new BazaarDonate());
             bazaarMods.Add(new BazaarScrapper());
             bazaarMods.Add(new BazaarEquipment());
             bazaarMods.Add(new BazaarLunarShop());
@@ -88,8 +90,8 @@ namespace BazaarIsMyHaven
 
         private void Run_Start(On.RoR2.Run.orig_Start orig, Run self)
         {
-            ShopKeep.DiedAtLeastOnce = false;
-            ShopKeep.Body = null;
+            ShopKeeper.DiedAtLeastOnce = false;
+            ShopKeeper.Body = null;
             orig(self);
         }
 
@@ -98,12 +100,12 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.EnableMod.Value && NetworkServer.active)
             {
-                if (ModConfig.LunarSeerSectionEnabled.Value || (ModConfig.EquipmentSectionEnabled.Value && ModConfig.ReplaceLunarSeersWithEquipment.Value))
+                if (ModConfig.LunarSeerSectionEnabled.Value || (ModConfig.EquipmentSectionEnabled.Value && ModConfig.EquipmentReplaceLunarSeersWithEquipment.Value))
                 {
                     foreach (SeerStationController seerStationController in self.seerStations)
                     {
-                        var seerStationAvailable = ModConfig.SeerStationAvailable.Value;
-                        if (ModConfig.EquipmentSectionEnabled.Value && ModConfig.ReplaceLunarSeersWithEquipment.Value)
+                        var seerStationAvailable = ModConfig.LunarSeerAvailable.Value;
+                        if (ModConfig.EquipmentSectionEnabled.Value && ModConfig.EquipmentReplaceLunarSeersWithEquipment.Value)
                         {
                             seerStationAvailable = false;
                         }
@@ -111,8 +113,8 @@ namespace BazaarIsMyHaven
                         seerStationController.GetComponent<PurchaseInteraction>().Networkavailable = seerStationAvailable;
                         if (ModConfig.LunarSeerSectionEnabled.Value && seerStationAvailable)
                         {
-                            seerStationController.GetComponent<PurchaseInteraction>().cost = ModConfig.SeerStationsCost.Value;
-                            seerStationController.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.SeerStationsCost.Value; 
+                            seerStationController.GetComponent<PurchaseInteraction>().cost = ModConfig.LunarSeerCost.Value;
+                            seerStationController.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.LunarSeerCost.Value; 
                         }
                     }
                 }
@@ -124,7 +126,7 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.EnableMod.Value && NetworkServer.active)
             {
-                ShopKeep.DeathCount = 0;
+                ShopKeeper.DeathCount = 0;
                 playerStructs_.Clear();
 
                 ArtifactDef artifactDef = ArtifactCatalog.FindArtifactDef("Sacrifice");
@@ -147,23 +149,27 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
-                ShopKeep.Body = null;
+                ShopKeeper.Body = null;
             }
             orig(self);
         }
         private void TeleporterInteraction_Start(On.RoR2.TeleporterInteraction.orig_Start orig, TeleporterInteraction self)
         {
             orig(self);
-            if (ModConfig.EnableMod.Value && ModConfig.EnableAutoOpenShop.Value && NetworkServer.active)
+            if (ModConfig.EnableMod.Value && ModConfig.AlwaysSpawnShopPortal.Value && NetworkServer.active)
             {
                 self.shouldAttemptToSpawnShopPortal = true;
             }
         }
         private void KickFromShop_FixedUpdate(On.EntityStates.NewtMonster.KickFromShop.orig_FixedUpdate orig, EntityStates.NewtMonster.KickFromShop self)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.EnableNoKickFromShop.Value && NetworkServer.active)
+            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.NewtNoKickFromShop.Value && NetworkServer.active)
             {
-                if (ModConfig.NewtSecondLifeMode.Value == ShopKeep.DeathState.Hostile)
+                if(!ShopKeeper.DiedAtLeastOnce)
+                {
+                    ChatHelper.HitWord();
+                }
+                if (ModConfig.NewtDeathBehavior.Value == ShopKeeper.DeathState.Hostile)
                 {
                     // TODO
                 }
@@ -176,23 +182,14 @@ namespace BazaarIsMyHaven
         }
         private void GlobalEventManager_OnHitAll(On.RoR2.GlobalEventManager.orig_OnHitAll orig, GlobalEventManager self, DamageInfo damageInfo, GameObject hitObject)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.EnableNewtTrashTalk.Value && NetworkServer.active)
+            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.NewtTrashTalk.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
-                if (IsCurrentMapInBazaar())
+                if (hitObject.name.StartsWith("ShopkeeperBody") && damageInfo.attacker)
                 {
-                    try
-                    {
-                        if (hitObject.name.StartsWith("ShopkeeperBody") && damageInfo.attacker)
-                        {
-                            ChatHelper.HitWord();
-                            orig(self, damageInfo, hitObject);
-                        }
+                    float damageAsPercentageOfHealth = damageInfo.damage / hitObject.GetComponent<HealthComponent>().fullCombinedHealth;
+                    if(Random.NextDouble() < damageAsPercentageOfHealth / 2f) {
+                        ChatHelper.HitWord();
                     }
-                    catch (Exception)
-                    {
-                        
-                    }
-                    return;
                 }
             }
             orig(self, damageInfo, hitObject);
@@ -207,11 +204,11 @@ namespace BazaarIsMyHaven
                 var victim = body.name;
                 if (victim.Contains("ShopkeeperBody"))
                 {
-                    ShopKeep.DiedAtLeastOnce = true;
-                    ShopKeep.DeathCount++;
-                    if (ModConfig.NewtSecondLifeMode.Value == ShopKeep.DeathState.Default)
+                    ShopKeeper.DiedAtLeastOnce = true;
+                    ShopKeeper.DeathCount++;
+                    if (ModConfig.NewtDeathBehavior.Value == ShopKeeper.DeathState.Default)
                     {
-                        if(ModConfig.EnableNewtTrashTalk.Value)
+                        if(ModConfig.NewtTrashTalk.Value)
                         {
                             ChatHelper.ShowNewtDeath();
                         }
@@ -232,17 +229,17 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && NetworkServer.active && NetworkServer.active)
             {
-                if (ModConfig.EnableWelcomeWord.Value)
+                if (ModConfig.NewtGreeting.Value)
                 {
                     StartCoroutine(ShopWelcomeWord());
                 }
 
-                if (ShopKeep.Body is null) FindShopkeeper();
+                if (ShopKeeper.Body is null) FindShopkeeper();
 
-                if (ModConfig.NewtSecondLifeMode.Value != ShopKeep.DeathState.Default)
+                if (ModConfig.NewtDeathBehavior.Value != ShopKeeper.DeathState.Default)
                 {
-                    ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ExtraLife")), 1000);
-                    ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("CutHp")), 200);
+                    ShopKeeper.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ExtraLife")), 1000);
+                    ShopKeeper.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("CutHp")), 200);
                 }
             }
             orig(self);
@@ -250,17 +247,17 @@ namespace BazaarIsMyHaven
 
         private void AddItemToShopKeeper(CharacterBody body)
         {
-            switch (ModConfig.NewtSecondLifeMode.Value)
+            switch (ModConfig.NewtDeathBehavior.Value)
             {
-                case ShopKeep.DeathState.Ghost:
-                    ShopKeep.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Ghost")), 1);
-                    ShopKeep.Body.AddBuff(RoR2Content.Buffs.HiddenInvincibility);
+                case ShopKeeper.DeathState.Ghost:
+                    ShopKeeper.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Ghost")), 1);
+                    ShopKeeper.Body.AddBuff(RoR2Content.Buffs.HiddenInvincibility);
                     break;
-                case ShopKeep.DeathState.Tank:
-                    var healthBoost = 10 * (int)Math.Pow(2, ShopKeep.DeathCount) - 10 * (int)Math.Pow(2, ShopKeep.DeathCount - 1);
+                case ShopKeeper.DeathState.Tank:
+                    var healthBoost = 10 * (int)Math.Pow(2, ShopKeeper.DeathCount) - 10 * (int)Math.Pow(2, ShopKeeper.DeathCount - 1);
                     body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BoostHp")), healthBoost);
                     break;
-                case ShopKeep.DeathState.Hostile:
+                case ShopKeeper.DeathState.Hostile:
                     body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Thorns")), 1);
                     body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BurnNearby")), 1);
                     break;
@@ -284,7 +281,7 @@ namespace BazaarIsMyHaven
                     CharacterBody cb = cm.GetBody();
                     if (cb && cb.name.StartsWith("ShopkeeperBody"))
                     {
-                        ShopKeep.Body = cb;
+                        ShopKeeper.Body = cb;
                         break;
                     }
                 }

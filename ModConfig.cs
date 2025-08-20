@@ -14,20 +14,20 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<bool> EnableMod;
         public static ConfigEntry<bool> SpawnCountByStage;
         public static ConfigEntry<int> SpawnCountOffset;
-        public static ConfigEntry<bool> EnableAutoOpenShop;
-        public static ConfigEntry<bool> EnableDecorate;
+        public static ConfigEntry<bool> AlwaysSpawnShopPortal;
+        public static ConfigEntry<bool> DecorateBazaar;
         //public static ConfigEntry<string> HitWords;
 
         // newt
         public static ConfigEntry<bool> NewtSectionEnabled;
-        public static ConfigEntry<bool> EnableWelcomeWord;
-        public static ConfigEntry<bool> EnableNoKickFromShop;
-        public static ConfigEntry<ShopKeep.DeathState> NewtSecondLifeMode;
-        public static ConfigEntry<bool> EnableNewtTrashTalk;
+        public static ConfigEntry<bool> NewtGreeting;
+        public static ConfigEntry<bool> NewtNoKickFromShop;
+        public static ConfigEntry<ShopKeeper.DeathState> NewtDeathBehavior;
+        public static ConfigEntry<bool> NewtTrashTalk;
 
         // printer
         public static ConfigEntry<bool> PrinterSectionEnabled;
-        public static ConfigEntry<int> PrinterCount;
+        public static ConfigEntry<int> PrinterAmount;
         public static ConfigEntry<float> PrinterTier1Weight;
         public static ConfigEntry<float> PrinterTier2Weight;
         public static ConfigEntry<float> PrinterTier3Weight;
@@ -40,7 +40,7 @@ namespace BazaarIsMyHaven
 
         // cauldron
         public static ConfigEntry<bool> CauldronSectionEnabled;
-        public static ConfigEntry<int> CauldronCount;
+        public static ConfigEntry<int> CauldronAmount;
         public static ConfigEntry<float> CauldronWhiteToGreenWeight;
         public static ConfigEntry<float> CauldronGreenToRedWeight;
         public static ConfigEntry<float> CauldronRedToWhiteWeight;
@@ -54,155 +54,155 @@ namespace BazaarIsMyHaven
 
         // scrapper
         public static ConfigEntry<bool> ScrapperSectionEnabled;
-        public static ConfigEntry<int> ScrapperCount;
+        public static ConfigEntry<int> ScrapperAmount;
 
         // equipment
         public static ConfigEntry<bool> EquipmentSectionEnabled;
-        public static ConfigEntry<int> EquipmentCount;
-        public static ConfigEntry<bool> EquipmentInstanced;
+        public static ConfigEntry<int> EquipmentAmount;
+        public static ConfigEntry<bool> EquipmentInstancedPurchases;
         public static ConfigEntry<int> EquipmentCost;
         public static ConfigEntry<bool> EquipmentBuyToInventory;
-        public static ConfigEntry<bool> ReplaceLunarSeersWithEquipment;
+        public static ConfigEntry<bool> EquipmentReplaceLunarSeersWithEquipment;
 
         // lunarShop
         public static ConfigEntry<bool> LunarShopSectionEnabled;
-        public static ConfigEntry<int> LunarShopTerminalCount;
-        public static ConfigEntry<int> LunarShopTerminalCost;
+        public static ConfigEntry<int> LunarShopAmount;
+        public static ConfigEntry<int> LunarShopCost;
         public static ConfigEntry<int> LunarShopBuyLimit;
-        public static ConfigEntry<bool> EnableLunarShopStaticItems;
-        public static ConfigEntry<string> LunarShopItemsList;
-        public static ConfigEntry<bool> LunarShopInstanced;
+        public static ConfigEntry<bool> LunarShopStaticItems;
+        public static ConfigEntry<string> LunarShopItemList;
+        public static ConfigEntry<bool> LunarShopInstancedPurchases;
         public static ConfigEntry<bool> LunarShopBuyToInventory;
 
         // lunarRecycler
         public static ConfigEntry<bool> LunarRecyclerSectionEnabled;
         public static ConfigEntry<bool> LunarRecyclerAvailable;
-        public static ConfigEntry<int> LunarRecyclerRerollCost;
-        public static ConfigEntry<int> LunarRecyclerRerollCostMultiplier;
+        public static ConfigEntry<int> LunarRecyclerCost;
+        public static ConfigEntry<int> LunarRecyclerCostMultiplier;
         public static ConfigEntry<int> LunarRecyclerRerollLimit;
 
         // cleansing pool
         public static ConfigEntry<bool> CleansingPoolSectionEnabled;
-        public static ConfigEntry<bool> ShrineCleaseGivesLunarCoins;
+        public static ConfigEntry<bool> CleansingPoolRewardsLunarCoins;
 
         // lunarSeer
         public static ConfigEntry<bool> LunarSeerSectionEnabled;
-        public static ConfigEntry<bool> SeerStationAvailable;
-        public static ConfigEntry<int> SeerStationsCost;
+        public static ConfigEntry<bool> LunarSeerAvailable;
+        public static ConfigEntry<int> LunarSeerCost;
 
         // restack shrine
-        public static ConfigEntry<bool> ShrineRestackSectionEnabled;
-        public static ConfigEntry<int> ShrineRestackUseLimit;
-        public static ConfigEntry<int> ShrineRestackCost;
-        public static ConfigEntry<int> ShrineRestackScalar;
+        public static ConfigEntry<bool> ShrineOfOrderSectionEnabled;
+        public static ConfigEntry<int> ShrineOfOrderUseLimit;
+        public static ConfigEntry<int> ShrineOfOrderCost;
+        public static ConfigEntry<int> ShrineOfOrderCostMultiplier;
 
         // prayer
-        public static ConfigEntry<bool> PrayerSectionEnabled;
-        public static ConfigEntry<int> PrayCost;
-        public static ConfigEntry<int> PrayRewardLimit;
-        public static ConfigEntry<float> PrayNormalWeight;
-        public static ConfigEntry<float> PrayEliteWeight;
-        public static ConfigEntry<float> PrayPeculiarWeight;
-        public static ConfigEntry<string> PrayPeculiarList;
+        public static ConfigEntry<bool> DonateSectionEnabled;
+        public static ConfigEntry<int> DonateCost;
+        public static ConfigEntry<int> DonateRewardLimit;
+        public static ConfigEntry<float> DonateRewardNormalWeight;
+        public static ConfigEntry<float> DonateRewardEliteWeight;
+        public static ConfigEntry<float> DonateRewardPeculiarWeight;
+        public static ConfigEntry<string> DonateRewardPeculiarList;
 
         public static void InitConfig(ConfigFile config)
         {
             // 00 General
             EnableMod = config.Bind("00 General", "Enabled", true, "Enable Mod");
-            EnableAutoOpenShop = config.Bind("00 General", "AlwaysSpawnShopPortal", false, "Spawn a portal to the Bazaar after each teleporter event.");
-            SpawnCountByStage = config.Bind("00 General", "SpawnCountByStage", true, "The amount of spawned interactables are based on stage completion count.\nFormula: Total = stage count + offset");
+            AlwaysSpawnShopPortal = config.Bind("00 General", "AlwaysSpawnShopPortal", false, "Spawn a portal to the Bazaar after each teleporter event.");
+            SpawnCountByStage = config.Bind("00 General", "SpawnCountByStage", true, "The amount of spawned interactables are based on stage completion count, capped by the amount.\nFormula: Total = stage count + offset");
             SpawnCountOffset = config.Bind("00 General", "SpawnCountOffset", 0, "Offset value added to stage-based interactable spawns.");
-            EnableDecorate = config.Bind("00 General", "EnableDecorate", true, "Adds Bazaar decorations such as chests and an extra portal behind Newt.");
+            DecorateBazaar = config.Bind("00 General", "DecorateBazaar", true, "Adds Bazaar decorations such as chests and an extra portal behind Newt.");
 
             // 01 Newt
             NewtSectionEnabled = config.Bind("01 Newt", "SectionEnabled", true, "Enables or disables the Newt section.");
-            EnableWelcomeWord = config.Bind("01 Newt", "EnableWelcomeWord", true, "Enables Newt's welcome messages. If he has been killed before, his tone may be hostile.");
-            EnableNoKickFromShop = config.Bind("01 Newt", "EnableNoKickFromShop", true, "Prevents being kicked out of the Bazaar after angering Newt.");
-            NewtSecondLifeMode = config.Bind("01 Newt", "NewtDeath", ShopKeep.DeathState.Tank, "Determines Newt's behavior after death.\nDefault: Vanilla - Unchanged behavior\nTank: Doubles Newt's health after each kill\nGhost: Newt respawns as a passive ghost\nHostile: Newt revives hostile and attacks players");
-            EnableNewtTrashTalk = config.Bind("01 Newt", "EnableNewtTrashTalk", true, "When hit, Newt responds with sarcastic remarks.");
+            NewtGreeting = config.Bind("01 Newt", "Greeting", true, "Enables Newt's welcome messages. If he has been killed before, his tone may be hostile.");
+            NewtNoKickFromShop = config.Bind("01 Newt", "NoKickFromShop", true, "Prevents being kicked out of the Bazaar after angering Newt.");
+            NewtDeathBehavior = config.Bind("01 Newt", "DeathBehavior", ShopKeeper.DeathState.Tank, "Determines Newt's behavior after death.\nDefault: Vanilla - Unchanged behavior\nTank: Doubles Newt's health after each kill\nGhost: Newt respawns as a passive ghost\nHostile: Newt revives hostile and attacks players");
+            NewtTrashTalk = config.Bind("01 Newt", "TrashTalk", true, "When hit, Newt responds with sarcastic remarks.");
 
             // 02 Printer
             PrinterSectionEnabled = config.Bind("02 Printer", "SectionEnabled", true, "Enables or disables the Printer section.");
-            PrinterCount = config.Bind("02 Printer", "PrinterCount", 9, "Number of printers spawned (max 9)."); if (PrinterCount.Value > 9) PrinterCount.Value = 9;
-            PrinterTier1Weight = config.Bind("02 Printer", "PrinterTier1Weight", 0.5f, "Weight for Tier 1 (white) items."); PrinterTier1Weight.Value = Math.Abs(PrinterTier1Weight.Value);
-            PrinterTier2Weight = config.Bind("02 Printer", "PrinterTier2Weight", 0.25f, "Weight for Tier 2 (green) items."); PrinterTier2Weight.Value = Math.Abs(PrinterTier2Weight.Value);
-            PrinterTier3Weight = config.Bind("02 Printer", "PrinterTier3Weight", 0.17f, "Weight for Tier 3 (red) items."); PrinterTier3Weight.Value = Math.Abs(PrinterTier3Weight.Value);
-            PrinterTierBossWeight = config.Bind("02 Printer", "PrinterBossWeight", 0.04f, "Weight for Boss-tier items."); PrinterTierBossWeight.Value = Math.Abs(PrinterTierBossWeight.Value);
-            PrinterTierVoid1Weight = config.Bind("02 Printer", "PrinterTierVoid1Weight", 0.015f, "Weight for Tier 1 Void items (traded from red)."); PrinterTierVoid1Weight.Value = Math.Abs(PrinterTierVoid1Weight.Value);
-            PrinterTierVoid2Weight = config.Bind("02 Printer", "PrinterTierVoid2Weight", 0.015f, "Weight for Tier 2 Void items (traded from red)."); PrinterTierVoid2Weight.Value = Math.Abs(PrinterTierVoid2Weight.Value);
-            PrinterTierVoid3Weight = config.Bind("02 Printer", "PrinterTierVoid3Weight", 0.006f, "Weight for Tier 3 Void items (traded from red)."); PrinterTierVoid3Weight.Value = Math.Abs(PrinterTierVoid3Weight.Value);
-            PrinterTierVoidBossWeight = config.Bind("02 Printer", "PrinterTierVoidBossWeight", 0.003f, "Weight for Boss-tier Void items (traded from red)."); PrinterTierVoidBossWeight.Value = Math.Abs(PrinterTierVoidBossWeight.Value);
-            PrinterTierVoidAnyWeight = config.Bind("02 Printer", "PrinterTierVoidAnyWeight", 0f, "Weight for Void items of any tier (traded from red)."); PrinterTierVoidAnyWeight.Value = Math.Abs(PrinterTierVoidAnyWeight.Value);
+            PrinterAmount = config.Bind("02 Printer", "Amount", 9, "Number of printers spawned (max 9)."); if (PrinterAmount.Value > 9) PrinterAmount.Value = 9;
+            PrinterTier1Weight = config.Bind("02 Printer", "Tier1Weight", 0.5f, "Weight for Tier 1 (white) items."); PrinterTier1Weight.Value = Math.Abs(PrinterTier1Weight.Value);
+            PrinterTier2Weight = config.Bind("02 Printer", "Tier2Weight", 0.25f, "Weight for Tier 2 (green) items."); PrinterTier2Weight.Value = Math.Abs(PrinterTier2Weight.Value);
+            PrinterTier3Weight = config.Bind("02 Printer", "Tier3Weight", 0.17f, "Weight for Tier 3 (red) items."); PrinterTier3Weight.Value = Math.Abs(PrinterTier3Weight.Value);
+            PrinterTierBossWeight = config.Bind("02 Printer", "BossWeight", 0.04f, "Weight for Boss-tier items."); PrinterTierBossWeight.Value = Math.Abs(PrinterTierBossWeight.Value);
+            PrinterTierVoid1Weight = config.Bind("02 Printer", "TierVoid1Weight", 0.015f, "Weight for Tier 1 Void items (traded from red)."); PrinterTierVoid1Weight.Value = Math.Abs(PrinterTierVoid1Weight.Value);
+            PrinterTierVoid2Weight = config.Bind("02 Printer", "TierVoid2Weight", 0.015f, "Weight for Tier 2 Void items (traded from red)."); PrinterTierVoid2Weight.Value = Math.Abs(PrinterTierVoid2Weight.Value);
+            PrinterTierVoid3Weight = config.Bind("02 Printer", "TierVoid3Weight", 0.006f, "Weight for Tier 3 Void items (traded from red)."); PrinterTierVoid3Weight.Value = Math.Abs(PrinterTierVoid3Weight.Value);
+            PrinterTierVoidBossWeight = config.Bind("02 Printer", "TierVoidBossWeight", 0.003f, "Weight for Boss-tier Void items (traded from red)."); PrinterTierVoidBossWeight.Value = Math.Abs(PrinterTierVoidBossWeight.Value);
+            PrinterTierVoidAnyWeight = config.Bind("02 Printer", "TierVoidAnyWeight", 0f, "Weight for Void items of any tier (traded from red)."); PrinterTierVoidAnyWeight.Value = Math.Abs(PrinterTierVoidAnyWeight.Value);
 
             // 03 Cauldron
             CauldronSectionEnabled = config.Bind("03 Cauldron", "SectionEnabled", true, "Enables or disables the Cauldron section.");
-            CauldronCount = config.Bind("03 Cauldron", "CauldronCount", 7, "Number of cauldrons spawned (max 7)."); if (CauldronCount.Value > 7) CauldronCount.Value = 7;
-            CauldronWhiteToGreenWeight = config.Bind("03 Cauldron", "CauldronWhiteToGreenWeight", 0.75f, "Weight for White->Green cauldrons."); CauldronWhiteToGreenWeight.Value = Math.Abs(CauldronWhiteToGreenWeight.Value);
-            CauldronWhiteToGreenCost = config.Bind("03 Cauldron", "CauldronWhiteToGreenCost", 3, "Number of White items required for Green conversion."); CauldronWhiteToGreenCost.Value = Math.Abs(CauldronWhiteToGreenCost.Value);
-            CauldronGreenToRedWeight = config.Bind("03 Cauldron", "CauldronGreenToRedWeight", 0.25f, "Weight for Green->Red cauldrons."); CauldronGreenToRedWeight.Value = Math.Abs(CauldronGreenToRedWeight.Value);
-            CauldronGreenToRedCost = config.Bind("03 Cauldron", "CauldronGreenToRedCost", 5, "Number of Green items required for Red conversion."); CauldronGreenToRedCost.Value = Math.Abs(CauldronGreenToRedCost.Value);
-            CauldronRedToWhiteWeight = config.Bind("03 Cauldron", "CauldronRedToWhiteWeight", 0f, "Weight for Red->White cauldrons."); CauldronRedToWhiteWeight.Value = Math.Abs(CauldronRedToWhiteWeight.Value);
-            CauldronRedToWhiteCost = config.Bind("03 Cauldron", "CauldronRedToWhiteCost", 1, "Number of Red items required for White conversion."); CauldronRedToWhiteCost.Value = Math.Abs(CauldronRedToWhiteCost.Value);
+            CauldronAmount = config.Bind("03 Cauldron", "Amount", 7, "Number of cauldrons spawned (max 7)."); if (CauldronAmount.Value > 7) CauldronAmount.Value = 7;
+            CauldronWhiteToGreenWeight = config.Bind("03 Cauldron", "WhiteToGreenWeight", 0.75f, "Weight for White->Green cauldrons."); CauldronWhiteToGreenWeight.Value = Math.Abs(CauldronWhiteToGreenWeight.Value);
+            CauldronWhiteToGreenCost = config.Bind("03 Cauldron", "WhiteToGreenCost", 3, "Number of White items required for Green conversion."); CauldronWhiteToGreenCost.Value = Math.Abs(CauldronWhiteToGreenCost.Value);
+            CauldronGreenToRedWeight = config.Bind("03 Cauldron", "GreenToRedWeight", 0.25f, "Weight for Green->Red cauldrons."); CauldronGreenToRedWeight.Value = Math.Abs(CauldronGreenToRedWeight.Value);
+            CauldronGreenToRedCost = config.Bind("03 Cauldron", "GreenToRedCost", 5, "Number of Green items required for Red conversion."); CauldronGreenToRedCost.Value = Math.Abs(CauldronGreenToRedCost.Value);
+            CauldronRedToWhiteWeight = config.Bind("03 Cauldron", "RedToWhiteWeight", 0f, "Weight for Red->White cauldrons."); CauldronRedToWhiteWeight.Value = Math.Abs(CauldronRedToWhiteWeight.Value);
+            CauldronRedToWhiteCost = config.Bind("03 Cauldron", "RedToWhiteCost", 1, "Number of Red items required for White conversion."); CauldronRedToWhiteCost.Value = Math.Abs(CauldronRedToWhiteCost.Value);
             // TODO
             //CauldronGreenToYellowWeight = config.Bind("03 Cauldron", "CauldronGreenToYellowWeight", 0.33f, "Spawn weight for Yellow cauldrons (uses Green items as cost)."); CauldronGreenToYellowWeight.Value = Math.Abs(CauldronGreenToYellowWeight.Value);
             //CauldronGreenToPurpleWeight = config.Bind("03 Cauldron", "CauldronGreenToPurpleWeight", 0.33f, "Spawn weight for Purple cauldrons (uses Green items as cost)."); CauldronGreenToPurpleWeight.Value = Math.Abs(CauldronGreenToPurpleWeight.Value);
 
             // 04 Scrapper
             ScrapperSectionEnabled = config.Bind("04 Scrapper", "SectionEnabled", true, "Enables or disables the Scrapper section.");
-            ScrapperCount = config.Bind("04 Scrapper", "ScrapperCount", 4, "Number of Scrappers spawned (max 4)."); if (ScrapperCount.Value > 4) ScrapperCount.Value = 4;
+            ScrapperAmount = config.Bind("04 Scrapper", "Amount", 4, "Number of Scrappers spawned (max 4)."); if (ScrapperAmount.Value > 4) ScrapperAmount.Value = 4;
 
             // 05 Equipment
             EquipmentSectionEnabled = config.Bind("05 Equipment", "SectionEnabled", true, "Enables or disables the Equipment section.");
-            EquipmentCount = config.Bind("05 Equipment", "EquipmentCount", 3, "Number of Equipment Terminals (max 3 normally, 5 if replacing Lunar Seers).");
-            ReplaceLunarSeersWithEquipment = config.Bind("05 Equipment", "ReplaceLunarSeersWithEquipment", true, "Replaces Lunar Seers with Equipment Terminals (increases equipment max to 5). Makes the Lunar Seer section irrelevant.");
-            EquipmentInstanced = config.Bind("05 Equipment", "EquipmentInstanced", true, "Each player can purchase equipment independently.");
-            EquipmentCost = config.Bind("05 Equipment", "EquipmentCost", 0, "Monetary cost for equipment purchases.");
-            EquipmentBuyToInventory = config.Bind("05 Equipment", "EquipmentBuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground.");
-            if (EquipmentCount.Value > 3 && !ReplaceLunarSeersWithEquipment.Value) EquipmentCount.Value = 3;
-            if (EquipmentCount.Value > 5 && ReplaceLunarSeersWithEquipment.Value) EquipmentCount.Value = 5;
+            EquipmentAmount = config.Bind("05 Equipment", "Amount", 3, "Number of Equipment Terminals (max 3 normally, 5 if replacing Lunar Seers).");
+            EquipmentReplaceLunarSeersWithEquipment = config.Bind("05 Equipment", "ReplaceLunarSeersWithEquipment", false, "Replaces Lunar Seers with Equipment Terminals (increases equipment max to 5). Makes the Lunar Seer section irrelevant.");
+            EquipmentInstancedPurchases = config.Bind("05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
+            EquipmentCost = config.Bind("05 Equipment", "Cost", 0, "Monetary cost for equipment purchases.");
+            EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground.");
+            if (EquipmentAmount.Value > 3 && !EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentAmount.Value = 3;
+            if (EquipmentAmount.Value > 5 && EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentAmount.Value = 5;
 
             // 06 LunarShop
             LunarShopSectionEnabled = config.Bind("06 LunarShop", "SectionEnabled", true, "Enables or disables the Lunar Shop section.");
-            LunarShopTerminalCount = config.Bind("06 LunarShop", "LunarShopTerminalCount", 5, "Number of Lunar Shop Terminals (max 20). -1 = Vanilla Behavior (5 Lunar Buds)."); if (LunarShopTerminalCount.Value > 20) LunarShopTerminalCount.Value = 20;
-            LunarShopTerminalCost = config.Bind("06 LunarShop", "LunarShopTerminalCost", 2, "Lunar coin cost per Lunar Shop Terminal or Lunar Bud use."); LunarShopTerminalCost.Value = Math.Abs(LunarShopTerminalCost.Value);
-            LunarShopBuyLimit = config.Bind("06 LunarShop", "LunarShopBuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar."); LunarShopBuyLimit.Value = Math.Abs(LunarShopBuyLimit.Value);
-            EnableLunarShopStaticItems = config.Bind("06 LunarShop", "EnableLunarShopStaticItems", true, "Uses fixed/static items instead of randomized rolls.");
+            LunarShopAmount = config.Bind("06 LunarShop", "Amount", 5, "Number of Lunar Shop Terminals (max 20). -1 = Vanilla Behavior (5 Lunar Buds)."); if (LunarShopAmount.Value > 20) LunarShopAmount.Value = 20;
+            LunarShopCost = config.Bind("06 LunarShop", "Cost", 1, "Lunar coin cost per Lunar Shop Terminal or Lunar Bud use."); LunarShopCost.Value = Math.Abs(LunarShopCost.Value);
+            LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar."); LunarShopBuyLimit.Value = Math.Abs(LunarShopBuyLimit.Value);
+            LunarShopStaticItems = config.Bind("06 LunarShop", "StaticItems", false, "Uses fixed/static items instead of randomized rolls.");
             var items = "LunarPrimaryReplacement, LunarSecondaryReplacement, LunarSpecialReplacement, AutoCastEquipment, LunarDagger, HalfSpeedDoubleHealth, LunarSun, LunarBadLuck, LunarBadLuck, LunarBadLuck, ShieldOnly, ShieldOnly, ShieldOnly, HalfAttackSpeedHalfCooldowns, HalfAttackSpeedHalfCooldowns, RandomDamageZone, Tonic";
             var itemTiersString = "Tier1, Tier2, Tier3, Lunar, Boss, VoidTier1, VoidTier2, VoidTier3, VoidBoss";
-            LunarShopItemsList = config.Bind("06 LunarShop", "LunarShopItems", items, $"Comma-separated list of items available in Lunar Shop. Must use internal names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/) or item tier keywords ({itemTiersString}).");
-            LunarShopInstanced = config.Bind("06 LunarShop", "LunarShopInstanced", true, "Each player can buy independently from Lunar Shop.");
-            LunarShopBuyToInventory = config.Bind("06 LunarShop", "LunarShopBuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
+            LunarShopItemList = config.Bind("06 LunarShop", "ItemList", items, $"Comma-separated list of items available in Lunar Shop. Must use internal names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/) or item tier keywords ({itemTiersString}).");
+            LunarShopInstancedPurchases = config.Bind("06 LunarShop", "InstancedPurchases", true, "Each player can buy independently from Lunar Shop.");
+            LunarShopBuyToInventory = config.Bind("06 LunarShop", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
 
             // 07 LunarRecycler
             LunarRecyclerSectionEnabled = config.Bind("07 LunarRecycler", "SectionEnabled", true, "Enables or disables the Lunar Recycler section.");
-            LunarRecyclerAvailable = config.Bind("07 LunarRecycler", "LunarRecyclerAvailable", true, "If enabled, a Lunar Recycler is available in the Bazaar. Otherwise it will get removed.");
-            LunarRecyclerRerollLimit = config.Bind("07 LunarRecycler", "LunarRecyclerRerollLimit", 10, "Limit the amount of rerolls allowed per visit to the Bazaar.");
-            LunarRecyclerRerollCost = config.Bind("07 LunarRecycler", "LunarRecyclerRerollCost", 1, "Initial lunar coin cost to reroll.");
-            LunarRecyclerRerollCostMultiplier = config.Bind("07 LunarRecycler", "LunarRecyclerRerollCostMultiplier", 2, "Cost multiplier applied after each reroll use.");
+            LunarRecyclerAvailable = config.Bind("07 LunarRecycler", "Available", true, "If enabled, a Lunar Recycler is available in the Bazaar. Otherwise it will get removed.");
+            LunarRecyclerRerollLimit = config.Bind("07 LunarRecycler", "RerollLimit", 3, "Limit the amount of rerolls allowed per visit to the Bazaar.");
+            LunarRecyclerCost = config.Bind("07 LunarRecycler", "Cost", 1, "Initial lunar coin cost to reroll.");
+            LunarRecyclerCostMultiplier = config.Bind("07 LunarRecycler", "CostMultiplier", 2, "Cost multiplier applied after each reroll use.");
 
             // 08 CleansingPool
             CleansingPoolSectionEnabled = config.Bind("08 CleansingPool", "SectionEnabled", true, "Enables or disables the Cleansing Pool section.");
-            ShrineCleaseGivesLunarCoins = config.Bind("08 CleansingPool", "CleansingPoolGivesLunarCoins", true, "Cleansing Pools reward Lunar Coins instead of Pearls.");
+            CleansingPoolRewardsLunarCoins = config.Bind("08 CleansingPool", "RewardsLunarCoin", true, "Cleansing Pools reward a Lunar Coin instead of a Pearl.");
 
             // 09 LunarSeer
             LunarSeerSectionEnabled = config.Bind("09 LunarSeer", "SectionEnabled", true, "Enables or disables the Lunar Seer Station section.");
-            SeerStationAvailable = config.Bind("09 LunarSeer", "LunarSeerStationAvailable", true, "If enabled, Seer Stations appear in the Bazaar.");
-            SeerStationsCost = config.Bind("09 LunarSeer", "LunarSeerStationsCost", 3, "Lunar coin cost for using Seer Stations.");
+            LunarSeerAvailable = config.Bind("09 LunarSeer", "Available", true, "If enabled, Seer Stations appear in the Bazaar.");
+            LunarSeerCost = config.Bind("09 LunarSeer", "Cost", 3, "Lunar coin cost for using Seer Stations.");
 
             // 10 ShrineOfOrder
-            ShrineRestackSectionEnabled = config.Bind("10 ShrineOfOrder", "SectionEnabled", true, "Enables or disables the Shrine of Order section.");
-            ShrineRestackUseLimit = config.Bind("10 ShrineOfOrder", "ShrineOfOrderUseLimit", 99, "Limit the amount of Shrine of Order uses per visit to the Bazaar.");
-            ShrineRestackCost = config.Bind("10 ShrineOfOrder", "ShrineOfOrderCost", 1, "Initial lunar coin cost for Shrine of Order.");
-            ShrineRestackScalar = config.Bind("10 ShrineOfOrder", "ShrineOfOrderScalar", 1, "Multiplier to Shrine of Order cost per use.");
+            ShrineOfOrderSectionEnabled = config.Bind("10 ShrineOfOrder", "SectionEnabled", true, "Enables or disables the Shrine of Order section.");
+            ShrineOfOrderUseLimit = config.Bind("10 ShrineOfOrder", "UseLimit", 99, "Limit the amount of Shrine of Order uses per visit to the Bazaar.");
+            ShrineOfOrderCost = config.Bind("10 ShrineOfOrder", "Cost", 1, "Initial lunar coin cost for Shrine of Order.");
+            ShrineOfOrderCostMultiplier = config.Bind("10 ShrineOfOrder", "CostMultiplier", 1, "Cost multiplier applied after each Shrine of Order use.");
 
-            // 11 Prayer
-            PrayerSectionEnabled = config.Bind("11 Prayer", "SectionEnabled", true, "Enables or disables the Prayer section.");
-            PrayRewardLimit = config.Bind("11 Prayer", "RewardLimit", 3, "Limit the number of rewards each player can get per visit to the Bazaar. One reward is given every 11 Prayers.");
-            PrayCost = config.Bind("11 Prayer", "PrayCost", 2, "Lunar coin cost per prayer. 11 Prayers need to be done to get a reward.");
-            PrayNormalWeight = config.Bind("11 Prayer", "PrayNormalWeight", 0.5f, "Weight for regular item rewards (white, green, red items)."); PrayNormalWeight.Value = Math.Abs(PrayNormalWeight.Value);
-            PrayEliteWeight = config.Bind("11 Prayer", "PrayEliteWeight", 0.25f, "Weight for elite equipment rewards."); PrayEliteWeight.Value = Math.Abs(PrayEliteWeight.Value);
-            PrayPeculiarWeight = config.Bind("11 Prayer", "PrayPeculiarWeight", 0.25f, "Weight for odd or peculiar items (some unobtainable in normal gameplay)."); PrayPeculiarWeight.Value = Math.Abs(PrayPeculiarWeight.Value);
-            PrayPeculiarList = config.Bind("11 Prayer", "PrayPeculiarList", "BoostAttackSpeed,BoostDamage,BoostEquipmentRecharge,BoostHp,BurnNearby,CrippleWardOnLevel,EmpowerAlways,Ghost,Incubator,LevelBonus,WarCryOnCombat,TempestOnKill", "Comma-separated peculiar items available as prayer rewards.");
+            // 11 Donation
+            DonateSectionEnabled = config.Bind("11 Donate", "SectionEnabled", true, "Enables or disables the Donate section.");
+            DonateRewardLimit = config.Bind("11 Donate", "RewardLimit", 3, "Limit the number of rewards each player can get per visit to the Bazaar. One reward is given every 10 donations.");
+            DonateCost = config.Bind("11 Donate", "Cost", 2, "Lunar coin cost per donation. 10 donations need to be done to get a reward.");
+            DonateRewardNormalWeight = config.Bind("11 Donate", "RewardNormalWeight", 0.5f, "Weight for regular item rewards (white, green, red items)."); DonateRewardNormalWeight.Value = Math.Abs(DonateRewardNormalWeight.Value);
+            DonateRewardEliteWeight = config.Bind("11 Donate", "RewardEliteWeight", 0.25f, "Weight for elite equipment rewards."); DonateRewardEliteWeight.Value = Math.Abs(DonateRewardEliteWeight.Value);
+            DonateRewardPeculiarWeight = config.Bind("11 Donate", "RewardPeculiarWeight", 0.25f, "Weight for odd or peculiar items (some unobtainable in normal gameplay)."); DonateRewardPeculiarWeight.Value = Math.Abs(DonateRewardPeculiarWeight.Value);
+            DonateRewardPeculiarList = config.Bind("11 Donate", "RewardPeculiarList", "BoostAttackSpeed,BoostDamage,BoostEquipmentRecharge,BoostHp,BurnNearby,CrippleWardOnLevel,EmpowerAlways,Ghost,Incubator,LevelBonus,WarCryOnCombat,TempestOnKill", "Comma-separated peculiar items available as prayer rewards.");
 
             if (ModCompatibilityInLobbyConfig.enabled)
             {

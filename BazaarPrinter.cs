@@ -87,15 +87,15 @@ namespace BazaarIsMyHaven
 
         private void SpawnPrinters()
         {
-            if (ModConfig.PrinterCount.Value > 0)
+            if (ModConfig.PrinterAmount.Value > 0)
             {
                 DicPrinters.Clear();
                 SetPrinter();
                 int count = 0;
                 if (ModConfig.SpawnCountByStage.Value)
-                    count = SetCountbyGameStage(ModConfig.PrinterCount.Value, ModConfig.SpawnCountOffset.Value);
+                    count = SetCountbyGameStage(ModConfig.PrinterAmount.Value, ModConfig.SpawnCountOffset.Value);
                 else
-                    count = ModConfig.PrinterCount.Value;
+                    count = ModConfig.PrinterAmount.Value;
                 for (int i = 0; i < count; i++)
                 {
                     var tier = GetRandomPrinterTier();

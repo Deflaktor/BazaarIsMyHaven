@@ -108,13 +108,13 @@ namespace BazaarIsMyHaven
 
         public void SpawnLunarCauldron()
         {
-            if (ModConfig.CauldronCount.Value > 0)
+            if (ModConfig.CauldronAmount.Value > 0)
             {
                 DicCauldrons.Clear();
                 SetCauldron();
                 int count = 0;
-                if (ModConfig.SpawnCountByStage.Value) count = SetCountbyGameStage(ModConfig.CauldronCount.Value, ModConfig.SpawnCountOffset.Value);
-                else count = ModConfig.CauldronCount.Value;
+                if (ModConfig.SpawnCountByStage.Value) count = SetCountbyGameStage(ModConfig.CauldronAmount.Value, ModConfig.SpawnCountOffset.Value);
+                else count = ModConfig.CauldronAmount.Value;
                 for (int i = 0; i < count; i++)
                 {
                     AsyncOperationHandle<GameObject> randomCauldron = GetRandomLunarCauldron();

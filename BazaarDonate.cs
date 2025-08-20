@@ -10,7 +10,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace BazaarIsMyHaven
 {
-    public class BazaarPrayer : BazaarBase
+    public class BazaarDonate : BazaarBase
     {
         //AsyncOperationHandle<InteractableSpawnCard> iscShrineHealing;
         AsyncOperationHandle<GameObject> BlueprintStation;
@@ -71,7 +71,7 @@ namespace BazaarIsMyHaven
 
         public override void SetupBazaar()
         {
-            if (ModConfig.PrayerSectionEnabled.Value)
+            if (ModConfig.DonateSectionEnabled.Value)
             {
                 InitPrayData();
                 SpawnShrineHealing();
@@ -80,7 +80,7 @@ namespace BazaarIsMyHaven
 
         private void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
-            if (ModConfig.EnableMod.Value & ModConfig.PrayerSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
+            if (ModConfig.EnableMod.Value & ModConfig.DonateSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("BlueprintStation"))
                 {
@@ -98,12 +98,12 @@ namespace BazaarIsMyHaven
                     if (playerStruct.DonateCount % 10 == 0)
                     {
                         playerStruct.RewardCount += 1;
-                        if (playerStruct.RewardCount <= ModConfig.PrayRewardLimit.Value)
+                        if (playerStruct.RewardCount <= ModConfig.DonateRewardLimit.Value)
                         {
                             GiftReward(self, networkUser, characterBody, inventory);
                         }
                     }
-                    if (playerStruct.DonateCount <= (ModConfig.PrayRewardLimit.Value * 10))
+                    if (playerStruct.DonateCount <= (ModConfig.DonateRewardLimit.Value * 10))
                     {
                         SpawnEffect(ShrineUseEffect, self.transform.position, new Color32(64, 127, 255, 255), 5f);
                         networkUser.DeductLunarCoins((uint)self.Networkcost);
@@ -117,7 +117,7 @@ namespace BazaarIsMyHaven
         private void InitPrayData()
         {
             SpecialCodes.ForEach(x => x.IsUse = false);
-            string[] codes = ModConfig.PrayPeculiarList.Value.Split(',');
+            string[] codes = ModConfig.DonateRewardPeculiarList.Value.Split(',');
             for (int i = 0; i < codes.Length; i++)
             {
                 string code = codes[i].Trim().ToLower();
@@ -128,7 +128,7 @@ namespace BazaarIsMyHaven
 
         private void GiftReward(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Inventory inventory)
         {
-            float w1 = ModConfig.PrayNormalWeight.Value, w2 = ModConfig.PrayEliteWeight.Value, w3 = ModConfig.PrayPeculiarWeight.Value;
+            float w1 = ModConfig.DonateRewardNormalWeight.Value, w2 = ModConfig.DonateRewardEliteWeight.Value, w3 = ModConfig.DonateRewardPeculiarWeight.Value;
             double random = RNG.NextDouble() * (w1 + w2 + w3);
             if (random <= w1)
             {
@@ -176,8 +176,8 @@ namespace BazaarIsMyHaven
             // RoR2/Base/WarCryOnMultiKill/WarCryEffect.prefab: -17.2625f
 
             gameObject.transform.eulerAngles = new Vector3(0.0f, 300f, 0.0f);
-            gameObject.GetComponent<PurchaseInteraction>().cost = ModConfig.PrayCost.Value;
-            gameObject.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.PrayCost.Value;
+            gameObject.GetComponent<PurchaseInteraction>().cost = ModConfig.DonateCost.Value;
+            gameObject.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.DonateCost.Value;
             gameObject.GetComponent<PurchaseInteraction>().contextToken = "NEWT_STATUE_CONTEXT";
             gameObject.GetComponent<PurchaseInteraction>().NetworkcontextToken = "NEWT_STATUE_CONTEXT";
 

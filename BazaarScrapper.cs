@@ -34,11 +34,11 @@ namespace BazaarIsMyHaven
         }
         private void SpawnScrapper()
         {
-            if (ModConfig.ScrapperCount.Value > 0)
+            if (ModConfig.ScrapperAmount.Value > 0)
             {
                 DicScrapers.Clear();
                 SetScraper();
-                DoSpawnCard(DicScrapers, iscScrapper, ModConfig.ScrapperCount.Value);
+                DoSpawnCard(DicScrapers, iscScrapper, ModConfig.ScrapperAmount.Value);
             }
         }
 

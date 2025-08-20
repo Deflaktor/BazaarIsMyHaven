@@ -47,7 +47,7 @@ namespace BazaarIsMyHaven
         public int Count { get; set; }
         public bool IsUse { get; set; }
     }
-    public class ShopKeep
+    public class ShopKeeper
     {
         public static bool DiedAtLeastOnce { get; set; }
         public static int DeathCount { get; set; }
