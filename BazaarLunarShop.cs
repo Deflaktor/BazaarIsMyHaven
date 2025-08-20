@@ -18,7 +18,6 @@ namespace BazaarIsMyHaven
     {
         AsyncOperationHandle<GameObject> lunarShopTerminal;
         AsyncOperationHandle<GameObject> LunarRerollEffect;
-        // List<GameObject> originalLunarBuds = new List<GameObject>();
 
         Dictionary<int, SpawnCardStruct> DicLunarShopTerminals = new Dictionary<int, SpawnCardStruct>();
         int LunarShopTerminalTotalCount = 0;
@@ -41,7 +40,6 @@ namespace BazaarIsMyHaven
         public override void Hook()
         {
             On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
-            // On.EntityStates.NewtMonster.SpawnState.OnEnter += Newt_SpawnState_OnEnter;
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             IL.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionEnd;
             On.RoR2.PurchaseInteraction.ScaleCost += PurchaseInteraction_ScaleCost;
@@ -73,12 +71,6 @@ namespace BazaarIsMyHaven
                     {
                         self.cost = ModConfig.LunarShopTerminalCost.Value;
                         self.Networkcost = ModConfig.LunarShopTerminalCost.Value;
-                        // Make the purchase instanced
-                        //var instancedPurchase = self.gameObject.AddComponent<InstancedPurchase>();
-                        //instancedPurchase.originalAvailable = self.available;
-                        //var shopTerminalBehavior = self.GetComponent<ShopTerminalBehavior>();
-                        //instancedPurchase.originalPickupIndex = shopTerminalBehavior.pickupIndex;
-                        //instancedPurchase.originalHasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
                     }
                 }
                 if (ModConfig.LunarRecyclerSectionEnabled.Value)
@@ -158,7 +150,7 @@ namespace BazaarIsMyHaven
                     if (self.name.StartsWith("LunarRecycler"))
                     {
                         lunarRecyclerRerolledCount++;
-                        var usesLeft = ModConfig.LunarRecyclerRerollCount.Value - lunarRecyclerRerolledCount;
+                        var usesLeft = ModConfig.LunarRecyclerRerollLimit.Value - lunarRecyclerRerolledCount;
                         ChatHelper.LunarRecyclerUsesLeft(usesLeft);
                     }
                 }
@@ -182,7 +174,7 @@ namespace BazaarIsMyHaven
             {
                 if (self.name.StartsWith("LunarRecycler"))
                 {
-                    newAvailable = lunarRecyclerRerolledCount < ModConfig.LunarRecyclerRerollCount.Value;
+                    newAvailable = lunarRecyclerRerolledCount < ModConfig.LunarRecyclerRerollLimit.Value;
                 }
             }
             orig(self, newAvailable);
@@ -423,7 +415,6 @@ namespace BazaarIsMyHaven
             {
                 if (obj.name.StartsWith("LunarShopTerminal") && !obj.name.EndsWith("(Clone)"))
                 {
-                    // originalLunarBuds.Add(obj);
                     NetworkServer.Destroy(obj);
                 }
             }

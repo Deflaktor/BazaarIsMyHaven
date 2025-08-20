@@ -23,18 +23,6 @@ namespace BazaarIsMyHaven
         public abstract void Hook();
         public abstract void SetupBazaar();
 
-        //protected void DoSpawnCard(string name, Vector3 vector)
-        //{
-        //    SpawnCard spawnCard = LegacyResourcesAPI.Load<SpawnCard>(name);
-        //    DirectorPlacementRule placementRule = new DirectorPlacementRule
-        //    {
-        //        placementMode = DirectorPlacementRule.PlacementMode.Random
-        //    };
-        //    GameObject obj = spawnCard.DoSpawn(vector, Quaternion.identity, new DirectorSpawnRequest(spawnCard, placementRule, Run.instance.runRNG)).spawnedInstance;
-        //    obj.transform.eulerAngles = default;
-        //}
-
-
         protected List<GameObject> DoSpawnCard(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<InteractableSpawnCard> card, int max)
         {
             int count = 0;
@@ -43,17 +31,10 @@ namespace BazaarIsMyHaven
             List<GameObject> result = new List<GameObject>();
             for (int i = 0; i < count; i++)
             {
-                try
-                {
-                    SpawnCard spawnCard = card.WaitForCompletion();
-                    GameObject gameObject = spawnCard.DoSpawn(keyValuePairs[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
-                    gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
-                    result.Add(gameObject);
-                }
-                catch (Exception ex)
-                {
-                    Log.LogDebug($"{card} 出现问题了");
-                }
+                SpawnCard spawnCard = card.WaitForCompletion();
+                GameObject gameObject = spawnCard.DoSpawn(keyValuePairs[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
+                gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
+                result.Add(gameObject);
             }
             return result;
         }

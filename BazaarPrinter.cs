@@ -89,7 +89,6 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.PrinterCount.Value > 0)
             {
-                // 打印机
                 DicPrinters.Clear();
                 SetPrinter();
                 int count = 0;
@@ -168,7 +167,7 @@ namespace BazaarIsMyHaven
             weightedSelection.AddChoice(ItemTier.VoidTier2, ModConfig.PrinterTierVoid2Weight.Value);
             weightedSelection.AddChoice(ItemTier.VoidTier3, ModConfig.PrinterTierVoid3Weight.Value);
             weightedSelection.AddChoice(ItemTier.VoidBoss, ModConfig.PrinterTierVoidBossWeight.Value);
-            weightedSelection.AddChoice(ItemTier.NoTier, ModConfig.PrinterTierVoidAllWeight.Value);
+            weightedSelection.AddChoice(ItemTier.NoTier, ModConfig.PrinterTierVoidAnyWeight.Value);
             var tier = weightedSelection.Evaluate(UnityEngine.Random.value);
             return tier;
         }

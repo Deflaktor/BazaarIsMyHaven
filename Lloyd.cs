@@ -23,7 +23,7 @@ namespace BazaarIsMyHaven
             for (int i = 0; i < numberOfPoints; i++)
             {
                 float angleInDegrees = startAngle + i * angleStep + orientation;
-                float angleInRadians = angleInDegrees * Mathf.Deg2Rad; // Convert to radians
+                float angleInRadians = angleInDegrees * Mathf.Deg2Rad;
                 float x = radius * Mathf.Cos(angleInRadians);
                 float y = radius * Mathf.Sin(angleInRadians);
                 points.Add(new Vector2(x, y));

@@ -36,7 +36,6 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.ScrapperCount.Value > 0)
             {
-                // 收割机
                 DicScrapers.Clear();
                 SetScraper();
                 DoSpawnCard(DicScrapers, iscScrapper, ModConfig.ScrapperCount.Value);
