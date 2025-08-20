@@ -189,41 +189,44 @@ namespace BazaarIsMyHaven
         }
         private void ShopTerminalBehavior_DropPickup(On.RoR2.ShopTerminalBehavior.orig_DropPickup orig, ShopTerminalBehavior self)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopBuyToInventory.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("LunarShopTerminal"))
+            if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("LunarShopTerminal"))
             {
-                if (!NetworkServer.active)
+                if (ModConfig.LunarShopBuyToInventory.Value)
                 {
-                    Debug.LogWarning("[Server] function 'System.Void RoR2.ShopTerminalBehavior::DropPickup()' called on client");
-                    return;
-                }
-                var body = currentActivator.master.GetBody();
-                if (body != null)
-                {
-                    var pickupDef = PickupCatalog.GetPickupDef(self.CurrentPickupIndex());
-                    if (pickupDef.itemIndex != ItemIndex.None)
+                    var body = currentActivator.master.GetBody();
+                    if (body != null)
                     {
-                        PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, PickupCatalog.GetPickupDef(self.CurrentPickupIndex()).itemIndex);
-                        currentActivator.master.inventory.GiveItem(pickupDef.itemIndex);
+                        var pickupDef = PickupCatalog.GetPickupDef(self.CurrentPickupIndex());
+                        if (pickupDef.itemIndex != ItemIndex.None)
+                        {
+                            PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, PickupCatalog.GetPickupDef(self.CurrentPickupIndex()).itemIndex);
+                            currentActivator.master.inventory.GiveItem(pickupDef.itemIndex);
 
-                        self.SetHasBeenPurchased(newHasBeenPurchased: true);
-                        self.SetNoPickup();
-                    } 
-                    else if (pickupDef.equipmentIndex != EquipmentIndex.None)
-                    {
-                        if (currentActivator.master.inventory.GetEquipmentIndex() != EquipmentIndex.None)
-                        {
-                            var placeEquipment = PickupCatalog.FindPickupIndex(currentActivator.master.inventory.GetEquipmentIndex());
-                            self.SetPickupIndex(placeEquipment);
-                            var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
-                            purchaseInteraction.SetAvailable(true);
-                        }
-                        else
-                        {
                             self.SetHasBeenPurchased(newHasBeenPurchased: true);
                             self.SetNoPickup();
                         }
-                        currentActivator.master.inventory.SetEquipmentIndex(pickupDef.equipmentIndex);
+                        else if (pickupDef.equipmentIndex != EquipmentIndex.None)
+                        {
+                            if (currentActivator.master.inventory.GetEquipmentIndex() != EquipmentIndex.None)
+                            {
+                                var placeEquipment = PickupCatalog.FindPickupIndex(currentActivator.master.inventory.GetEquipmentIndex());
+                                self.SetPickupIndex(placeEquipment);
+                                var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
+                                purchaseInteraction.SetAvailable(true);
+                            }
+                            else
+                            {
+                                self.SetHasBeenPurchased(newHasBeenPurchased: true);
+                                self.SetNoPickup();
+                            }
+                            currentActivator.master.inventory.SetEquipmentIndex(pickupDef.equipmentIndex);
+                        }
                     }
+                }
+                else
+                {
+                    orig(self);
+                    self.SetNoPickup();
                 }
             }
             else
@@ -235,6 +238,7 @@ namespace BazaarIsMyHaven
         IEnumerator DelayEffect(PurchaseInteraction lunarShopTerminal, float time, bool spawnEffect)
         {
             yield return new WaitForSeconds(time);
+
             RerollLunarShopTerminal(lunarShopTerminal);
             if(spawnEffect)
                 SpawnEffect(LunarRerollEffect, lunarShopTerminal.gameObject.transform.position - Vector3.up * 2.5f, new Color32(255, 255, 255, 255), 2f);
@@ -352,30 +356,45 @@ namespace BazaarIsMyHaven
             float tableEndAngleInner = 330f;
             float tableEndAngleMiddle = 325f;
             float tableEndAngleOuter = 339f;
+            
             const float minDistance = 19f;
             const float innerCapacity = 5;//(int)(2 * Math.PI * tableRadiusInner * (tableEndAngleInner - tableStartAngleInner) / 360f / minDistance);
             const float middleCapacity = 8;//(int)(2 * Math.PI * tableRadiusMiddle * (tableEndAngleMiddle - tableStartAngleMiddle) / 360f / minDistance);
             const float outerCapacity = 10;//(int)(2 * Math.PI * tableRadiusOuter * (tableEndAngleOuter - tableStartAngleOuter) / 360f / minDistance);
 
             List<Vector2> points = new List<Vector2>();
-            if (ModConfig.LunarShopTerminalCount.Value <= middleCapacity)
+
+            int count = 0;
+            if (ModConfig.SpawnCountByStage.Value)
+                count = SetCountbyGameStage(ModConfig.LunarShopTerminalCount.Value, ModConfig.SpawnCountOffset.Value);
+            else
+                count = ModConfig.LunarShopTerminalCount.Value;
+
+            if (count <= middleCapacity)
             {
-                points = Lloyd.GenerateCirclePoints(tableRadiusMiddle, tableStartAngleMiddle, tableEndAngleMiddle, orientation, ModConfig.LunarShopTerminalCount.Value);
+                if (count < middleCapacity)
+                {
+                    // place them closer together
+                    float angleDiff = tableEndAngleMiddle - tableStartAngleMiddle;
+                    tableStartAngleMiddle += angleDiff / (float)(count + 1f);
+                    tableEndAngleMiddle -= angleDiff / (float)(count + 1f);
+                }
+                points = Lloyd.GenerateCirclePoints(tableRadiusMiddle, tableStartAngleMiddle, tableEndAngleMiddle, orientation, count);
             }
             else
             {
                 List<Vector2> samples = new List<Vector2>();
-                var innerSamples = Lloyd.GenerateCirclePoints(tableRadiusInner, tableStartAngleInner, tableEndAngleInner, orientation, 200);
-                var outerSamples = Lloyd.GenerateCirclePoints(tableRadiusOuter, tableStartAngleOuter, tableEndAngleOuter, orientation, 300);
+                var innerSamples = Lloyd.GenerateCirclePoints(tableRadiusInner, tableStartAngleInner, tableEndAngleInner, orientation, (int)(2f * Mathf.PI * tableRadiusInner * 10f));
+                var outerSamples = Lloyd.GenerateCirclePoints(tableRadiusOuter, tableStartAngleOuter, tableEndAngleOuter, orientation, (int)(2f * Mathf.PI * tableRadiusOuter * 10f));
                 outerSamples.Reverse();
                 samples.AddRange(innerSamples);
                 samples.AddRange(outerSamples);
-                List<Vector2> centroids = Lloyd.Centroids(samples, ModConfig.LunarShopTerminalCount.Value);
+                List<Vector2> centroids = Lloyd.Centroids(samples, count);
                 points = Lloyd.MapSamplesOrderToCentroids(samples, centroids);
             }
             for (int i = 0; i < points.Count; i++) {
                 Quaternion rotation = Quaternion.LookRotation(new Vector3(-points[i].x, 0, -points[i].y));
-                if (ModConfig.LunarShopTerminalCount.Value > middleCapacity && points[i].magnitude < tableRadiusMiddle)
+                if (count > middleCapacity && points[i].magnitude < tableRadiusMiddle)
                 {
                     // we are on the inner row
                     rotation = Quaternion.LookRotation(new Vector3(points[i].x, 0, points[i].y));
