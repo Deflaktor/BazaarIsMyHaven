@@ -43,7 +43,7 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> CauldronCount;
         public static ConfigEntry<float> CauldronWhiteToGreenWeight;
         public static ConfigEntry<float> CauldronGreenToRedWeight;
-        public static ConfigEntry<float> CauldronRedToWhite;
+        public static ConfigEntry<float> CauldronRedToWhiteWeight;
         public static ConfigEntry<float> CauldronRedToYellowWeight;
         public static ConfigEntry<float> CauldronGreenToYellowWeight;
         public static ConfigEntry<float> CauldronGreenToPurpleWeight;
@@ -141,7 +141,7 @@ namespace BazaarIsMyHaven
             CauldronWhiteToGreenCost = config.Bind("03 Cauldron", "CauldronWhiteToGreenCost", 3, "Number of White items required for Green conversion."); CauldronWhiteToGreenCost.Value = Math.Abs(CauldronWhiteToGreenCost.Value);
             CauldronGreenToRedWeight = config.Bind("03 Cauldron", "CauldronGreenToRedWeight", 0.25f, "Weight for Green->Red cauldrons."); CauldronGreenToRedWeight.Value = Math.Abs(CauldronGreenToRedWeight.Value);
             CauldronGreenToRedCost = config.Bind("03 Cauldron", "CauldronGreenToRedCost", 5, "Number of Green items required for Red conversion."); CauldronGreenToRedCost.Value = Math.Abs(CauldronGreenToRedCost.Value);
-            CauldronRedToWhite = config.Bind("03 Cauldron", "CauldronRedToWhite", 0f, "Weight for Red->White cauldrons."); CauldronRedToWhite.Value = Math.Abs(CauldronRedToWhite.Value);
+            CauldronRedToWhiteWeight = config.Bind("03 Cauldron", "CauldronRedToWhiteWeight", 0f, "Weight for Red->White cauldrons."); CauldronRedToWhiteWeight.Value = Math.Abs(CauldronRedToWhiteWeight.Value);
             CauldronRedToWhiteCost = config.Bind("03 Cauldron", "CauldronRedToWhiteCost", 1, "Number of Red items required for White conversion."); CauldronRedToWhiteCost.Value = Math.Abs(CauldronRedToWhiteCost.Value);
             // TODO
             //CauldronGreenToYellowWeight = config.Bind("03 Cauldron", "CauldronGreenToYellowWeight", 0.33f, "Spawn weight for Yellow cauldrons (uses Green items as cost)."); CauldronGreenToYellowWeight.Value = Math.Abs(CauldronGreenToYellowWeight.Value);
