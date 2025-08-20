@@ -45,7 +45,7 @@ namespace BazaarIsMyHaven
             orig(self);
             if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
-                if (ModConfig.EquipmentCount.Value > 0)
+                if (ModConfig.EquipmentAmount.Value > 0)
                 {
                     if (self.name.StartsWith("MultiShopEquipmentTerminal"))
                     {
@@ -126,7 +126,7 @@ namespace BazaarIsMyHaven
         private void SetEquipment()
         {
             List<int> total = new List<int> { 0, 1, 2 };
-            if(ModConfig.ReplaceLunarSeersWithEquipment.Value)
+            if(ModConfig.EquipmentReplaceLunarSeersWithEquipment.Value)
             { 
                 total = new List<int> { 2, 3, 4 };
 
@@ -150,24 +150,24 @@ namespace BazaarIsMyHaven
 
         private void SpawnEquipment()
         {
-            if (ModConfig.EquipmentCount.Value > 0)
+            if (ModConfig.EquipmentAmount.Value > 0)
             {
                 DicEquipments.Clear();
                 SetEquipment();
 
-                var count = ModConfig.EquipmentCount.Value;
-                if (!ModConfig.ReplaceLunarSeersWithEquipment.Value && count > 3)
+                var count = ModConfig.EquipmentAmount.Value;
+                if (!ModConfig.EquipmentReplaceLunarSeersWithEquipment.Value && count > 3)
                 {
                     count = 3;
                 }
-                if (ModConfig.ReplaceLunarSeersWithEquipment.Value && count > 5) {
+                if (ModConfig.EquipmentReplaceLunarSeersWithEquipment.Value && count > 5) {
                     count = 5;
                 }
 
                 DoSpawnGameObject(DicEquipments, multiShopEquipmentTerminal, count).ForEach(gameObject => {
                     var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
                     var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
-                    if(ModConfig.EquipmentInstanced.Value) {
+                    if(ModConfig.EquipmentInstancedPurchases.Value) {
                         var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
                         instancedPurchase.original.available = purchaseInteraction.available;
                         instancedPurchase.original.pickupIndex = shopTerminalBehavior.pickupIndex;

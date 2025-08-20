@@ -14,7 +14,6 @@ namespace BazaarIsMyHaven
     {
         private static bool? _enabled;
         private static BaseUnityPlugin _plugin;
-
         public static bool enabled
         {
             get

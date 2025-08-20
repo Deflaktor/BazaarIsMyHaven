@@ -10,8 +10,6 @@ namespace BazaarIsMyHaven
     {
         private static System.Random Random = new System.Random();
 
-        private static int RandomCapacity = 500;
-
         private static string NewtName
         {
             get
@@ -79,9 +77,8 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private static string GetDeathState() => ShopKeep.DiedAtLeastOnce ? $" ({Language.GetString(LanguageAPI.NEWT_DEATH_STATE)})" : "";
+        private static string GetDeathState() => ShopKeeper.DiedAtLeastOnce && ModConfig.NewtDeathBehavior.Value == ShopKeeper.DeathState.Ghost ? $" ({Language.GetString(LanguageAPI.NEWT_DEATH_STATE)})" : "";
 
-        // 不知道是否有更好的写法
         public static void ThanksTip(NetworkUser networkUser, PlayerCharacterMasterController pc)
         {
             Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_FIRST_TIME, NewtName, GetDeathState(), GetColoredPlayerName(pc)));
@@ -107,23 +104,20 @@ namespace BazaarIsMyHaven
             int r = Random.Next(length);
             if (r < length)
             {
-                if (!ShopKeep.DiedAtLeastOnce) Send(Language.GetStringFormatted(LanguageAPI.NEWT_WELCOME_WORD[r], NewtName));
+                if (!ShopKeeper.DiedAtLeastOnce) Send(Language.GetStringFormatted(LanguageAPI.NEWT_WELCOME_WORD[r], NewtName));
                 else Send(Language.GetStringFormatted(LanguageAPI.NEWT_ANGRY_WELCOME_WORD[r], NewtName, GetDeathState()));
             }
         }
         public static void ShowNewtDeath()
         {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_DEATH_INFO, NewtName));
+            Send(Language.GetStringFormatted(LanguageAPI.NEWT_DEATH_INFO, NewtName, GetDeathState()));
         }
 
         public static void HitWord()
         {
             int length = LanguageAPI.NEWT_ATTACKED_WORD.Length;
-            int r = Random.Next(length * RandomCapacity);
-            if (r < length)
-            {
-                if (!ShopKeep.DiedAtLeastOnce) Send(Language.GetStringFormatted(LanguageAPI.NEWT_ATTACKED_WORD[r], NewtName));
-            }
+            int r = Random.Next(length);
+            Send(Language.GetStringFormatted(LanguageAPI.NEWT_ATTACKED_WORD[r], NewtName, GetDeathState()));
         }
         public static void Send(string message)
         {

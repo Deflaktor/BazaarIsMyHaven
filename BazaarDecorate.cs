@@ -45,7 +45,7 @@ namespace BazaarIsMyHaven
 
         public override void SetupBazaar()
         {
-            if (ModConfig.EnableDecorate.Value)
+            if (ModConfig.DecorateBazaar.Value)
             {
                 SpawnDecorate();
                 SpawnBluePortal();

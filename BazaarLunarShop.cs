@@ -65,22 +65,22 @@ namespace BazaarIsMyHaven
             orig(self);
             if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
-                if(ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopTerminalCost.Value >= 0) 
+                if(ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopCost.Value >= 0) 
                 {
                     if (self.name.StartsWith("LunarShopTerminal"))
                     {
-                        self.cost = ModConfig.LunarShopTerminalCost.Value;
-                        self.Networkcost = ModConfig.LunarShopTerminalCost.Value;
+                        self.cost = ModConfig.LunarShopCost.Value;
+                        self.Networkcost = ModConfig.LunarShopCost.Value;
                     }
                 }
                 if (ModConfig.LunarRecyclerSectionEnabled.Value)
                 {
                     if (self.name.StartsWith("LunarRecycler"))
                     {
-                        if (ModConfig.LunarRecyclerAvailable.Value && ModConfig.LunarRecyclerRerollCost.Value >= 0)
+                        if (ModConfig.LunarRecyclerAvailable.Value && ModConfig.LunarRecyclerCost.Value >= 0)
                         {
-                            self.cost = ModConfig.LunarRecyclerRerollCost.Value;
-                            self.Networkcost = ModConfig.LunarRecyclerRerollCost.Value;
+                            self.cost = ModConfig.LunarRecyclerCost.Value;
+                            self.Networkcost = ModConfig.LunarRecyclerCost.Value;
                         }
                         else
                         {
@@ -163,7 +163,7 @@ namespace BazaarIsMyHaven
             {
                 if (self.name.StartsWith("LunarRecycler"))
                 {
-                    scalar = (float)ModConfig.LunarRecyclerRerollCostMultiplier.Value;
+                    scalar = (float)ModConfig.LunarRecyclerCostMultiplier.Value;
                 }
             }
             orig(self, scalar);
@@ -241,16 +241,16 @@ namespace BazaarIsMyHaven
             PickupIndex pickupIndex = PickupIndex.none;
 
             // var index = ObjectLunarShopTerminals_Spawn.IndexOf(lunarShopTerminal);
-            if (!ModConfig.LunarShopItemsList.Value.IsNullOrWhiteSpace())
+            if (!ModConfig.LunarShopItemList.Value.IsNullOrWhiteSpace())
             {
-                List<string> codes = ModConfig.LunarShopItemsList.Value.Split(',').ToList();
+                List<string> codes = ModConfig.LunarShopItemList.Value.Split(',').ToList();
 
                 TryAgain:
 
                 if(codes.Count > 0)
                 {
                     var index = RNG.Next(codes.Count);
-                    if (ModConfig.EnableLunarShopStaticItems.Value)
+                    if (ModConfig.LunarShopStaticItems.Value)
                     {
                         index = currentLunarShopStaticItemIndex % codes.Count;
                     }
@@ -358,9 +358,9 @@ namespace BazaarIsMyHaven
 
             int count = 0;
             if (ModConfig.SpawnCountByStage.Value)
-                count = SetCountbyGameStage(ModConfig.LunarShopTerminalCount.Value, ModConfig.SpawnCountOffset.Value);
+                count = SetCountbyGameStage(ModConfig.LunarShopAmount.Value, ModConfig.SpawnCountOffset.Value);
             else
-                count = ModConfig.LunarShopTerminalCount.Value;
+                count = ModConfig.LunarShopAmount.Value;
 
             if (count <= middleCapacity)
             {
@@ -402,7 +402,7 @@ namespace BazaarIsMyHaven
         {
             ObjectLunarShopTerminals_Spawn.Clear();
             LunarShopTerminalTotalCount = 0;
-            if (ModConfig.LunarShopTerminalCount.Value >= 0)
+            if (ModConfig.LunarShopAmount.Value >= 0)
             {
                 Main.instance.StartCoroutine(DestroyLunarShopTerminalsDelayed());
             }
@@ -421,12 +421,12 @@ namespace BazaarIsMyHaven
 
             DicLunarShopTerminals.Clear();
             SetLunarShopTerminal();
-            var gameObjects = DoSpawnGameObject(DicLunarShopTerminals, lunarShopTerminal, ModConfig.LunarShopTerminalCount.Value);
+            var gameObjects = DoSpawnGameObject(DicLunarShopTerminals, lunarShopTerminal, ModConfig.LunarShopAmount.Value);
             gameObjects.ForEach(gameObject => {
                 gameObject.name = "LunarShopTerminal";
                 var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
                 var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
-                if (ModConfig.LunarShopInstanced.Value)
+                if (ModConfig.LunarShopInstancedPurchases.Value)
                 {
                     var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
                     instancedPurchase.original.available = purchaseInteraction.available;

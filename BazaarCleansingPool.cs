@@ -44,7 +44,7 @@ namespace BazaarIsMyHaven
 
         private void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.CleansingPoolSectionEnabled.Value && ModConfig.ShrineCleaseGivesLunarCoins.Value && IsCurrentMapInBazaar() && NetworkServer.active)
+            if (ModConfig.EnableMod.Value && ModConfig.CleansingPoolSectionEnabled.Value && ModConfig.CleansingPoolRewardsLunarCoins.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("ShrineCleanse"))
                 {
@@ -65,7 +65,7 @@ namespace BazaarIsMyHaven
             SetLunarPool();
             DoSpawnCard(DicLunarPools, iscShrineCleanse, DicLunarPools.Count);
 
-            if (ModConfig.ShrineCleaseGivesLunarCoins.Value)
+            if (ModConfig.CleansingPoolRewardsLunarCoins.Value)
             {
                 GameObject gameObject = GameObject.Instantiate(lunarShopTerminal.WaitForCompletion(), DicLunarPools[0].Position, Quaternion.identity);
                 gameObject.transform.localPosition = new Vector3(DicLunarPools[0].Position.x, DicLunarPools[0].Position.y + 0.5f, DicLunarPools[0].Position.z);
