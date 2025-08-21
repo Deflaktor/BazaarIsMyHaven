@@ -1,55 +1,71 @@
 # BazaarIsMyHaven
 
-This mod is a fork of the excellent [BazaarIsMyHaven](https://thunderstore.io/package/Lunzir2/BazaarIsMyHaven/) mod by Lunzir. This is a server-side mod, as such only the host needs it.
+**server-side only** — only the host needs it installed.
+
+This is a fork of Lunzir’s excellent [BazaarIsMyHaven](https://thunderstore.io/package/Lunzir2/BazaarIsMyHaven/) mod.
+
 ## Features
 
-- Spawn configurable amount of interactables in the Bazaar:
+- **Extra Interactables in the Bazaar** (configurable):
   - 3D Printers
   - Additional Cauldrons
   - Scrappers
   - Equipment Terminals
-  - Lunar Shop with configurable item list
-  - Cleansing Pool (giving either pearls or lunar coins)
+  - Lunar Shop (customizable)
+  - Cleansing Pool
   - Shrine of Order
   - Donation Altar
-- Some settings for the behavior of the Newt
-  - Prevent kicking you out of the shop
-  - His behavior after death
-  - Some additional dialogue
-- Setting for spawning a portal to the shop after every teleporter event
-- Add some additional decoration to the bazaar
-- Setting for slowly increasing the amount of interactibles in the shop per stage
 
-Further some additional explanations for some of the settings:
+- **Newt Behavior Options**:
+  - Stop him from throwing you out.
+  - Change what happens after you kill him.
+  - Extra dialogue lines.
+
+- **Portal Options**:
+  - Spawn a Bazaar portal after *every* teleporter event.
+
+- **Other Tweaks**:
+  - Extra decoration in the Bazaar.
+  - Settings to gradually increase interactables as you complete more stages during the run.
+
+## Key Settings
+
+In-detail descriptions for some of the settings:
 
 ### General - SpawnCountByStage
 
 This settings makes it so that the more stage are completed, the more interactables are spawned in the Bazaar. If you just start the run and go immediately to the Bazaar you will see few interactables. But as you progress further, more and more interactables will get spawned. Up to the configured limit of each respective interactable. The `SpawnCountByStage` setting enables this behavior. There is also the `SpawnCountOffset` which allows you to either add a baseline amount of interactables or make interactables increase even later. Can be both positive or negative. The formula is a follows:
 
-`Amount of Interactables per Type = Number of Stages Completed + SpawnCountOffset`
+Formula: `Amount of Interactables per Type = Number of Stages Completed + SpawnCountOffset`
 
-### Newt - DeathBehavior
+### Newt – DeathBehavior
 
-Some settings on how the Newt shall behave after been killed.
+Controls how Newt acts after being killed:
 
-`Default`: The vanilla behavior. The Newt is not modified in any way.
-`Tank`: The Newt Health is significantly reduced so he can be killed. However, he will revive with his HP doubled.
-`Ghost`: The Newt Health is significantly reduced so he can be killed. However, he will revive as a Ghost.
-`Hostile`: The Newt Health is significantly reduced so he can be killed. However, he will revive and start to defend himself.
+- `Default` → Normal behavior.  
+- `Tank` → Newt Health is significantly reduced. Revives with double HP.
+- `Ghost` → Newt Health is significantly reduced. Revives as a ghost.
+- `Hostile` → Newt Health is significantly reduced. Revives and starts defending himself.
 
 ### LunarShop
 
 You can freely configure which items can be bought at the LunarShop. There are two settings to configure this:
 
-- `LunarShopStaticItems`: This setting configures if the items shall be static. This means you will always find the same items in the Lunar Shop on each visit to the Bazaar. Otherwise the items will be selected at random from the `LunarShopItemList`.
-- `LunarShopItemList`: This is a comma-separated list of items which shall appear in the Lunar Shop. See below section on the support Item Keyword List. Here some examples:
-  - `Tier1, Tier2, Tier3, Lunar, Boss`: If `LunarShopStaticItems` is set to `True` and `Amount` to 5, then you will find exactly 1 white item, 1 green item, 1 red item, 1 lunar item and 1 boss item in the shop. If `LunarShopStaticItems` is set to `False`, it will pick of these tiers at random for each shop terminal.
-  - `dtLunarChest`: This is the vanilla behavior of the game.
-  - `FreeChest, VoidTier1, dtChest2`: 1 Shipping Request Form, one random item of Void Tier 1 and one random item of the droptable of a large chest.
+- `SequentialItems`:
+  - **True** → Items are picked sequentially from the list. As such, if the number of Lunar Shop Terminals and the number of items in the list are the same, you will always find the same items in the Bazaar.
+  - **False** → Items are picked at random from the list.
 
-### Donate
+- `ItemList`:
+  - A list of items to appear. Must be internal items names. Can use tier or droptables as well, see *Item Keywords* below.
+  - Examples:
+    - `Tier1, Tier2, Tier3, Lunar, Boss`: If `SequentialItems` is set to `True` and `Amount` to 5, then you will find exactly 1 white item, 1 green item, 1 red item, 1 lunar item and 1 boss item in the shop.
+    - `dtLunarChest`: This is the vanilla behavior of the game.
+    - `FreeChest, VoidTier1, dtChest2`: 1 Shipping Request Form, one random item of Void Tier 1 and one random item of the droptable of a large chest.
 
-The Donate setting spawns a donation box near the Newt. After donating 10 times, the Newt will give you a gift. There are 3 item lists which are selected at random:
+### Donation Altar
+
+The Donate setting spawns a donation box near the Newt. After donating 10 times, the Newt will give you a reward. There are 3 item lists which are selected at random:
+
 - `DonateRewardNormalList`: The common reward list. Contains normal items.
 - `DonateRewardEliteList`: Contains the elite equipment items.
 - `DonateRewardPeculiarList`: Disabled by default. Contains some unreleased or unfinished items. But can be fully customized.
@@ -63,25 +79,12 @@ Examples:
 
 `RewardNormalList = dtChest1=5, dtChest2=2`: The reward will be either 5 random items of the small chest droptable or 2 random items of the large chest droptable.
 
-## Item Keyword List
+## Item Keywords
 
-When providing the item key word, one can use either an internal item key name, an item tier name or the internal name of a droptable.
-
-### Internal Item Names
-
-See [R2Wiki - Items-and-Equipments-Data](https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)
-
-### Item Tier Names
-
-- Tier1
-- Tier2
-- Tier3
-- Lunar
-- Boss
-- VoidTier1
-- VoidTier2
-- VoidTier3
-- VoidBoss
+You can use:
+- **Internal item names** (see [R2Wiki - Items-and-Equipments-Data](https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)).  
+- **Item Tier names**: `Tier1`, `Tier2`, `Tier3`, `Lunar`, `Boss`, `VoidTier1`, `VoidTier2`, `VoidTier3`, `VoidBoss`.
+- **Droptable names**: e.g. `dtChest1`, `dtLunarChest`, `dtVoidChest`. See below.
 
 ### Droptable Names
 
@@ -135,5 +138,6 @@ Here is a list of supported droptables:
 | dtSonorousEcho | True |  |  | 0.9 | 0.1 | 0.001 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | dtCommandChest | True |  | Any, Any, Any, Any, Any | 0.2 | 0.2 | 0.05 | 0.05 | 0 | 0 | 0 | 0.2 | 0.1 | 0.1 | 0.05 | 0.05 |
 
+
 ## Known issues
-- Lunar Shop Terminal Price and Equipment Price labels are not displayed. This can't be fixed with a server-side mod.
+- Lunar Shop Terminal Price and Equipment Price labels are **not** displayed. This can't be fixed with a server-side mod.
