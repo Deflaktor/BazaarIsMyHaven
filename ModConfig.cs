@@ -70,7 +70,7 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> LunarShopAmount;
         public static ConfigEntry<int> LunarShopCost;
         public static ConfigEntry<int> LunarShopBuyLimit;
-        public static ConfigEntry<bool> LunarShopStaticItems;
+        public static ConfigEntry<bool> LunarShopSequentialItems;
         public static ConfigEntry<string> LunarShopItemList;
         public static ConfigEntry<bool> LunarShopInstancedPurchases;
         public static ConfigEntry<bool> LunarShopBuyToInventory;
@@ -170,7 +170,7 @@ namespace BazaarIsMyHaven
             LunarShopAmount = config.Bind("06 LunarShop", "Amount", 5, "Number of Lunar Shop Terminals (max 20)."); if (LunarShopAmount.Value > 20) LunarShopAmount.Value = 20;
             LunarShopCost = config.Bind("06 LunarShop", "Cost", 1, "Lunar coin cost per Lunar Shop Terminal or Lunar Bud use."); LunarShopCost.Value = Math.Abs(LunarShopCost.Value);
             LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar. -1 = Unlimited.");
-            LunarShopStaticItems = config.Bind("06 LunarShop", "StaticItems", false, "Uses fixed/static items instead of randomized rolls.");
+            LunarShopSequentialItems = config.Bind("06 LunarShop", "SequentialItems", false, "Picks items sequentially from the list instead of randomly.");
             var items = "LunarPrimaryReplacement, LunarSecondaryReplacement, LunarSpecialReplacement, AutoCastEquipment, LunarDagger, HalfSpeedDoubleHealth, LunarSun, LunarBadLuck, LunarBadLuck, LunarBadLuck, ShieldOnly, ShieldOnly, ShieldOnly, HalfAttackSpeedHalfCooldowns, HalfAttackSpeedHalfCooldowns, RandomDamageZone, Tonic";
             var itemTiersString = "Tier1, Tier2, Tier3, Lunar, Boss, VoidTier1, VoidTier2, VoidTier3, VoidBoss";
             LunarShopItemList = config.Bind("06 LunarShop", "ItemList", "dtLunarChest", $"Comma-separated list of items available in Lunar Shop. Can use:\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)\nExample: {items}");

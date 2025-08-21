@@ -241,7 +241,7 @@ namespace BazaarIsMyHaven
             {
                 PickupIndex pickupIndex = PickupIndex.none;
 
-                if (!ModConfig.LunarShopStaticItems.Value)
+                if (!ModConfig.LunarShopSequentialItems.Value)
                     currentLunarShopStaticItemIndex = -1;
                 PickupIndex[] rewards = ResolveItemRewardFromStringList(ModConfig.LunarShopItemList.Value, currentLunarShopStaticItemIndex);
 
