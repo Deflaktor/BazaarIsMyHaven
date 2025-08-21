@@ -1,6 +1,6 @@
 # BazaarIsMyHaven
 
-**server-side only** — only the host needs it installed.
+**server-side mod** - only the host needs it installed.
 
 This is a fork of Lunzir’s excellent [BazaarIsMyHaven](https://thunderstore.io/package/Lunzir2/BazaarIsMyHome/) mod.
 
