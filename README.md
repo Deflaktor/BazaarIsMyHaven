@@ -2,7 +2,7 @@
 
 **server-side mod** - only the host needs it installed.
 
-This is a fork of Lunzir’s excellent [BazaarIsMyHaven](https://thunderstore.io/package/Lunzir2/BazaarIsMyHome/) mod.
+This is a fork of Lunzir’s excellent [BazaarIsMyHome](https://thunderstore.io/package/Lunzir2/BazaarIsMyHome/) mod.
 
 ## Features
 
@@ -27,6 +27,10 @@ This is a fork of Lunzir’s excellent [BazaarIsMyHaven](https://thunderstore.io
 - **Other Tweaks**:
   - Extra decoration in the Bazaar.
   - Settings to gradually increase interactables as you complete more stages during the run.
+
+- **Compatiblity with other Mods**
+  - [BiggerBazaar](https://thunderstore.io/package/MagnusMagnuson/BiggerBazaar/)
+  - [InLobbyConfig](https://thunderstore.io/package/KingEnderBrine/InLobbyConfig/)
 
 ## Key Settings
 
