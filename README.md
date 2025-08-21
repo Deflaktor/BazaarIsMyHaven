@@ -70,12 +70,11 @@ You can freely configure which items can be bought at the LunarShop. There are t
 
 The Donate setting spawns a donation box near the Newt. After donating 10 times, the Newt will give you a reward. There are 3 item lists which are selected at random:
 
-- `DonateRewardNormalList`: The common reward list. Contains normal items.
-- `DonateRewardEliteList`: Contains the elite equipment items.
-- `DonateRewardPeculiarList`: Disabled by default. Contains some unreleased or unfinished items. But can be fully customized.
+- `RewardList1`: By default contains either 5 small chest items or 2 large chest items.
+- `RewardList2`: By default contains either 1 legendary item or 1 boss item.
+- `RewardList3`: Disabled by default. By default contains some unreleased or unfinished items.
 
-See the below section "Item Keyword List" on what are valid values.
-With the donate reward lists, it is possible to reward multiple items at the same time. Each keyword in the list needs to also have an "=" sign to denote how many of that items shall be given.
+These reward lists can be fully customized. See the below section *Item Keyword List* on what are valid values. With the donate reward lists, it is possible to reward multiple items at the same time. Each keyword in the list needs to also have an "=" sign to denote how many of that items shall be given.
 
 Examples:
 

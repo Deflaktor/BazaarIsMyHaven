@@ -1,9 +1,4 @@
 using BepInEx.Configuration;
-using RoR2;
-using UnityEngine;
-using R2API;
-using System.Collections.Generic;
-using System.Linq;
 using System;
 
 namespace BazaarIsMyHaven
@@ -103,12 +98,12 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<bool> DonateSectionEnabled;
         public static ConfigEntry<int> DonateCost;
         public static ConfigEntry<int> DonateRewardLimit;
-        public static ConfigEntry<float> DonateRewardNormalWeight;
-        public static ConfigEntry<string> DonateRewardNormalList;
-        public static ConfigEntry<float> DonateRewardEliteWeight;
-        public static ConfigEntry<string> DonateRewardEliteList;
-        public static ConfigEntry<float> DonateRewardPeculiarWeight;
-        public static ConfigEntry<string> DonateRewardPeculiarList;
+        public static ConfigEntry<float> DonateRewardList1Weight;
+        public static ConfigEntry<string> DonateRewardList1;
+        public static ConfigEntry<float> DonateRewardList2Weight;
+        public static ConfigEntry<string> DonateRewardList2;
+        public static ConfigEntry<float> DonateRewardList3Weight;
+        public static ConfigEntry<string> DonateRewardList3;
 
         public static void InitConfig(ConfigFile config)
         {
@@ -207,12 +202,12 @@ namespace BazaarIsMyHaven
             DonateSectionEnabled = config.Bind("11 Donate", "SectionEnabled", true, "Enables or disables the Donate section. Enabling spawns a Donation Altar near the Newt.");
             DonateRewardLimit = config.Bind("11 Donate", "RewardLimit", 3, "Limit the number of rewards each player can get per visit to the Bazaar. One reward is given every 10 donations."); DonateRewardLimit.Value = Math.Abs(DonateRewardLimit.Value);
             DonateCost = config.Bind("11 Donate", "Cost", 2, "Lunar coin cost per donation. 10 donations need to be done to get a reward."); DonateCost.Value = Math.Abs(DonateCost.Value);
-            DonateRewardNormalWeight = config.Bind("11 Donate", "RewardNormalWeight", 0.5f, "Weight for regular item rewards (white, green, red items)."); DonateRewardNormalWeight.Value = Math.Abs(DonateRewardNormalWeight.Value);
-            DonateRewardNormalList = config.Bind("11 Donate", "RewardNormalList", "dtChest1=5, dtChest2=2", "Normal item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)\n");
-            DonateRewardEliteWeight = config.Bind("11 Donate", "RewardEliteWeight", 0.25f, "Weight for elite equipment rewards."); DonateRewardEliteWeight.Value = Math.Abs(DonateRewardEliteWeight.Value);
-            DonateRewardEliteList = config.Bind("11 Donate", "RewardEliteList", "EliteEarthEquipment,EliteFireEquipment,EliteHauntedEquipment,EliteIceEquipment,EliteLightningEquipment,ElitePoisonEquipment,EliteVoidEquipment,EliteLunarEquipment,EliteAurelioniteEquipment,EliteBeadEquipment,LunarPortalOnUse", "Elite equipment reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)\\n\"");
-            DonateRewardPeculiarWeight = config.Bind("11 Donate", "RewardPeculiarWeight", 0f, "Weight for odd or peculiar items (some unobtainable in normal gameplay)."); DonateRewardPeculiarWeight.Value = Math.Abs(DonateRewardPeculiarWeight.Value);
-            DonateRewardPeculiarList = config.Bind("11 Donate", "RewardPeculiarList", "BoostAttackSpeed=10, BoostDamage=10, BoostEquipmentRecharge=10, BoostHp=10, BurnNearby, CrippleWardOnLevel=10, EmpowerAlways, Ghost, Incubator=3, LevelBonus=10, WarCryOnCombat=10, TempestOnKill=10", "Peculiar item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)\\n\"");
+            DonateRewardList1Weight = config.Bind("11 Donate", "RewardList1Weight", 0.85f, "Weight for choosing RewardList1."); DonateRewardList1Weight.Value = Math.Abs(DonateRewardList1Weight.Value);
+            DonateRewardList1 = config.Bind("11 Donate", "RewardList1", "dtChest1=4, Tier2=2", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)\n");
+            DonateRewardList2Weight = config.Bind("11 Donate", "RewardList2Weight", 0.15f, "Weight for choosing RewardList2."); DonateRewardList2Weight.Value = Math.Abs(DonateRewardList2Weight.Value);
+            DonateRewardList2 = config.Bind("11 Donate", "RewardList2", "Tier3, Boss", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)\\n\"");
+            DonateRewardList3Weight = config.Bind("11 Donate", "RewardList3Weight", 0f, "Weight for choosing RewardList3."); DonateRewardList3Weight.Value = Math.Abs(DonateRewardList3Weight.Value);
+            DonateRewardList3 = config.Bind("11 Donate", "RewardList3", "BoostAttackSpeed=10, BoostDamage=10, BoostEquipmentRecharge=10, BoostHp=10, BurnNearby, CrippleWardOnLevel=10, EmpowerAlways, Ghost, Incubator=3, LevelBonus=10, WarCryOnCombat=10, TempestOnKill=10", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)\\n\"");
 
             if (ModCompatibilityInLobbyConfig.enabled)
             {
