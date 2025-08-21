@@ -32,8 +32,9 @@ namespace BazaarIsMyHaven
         public override void Hook()
         {
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
-            On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
+            On.RoR2.BlueprintTerminal.Rebuild += BlueprintTerminal_Rebuild;
         }
+
 
         public override void SetupBazaar()
         {
@@ -43,16 +44,20 @@ namespace BazaarIsMyHaven
             }
         }
 
-        public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
+        public void BlueprintTerminal_Rebuild(On.RoR2.BlueprintTerminal.orig_Rebuild orig, BlueprintTerminal self)
         {
-            orig(self);
-            if (ModConfig.EnableMod.Value & ModConfig.DonateSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
+            if (ModConfig.EnableMod.Value & ModConfig.DonateSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("BlueprintStation"))
             {
-                if (self.name.StartsWith("BlueprintStation"))
+                PurchaseInteraction purchaseInteraction = self.GetComponent<PurchaseInteraction>();
+                if (purchaseInteraction != null)
                 {
-                    self.cost = ModConfig.DonateCost.Value;
-                    self.Networkcost = ModConfig.DonateCost.Value;
+                    purchaseInteraction.cost = ModConfig.DonateCost.Value;
+                    purchaseInteraction.Networkcost = ModConfig.DonateCost.Value;
                 }
+            }
+            else
+            {
+                orig(self);
             }
         }
 
