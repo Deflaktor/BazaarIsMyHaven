@@ -6,7 +6,6 @@ using RoR2;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -91,6 +90,9 @@ namespace BazaarIsMyHaven
 
         private void Run_Start(On.RoR2.Run.orig_Start orig, Run self)
         {
+#if DEBUG
+            BazaarBase.WriteDropTablesMarkdownFile();
+#endif
             ShopKeeper.DiedAtLeastOnce = false;
             ShopKeeper.Body = null;
             orig(self);
