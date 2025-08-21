@@ -40,6 +40,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="CHANGELOG.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="icon.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
