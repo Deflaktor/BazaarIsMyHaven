@@ -1,127 +1,139 @@
 # BazaarIsMyHaven
 
-This mod is a rewrite of the excellent [BazaarIsMyHaven](https://thunderstore.io/package/Lunzir2/BazaarIsMyHaven/) mod by Lunzir. This is a server-side mod, as such only the host needs it.
+This mod is a fork of the excellent [BazaarIsMyHaven](https://thunderstore.io/package/Lunzir2/BazaarIsMyHaven/) mod by Lunzir. This is a server-side mod, as such only the host needs it.
+## Features
 
-## Capabilities
+- Spawn configurable amount of interactables in the Bazaar:
+  - 3D Printers
+  - Additional Cauldrons
+  - Scrappers
+  - Equipment Terminals
+  - Lunar Shop with configurable item list
+  - Cleansing Pool (giving either pearls or lunar coins)
+  - Shrine of Order
+  - Donation Altar
+- Some settings for the behavior of the Newt
+  - Prevent kicking you out of the shop
+  - His behavior after death
+  - Some additional dialogue
+- Setting for spawning a portal to the shop after every teleporter event
+- Add some additional decoration to the bazaar
+- Setting for slowly increasing the amount of interactibles in the shop per stage
 
-- Have anywhere between 1 and 
+Further some additional explanations for some of the settings:
 
-## Config Settings
-| Setting| Default Value| 
-|:-------|:-------:|
-[00 Setting设置]|
-EnableMod|true
-EnableAutoOpenShop|true
-EnableNoKickFromShop|true
-EnableShoperWontDie|false
-NewtSecondLifeMode |Evil
-EnableWelcomeWord|true
-PenaltyCoefficient|10
-SpawnCountByStage|true
-SpawnCountOffset|0
-[01 Printer打印机]|
-PrinterCount|9
-PrinterTier1Weight|0.8
-PrinterTier2Weight|0.2
-PrinterTier3Weight|0.01
-PrinterBossWeight|0.01
-PrinterTierLunarHackChance|0.05
-PrinterTierVoidHackChance|0.05
-[02 Cauldron大锅]|
-CauldronCount|7
-CauldronWhiteWeight|0.3
-CauldronGreenWeight|0.6
-CauldronRedWeight|0.1
-[02.1 Cauldron Hack大锅数据修改]|
-EnableCauldronHacking|true
-CauldronWhiteToGreenCost|3
-CauldronGreenToRedCost|5
-CauldronRedToWhiteCost|1
-CauldronWhiteCostTypeChange|true
-CauldronWhiteHackedChance|0.2
-CauldronGreenHackedChance|0.2
-CauldronRedHackedChance|0.2
-CauldronYellowWeight|0.33
-CauldronBlueWeight|0.33
-CauldronPurpleWeight|0.33
-CauldronWhiteToGreenCost_Hacked|3
-CauldronGreenToRedCost_Hacked|5
-CauldronRedToWhiteCost_Hacked|4
-[03 Scrapper收割机]|
-ScrapperCount|4
-[04 Equipment主动装备]|
-EquipmentCount|6
-[05 Lunar月球装备]|
-LunarShopTerminalCount|11
-EnableLunarShopTerminalInjection|true
-LunarShopTerminalCost|2
-[06 ShrineRestack跌序]|
-EnableShrineRestack|true
-ShrineRestackMaxCount|99
-ShrineRestackCost|1
-ShrineRestackScalar|2
-[07 CleanPool净化池]|
-EnableShrineCleanse|true
-[08 Pray祈祷]|
-EnablePray|true
-RewardCount|3
-PrayCost|10
-PrayNormalWeight|0.5
-PrayEliteWeight|0.25
-PrayPeculiarWeight|0.25
-PrayPeculiarList|
-[09 LunarRecycler切片]|
-EnableLunarRecyclerInjection|true
-LunarRecyclerAvailable|true
-LunarRecyclerRerollCount|10
-LunarRecyclerRerollCost|1
-LunarRecyclerRerollScalar|2
-[10 预言地图]|
-EnableSeerStationsInjection|true
-SeerStationAvailable|true
-LunarSeerStationsCost|3
-[98 Newts lines商人台词]|
-EnableLines|true
-~~Lines~~|~~纽特：请不要打我。Newt: Please don\'t hit me.~~
-[99 Decorate装饰]|
-EnableDecorate|true
+### General - SpawnCountByStage
 
-### Items Pool of Pray 祈祷物品池信息
-|en|cn|describe|
-|---|---|---|
-[Normal Items 一般物品]||White(Tier1), Green(Tier2), Red(Tier3) 白、绿、红颜色物品
-[Elite Equipments 精英主动装备]||
-His Reassurance|大地之证|
-Ifrit's Distinction|伊夫利特的卓越|
-Spectral Circlet|幽灵头饰|
-Her Biting Embrace|她的噬咬拥抱|
-Silence Between Two Strikes|暴风雨前的宁静|
-N'kuhana's Retort|恩库哈纳的反驳|
-EQUIPMENT_AFFIXVOID_NAME|EQUIPMENT_AFFIXVOID_NAME|Void Elite equip 虚空精英装备
-Shared Design|共同的设计|
-Elegy of Extinction|灭绝挽歌|
-[Peculiar Items 奇特物品]||items from the game that have not been developed have no name or description. 来源于游戏没有开发完的内部物品，他们没有名字和描述
-ITEM_BOOSTATTACKSPEED_NAME|ITEM_BOOSTATTACKSPEED_NAME|+10% attack speed per stack. +10%攻击速度/物品数量
-ITEM_BOOSTDAMAGE_NAME|ITEM_BOOSTDAMAGE_NAME|+10% dmg per stack. +10%基础伤害/物品数量
-ITEM_BOOSTEQUIPMENTRECHARGE_NAME|ITEM_BOOSTEQUIPMENTRECHARGE_NAME|-10% equip CD per stack, benefits of diminishing. -10%主动装备冷却时间，效益递减
-ITEM_BOOSTHP_NAME|ITEM_BOOSTHP_NAME|+10% HP per stack. +10%生命值/物品数量
-ITEM_BURNNEARBY_NAME|ITEM_BURNNEARBY_NAME|permanent burning. 永久燃烧
-Wicked Ring|邪恶的戒指|+5% crit, when crit -0.5s all skill CD per stack. +5%暴击率，暴击时候-0.5秒技能CD
-ITEM_CRIPPLEWARDONLEVEL_NAME|ITEM_CRIPPLEWARDONLEVEL_NAME|when a monster levels up, a permanent slow down aura is generated for the player that owns the item. 当怪物升级，向拥有该物品的玩家生成永久减速光环
-ITEM_EMPOWERALWAYS_NAME|ITEM_EMPOWERALWAYS_NAME|just an ornament. 装饰品
-ITEM_GHOST_NAME|ITEM_GHOST_NAME|become a ghost and can't be attacked. 变成幽魂，无法被攻击
-ITEM_LEVELBONUS_NAME|ITEM_LEVELBONUS_NAME|+1 team level per stack. +1等级/物品数量
-Ancestral Incubator|先祖孵化器|
-ITEM_INVADINGDOPPELGANGER_NAME|ITEM_INVADINGDOPPELGANGER_NAME|+1000% hp, -96% dmg(dmg has been fixed to 1). +1000%生命值，-96%基础伤害(伤害已修正为1)
-ITEM_TEMPESTONKILL_NAME|ITEM_TEMPESTONKILL_NAME|When killed, there is a chance to summon the circle of Storms. touching the circle of Storms. gains N 'Kuhana's Retort Buff for 10 seconds. 当击杀后有一定机率召唤风暴圈，触碰风暴圈获得N'kuhana's Retort Buff，持续10秒
-ITEM_WARCRYONCOMBAT_NAME|ITEM_WARCRYONCOMBAT_NAME|Trigger effect: +50% movement speed, +100% attack speed for 2 seconds (+4 seconds per stack), 30 seconds cooldown. 当发动攻击触发效果，+50%移动速度，+100%攻击速度，持续2秒(+4秒/物品数量)，冷却30秒
+This settings makes it so that the more stage are completed, the more interactables are spawned in the Bazaar. If you just start the run and go immediately to the Bazaar you will see few interactables. But as you progress further, more and more interactables will get spawned. Up to the configured limit of each respective interactable. The `SpawnCountByStage` setting enables this behavior. There is also the `SpawnCountOffset` which allows you to either add a baseline amount of interactables or make interactables increase even later. Can be both positive or negative. The formula is a follows:
 
-## What's Next 以后的想法
-- [ ] Increase the probability of something good depending on the difficulty of the level. 根据关卡难度提升好东西的概率
-- [ ] Recycle can reroll custom LunarShopBud. 切片翻滚包含所有月球蓓蕾，目前只有原本的5个在滚，有点难不一定能做到
-- [ ] Developing new mods, and three other ideas that have something to do with Newt. 开发新的mod，还有三个想法都和商人有点关系。
+`Amount of Interactables per Type = Number of Stages Completed + SpawnCountOffset`
 
+### Newt - DeathBehavior
 
-## Known issues 已知问题
-- Although no need for unmoded, for players who have not installed the same mod, some labels are not correctly displayed and will not affect normal use. For example, moon bud physical size, shrinehealing price tag is displayed as money, the actual cost of lunar coins. 虽然不需要unmoded，但是未安装同样mod的玩家，一些标签不能准确显示，但不影响正常使用。比如月球蓓蕾实体大小，树灵价格标签显示为金钱，实际是花费月币。
-- Equipment price is currently set to 0, there is no better way to change the price type so far. 主动装备价格目前设置成0，目前没有找到办法修改价格类型。
+Some settings on how the Newt shall behave after been killed.
+
+`Default`: The vanilla behavior. The Newt is not modified in any way.
+`Tank`: The Newt Health is significantly reduced so he can be killed. However, he will revive with his HP doubled.
+`Ghost`: The Newt Health is significantly reduced so he can be killed. However, he will revive as a Ghost.
+`Hostile`: The Newt Health is significantly reduced so he can be killed. However, he will revive and start to defend himself.
+
+### LunarShop
+
+You can freely configure which items can be bought at the LunarShop. There are two settings to configure this:
+
+- `LunarShopStaticItems`: This setting configures if the items shall be static. This means you will always find the same items in the Lunar Shop on each visit to the Bazaar. Otherwise the items will be selected at random from the `LunarShopItemList`.
+- `LunarShopItemList`: This is a comma-separated list of items which shall appear in the Lunar Shop. See below section on the support Item Keyword List. Here some examples:
+  - `Tier1, Tier2, Tier3, Lunar, Boss`: If `LunarShopStaticItems` is set to `True` and `Amount` to 5, then you will find exactly 1 white item, 1 green item, 1 red item, 1 lunar item and 1 boss item in the shop. If `LunarShopStaticItems` is set to `False`, it will pick of these tiers at random for each shop terminal.
+  - `dtLunarChest`: This is the vanilla behavior of the game.
+  - `FreeChest, VoidTier1, dtChest2`: 1 Shipping Request Form, one random item of Void Tier 1 and one random item of the droptable of a large chest.
+
+### Donate
+
+The Donate setting spawns a donation box near the Newt. After donating 10 times, the Newt will give you a gift. There are 3 item lists which are selected at random:
+- `DonateRewardNormalList`: The common reward list. Contains normal items.
+- `DonateRewardEliteList`: Contains the elite equipment items.
+- `DonateRewardPeculiarList`: Disabled by default. Contains some unreleased or unfinished items. But can be fully customized.
+
+See the below section "Item Keyword List" on what are valid values.
+With the donate reward lists, it is possible to reward multiple items at the same time. Each keyword in the list needs to also have an "=" sign to denote how many of that items shall be given.
+
+Examples:
+
+`RewardNormalList = dtITDefaultWave=5`: The reward will be 5 random items of the droptable of void potentials from the Simulacrum mode.
+
+`RewardNormalList = dtChest1=5, dtChest2=2`: The reward will be either 5 random items of the small chest droptable or 2 random items of the large chest droptable.
+
+## Item Keyword List
+
+When providing the item key word, one can use either an internal item key name, an item tier name or the internal name of a droptable.
+
+### Internal Item Names
+
+See [R2Wiki - Items-and-Equipments-Data](https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)
+
+### Item Tier Names
+
+- Tier1
+- Tier2
+- Tier3
+- Lunar
+- Boss
+- VoidTier1
+- VoidTier2
+- VoidTier3
+- VoidBoss
+
+### Droptable Names
+
+Here is a list of supported droptables:
+
+|                                 | canDropBeReplaced | requiredItemTags | bannedItemTags | tier1Weight | tier2Weight | tier3Weight | bossWeight | lunarEquipmentWeight | lunarItemWeight | lunarCombinedWeight | equipmentWeight | voidTier1Weight | voidTier2Weight | voidTier3Weight | voidBossWeight |
+|---------------------------------|-------------------|------------------|----------------|-------------|-------------|-------------|------------|----------------------|-----------------|---------------------|-----------------|-----------------|-----------------|-----------------|----------------|
+| dtMonsterTeamTier1Item | True |  | AIBlacklist, OnKillEffect, EquipmentRelated, SprintRelated | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtMonsterTeamTier2Item | True |  | AIBlacklist, OnKillEffect, EquipmentRelated, SprintRelated | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtMonsterTeamTier3Item | True |  | AIBlacklist, OnKillEffect, EquipmentRelated, SprintRelated | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtSacrificeArtifact | True |  | SacrificeBlacklist | 0.7 | 0.3 | 0.01 | 0 | 0 | 0 | 0 | 0.1 | 0 | 0 | 0 | 0 |
+| dtAISafeTier1Item | True |  | AIBlacklist | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtAISafeTier2Item | True |  | AIBlacklist | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtAISafeTier3Item | True |  | AIBlacklist | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtEquipment | True |  |  | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 |
+| dtTier1Item | True |  |  | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtTier2Item | True |  |  | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtTier3Item | True |  |  | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtVoidChest | True |  |  | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 6 | 3 | 1 | 0 |
+| dtCasinoChest | True |  |  | 0.7 | 0.3 | 0.01 | 0 | 0 | 0 | 0 | 0.1 | 0 | 0 | 0 | 0 |
+| dtSmallChestDamage | True | Damage |  | 0.8 | 0.2 | 0.01 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtSmallChestHealing | True | Healing |  | 0.8 | 0.2 | 0.01 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtSmallChestUtility | True | Utility |  | 0.8 | 0.2 | 0.01 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtChest1 | True |  |  | 0.8 | 0.2 | 0.01 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtChest2 | True |  |  | 0 | 0.8 | 0.2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtDuplicatorTier1 | True |  | CannotDuplicate | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtDuplicatorTier2 | True |  | CannotDuplicate | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtDuplicatorTier3 | True |  | CannotDuplicate | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtDuplicatorWild | True |  | WorldUnique | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtGoldChest | True |  |  | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtLunarChest | True |  |  | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+| dtShrineChance | True |  |  | 8 | 2 | 0.2 | 0 | 0 | 0 | 0 | 2 | 0 | 0 | 0 | 0 |
+| dtLockbox | True |  |  | 0 | 4 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtITBossWave | True |  |  | 0 | 80 | 7.5 | 7.5 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtITDefaultWave | True |  |  | 80 | 10 | 0.25 | 0.25 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtITLunar | True |  |  | 0 | 0 | 0 | 0 | 0 | 0 | 100 | 0 | 0 | 0 | 0 | 0 |
+| dtITSpecialBossWave | True |  |  | 0 | 0 | 80 | 20 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtITVoid | True |  |  | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 80 | 20 | 1 | 0 |
+| dtCategoryChest2Damage | True | Damage |  | 0 | 0.8 | 0.2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtCategoryChest2Healing | True | Healing |  | 0 | 0.8 | 0.2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtCategoryChest2Utility | True | Utility |  | 0 | 0.8 | 0.2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtVoidCamp | True |  |  | 40 | 40 | 10 | 3 | 0 | 0 | 0 | 0 | 5.714286 | 5.714286 | 1.25 | 0 |
+| dtVoidTriple | True |  |  | 0.8 | 0.2 | 0.01 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtVoidLockbox | True |  |  | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 5 | 5 | 2 | 0 |
+| AurelioniteHeartPickupDropTable | True |  |  | 0 | 0 | 0.4 | 0.6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| GeodeRewardDropTable | True |  |  | 0.8 | 0.2 | 0.01 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtShrineHalcyoniteTier1 | True |  |  | 0.65 | 0.3 | 0.05 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtShrineHalcyoniteTier2 | True | HalcyoniteShrine |  | 0.65 | 0.3 | 0.05 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtShrineHalcyoniteTier3 | True |  |  | 0.65 | 0.3 | 0.05 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtChanceDoll | True |  |  | 0 | 0.79 | 0.2 | 0.01 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtSonorousEcho | True |  |  | 0.9 | 0.1 | 0.001 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| dtCommandChest | True |  | Any, Any, Any, Any, Any | 0.2 | 0.2 | 0.05 | 0.05 | 0 | 0 | 0 | 0.2 | 0.1 | 0.1 | 0.05 | 0.05 |
+
+## Known issues
+- Lunar Shop Terminal Price and Equipment Price labels are not displayed. This can't be fixed with a server-side mod.
