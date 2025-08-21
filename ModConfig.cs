@@ -63,6 +63,8 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> EquipmentCost;
         public static ConfigEntry<bool> EquipmentBuyToInventory;
         public static ConfigEntry<bool> EquipmentReplaceLunarSeersWithEquipment;
+        public static ConfigEntry<float> EquipmentReplaceWithEliteChance;
+        public static ConfigEntry<string> EquipmentReplaceWithEliteList;
 
         // lunarShop
         public static ConfigEntry<bool> LunarShopSectionEnabled;
@@ -158,6 +160,8 @@ namespace BazaarIsMyHaven
             EquipmentSectionEnabled = config.Bind("05 Equipment", "SectionEnabled", true, "Enables or disables the Equipment section.");
             EquipmentAmount = config.Bind("05 Equipment", "Amount", 3, "Number of Equipment Terminals (max 3 normally, 5 if replacing Lunar Seers).");
             EquipmentReplaceLunarSeersWithEquipment = config.Bind("05 Equipment", "ReplaceLunarSeersWithEquipment", false, "Replaces Lunar Seers with Equipment Terminals (increases equipment max to 5). Makes the Lunar Seer section irrelevant.");
+            EquipmentReplaceWithEliteChance = config.Bind("05 Equipment", "ReplaceWithEliteChance", 0.15f, "Chance for replacing the equipment with an elite equipment."); EquipmentReplaceWithEliteChance.Value = Math.Abs(EquipmentReplaceWithEliteChance.Value);
+            EquipmentReplaceWithEliteList = config.Bind("05 Equipment", "ReplaceWithEliteList", "EliteEarthEquipment, EliteFireEquipment, EliteIceEquipment, EliteLunarEquipment, EliteLightningEquipment", "With which elite equipments to replace. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)\\n\"");
             EquipmentInstancedPurchases = config.Bind("05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
             EquipmentCost = config.Bind("05 Equipment", "Cost", 0, "Monetary cost for equipment purchases."); EquipmentCost.Value = Math.Abs(EquipmentCost.Value);
             EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground.");

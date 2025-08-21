@@ -31,6 +31,7 @@ namespace BazaarIsMyHaven
             On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.ShopTerminalBehavior.DropPickup += ShopTerminalBehavior_DropPickup;
+            On.RoR2.ShopTerminalBehavior.GenerateNewPickupServer_bool += ShopTerminalBehavior_GenerateNewPickupServer_bool;
         }
 
         public override void SetupBazaar()
@@ -121,6 +122,30 @@ namespace BazaarIsMyHaven
             {
                 orig(self);
             }
+        }
+
+        private void ShopTerminalBehavior_GenerateNewPickupServer_bool(On.RoR2.ShopTerminalBehavior.orig_GenerateNewPickupServer_bool orig, ShopTerminalBehavior self, bool newHidden)
+        {
+            if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("MultiShopEquipmentTerminal"))
+            {
+                if(Run.instance.stageRng.nextNormalizedFloat < ModConfig.EquipmentReplaceWithEliteChance.Value)
+                {
+                    PickupIndex pickupIndex = PickupIndex.none;
+                    PickupIndex[] rewards = ResolveItemRewardFromStringList(ModConfig.EquipmentReplaceWithEliteList.Value);
+
+                    if (rewards != null)
+                    {
+                        pickupIndex = rewards[0];
+                        self.SetPickupIndex(pickupIndex, newHidden);
+                        return;
+                    }
+                    else
+                    {
+                        Log.LogError($"Could not get a proper pickup index from EquipmentReplaceWithEliteList: {ModConfig.EquipmentReplaceWithEliteList.Value}");
+                    }
+                }
+            }
+            orig(self, newHidden);
         }
 
         private void SetEquipment()
