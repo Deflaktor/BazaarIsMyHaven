@@ -1,6 +1,7 @@
 ﻿using RoR2;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -79,23 +80,56 @@ namespace BazaarIsMyHaven
 
         private static string GetDeathState() => ShopKeeper.DiedAtLeastOnce && ModConfig.NewtDeathBehavior.Value == ShopKeeper.DeathState.Ghost ? $" ({Language.GetString(LanguageAPI.NEWT_DEATH_STATE)})" : "";
 
+        public static string GetItemNames(PickupIndex[] pickupIndexes)
+        {
+            var counts = pickupIndexes.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+
+            var itemNames = new List<string>();
+            foreach (var entry in counts)
+            {
+                var pickupIndex = entry.Key;
+                var count = entry.Value;
+                var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
+                var itemName = pickupDef.internalName;
+                if (pickupDef.itemIndex != ItemIndex.None)
+                {
+                    itemName = Language.GetString(ItemCatalog.GetItemDef(pickupDef.itemIndex).nameToken);
+                }
+                else if (pickupDef.equipmentIndex != EquipmentIndex.None)
+                {
+                    itemName = Language.GetString(EquipmentCatalog.GetEquipmentDef(pickupDef.equipmentIndex).nameToken);
+                }
+                if (count > 1)
+                {
+                    itemNames.Add(string.Format("{0} x {1}", itemName, count));
+                }
+                else
+                {
+                    itemNames.Add(itemName);
+                }
+            }
+
+            return string.Join(", ", itemNames);
+        }
+
         public static void ThanksTip(NetworkUser networkUser, PlayerCharacterMasterController pc)
         {
             Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_FIRST_TIME, NewtName, GetDeathState(), GetColoredPlayerName(pc)));
         }
-        public static void ThanksTip(NetworkUser networkUser, PlayerCharacterMasterController pc, EquipmentDef equipmentDef)
+
+        public static void ThanksTipNormal(NetworkUser networkUser, PlayerCharacterMasterController pc, PickupIndex[] pickupIndexes)
         {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_NORMAL, NewtName, GetDeathState(), GetColoredPlayerName(pc), Language.GetString(equipmentDef.nameToken)));
+            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_NORMAL, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
         }
 
-        public static void ThanksTip(NetworkUser networkUser, PlayerCharacterMasterController pc, PickupDef pickupDef)
+        public static void ThanksTipElite(NetworkUser networkUser, PlayerCharacterMasterController pc, PickupIndex[] pickupIndexes)
         {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_ELITE, NewtName, GetDeathState(), GetColoredPlayerName(pc), Language.GetString(pickupDef.nameToken)));
+            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_ELITE, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
         }
 
-        public static void ThanksTip(NetworkUser networkUser, PlayerCharacterMasterController pc, ItemDef itemDef, int count)
+        public static void ThanksTipPeculiar(NetworkUser networkUser, PlayerCharacterMasterController pc, PickupIndex[] pickupIndexes)
         {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_PECULIAR, NewtName, GetDeathState(), GetColoredPlayerName(pc), string.Format("{0} x {1}", Language.GetString(itemDef.nameToken), count)));
+            Send(Language.GetStringFormatted(LanguageAPI.NEWT_PRAY_PECULIAR, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
         }
 
         public static void WelcomeWord()

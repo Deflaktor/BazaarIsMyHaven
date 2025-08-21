@@ -14,45 +14,10 @@ namespace BazaarIsMyHaven
     {
         //AsyncOperationHandle<InteractableSpawnCard> iscShrineHealing;
         AsyncOperationHandle<GameObject> BlueprintStation;
-
         AsyncOperationHandle<GameObject> LevelUpEffect;
         AsyncOperationHandle<GameObject> MoneyPackPickupEffect;
         AsyncOperationHandle<GameObject> TeamWarCryActivation;
         AsyncOperationHandle<GameObject> ShrineUseEffect;
-
-        List<SpecialItemStruct> SpecialCodes = new List<SpecialItemStruct>
-        {
-            new SpecialItemStruct("BoostAttackSpeed", 10),
-            new SpecialItemStruct("BoostDamage", 10),
-            new SpecialItemStruct("BoostEquipmentRecharge", 10),
-            new SpecialItemStruct("BoostHp", 10),
-            new SpecialItemStruct("BurnNearby", 1),
-            new SpecialItemStruct("CrippleWardOnLevel", 10),
-            new SpecialItemStruct("CooldownOnCrit", 1),
-            new SpecialItemStruct("EmpowerAlways", 1),
-            new SpecialItemStruct("Ghost", 1),
-            new SpecialItemStruct("Incubator", 3),
-            new SpecialItemStruct("InvadingDoppelganger", 1),
-            new SpecialItemStruct("LevelBonus", 10),
-            new SpecialItemStruct("WarCryOnCombat", 10),
-            new SpecialItemStruct("TempestOnKill", 10),
-        };
-
-        // 如果游戏更新，要检查一下
-        List<string> EquipmentCodes = new List<string>
-        {
-            "EliteEarthEquipment" ,
-            "EliteFireEquipment",
-            "EliteHauntedEquipment",
-            "EliteIceEquipment",
-            "EliteLightningEquipment",
-            "ElitePoisonEquipment",
-            "EliteVoidEquipment",
-            "EliteLunarEquipment",
-            "EliteAurelioniteEquipment",
-            "EliteBeadEquipment",
-            "LunarPortalOnUse",
-        };
 
         public override void Init()
         {
@@ -67,14 +32,27 @@ namespace BazaarIsMyHaven
         public override void Hook()
         {
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
+            On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
         }
 
         public override void SetupBazaar()
         {
             if (ModConfig.DonateSectionEnabled.Value)
             {
-                InitPrayData();
-                SpawnShrineHealing();
+                SpawnDonateAltar();
+            }
+        }
+
+        public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
+        {
+            orig(self);
+            if (ModConfig.EnableMod.Value & ModConfig.DonateSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
+            {
+                if (self.name.StartsWith("BlueprintStation"))
+                {
+                    self.cost = ModConfig.DonateCost.Value;
+                    self.Networkcost = ModConfig.DonateCost.Value;
+                }
             }
         }
 
@@ -114,63 +92,76 @@ namespace BazaarIsMyHaven
             }
             orig(self, activator);
         }
-        private void InitPrayData()
-        {
-            SpecialCodes.ForEach(x => x.IsUse = false);
-            string[] codes = ModConfig.DonateRewardPeculiarList.Value.Split(',');
-            for (int i = 0; i < codes.Length; i++)
-            {
-                string code = codes[i].Trim().ToLower();
-                SpecialItemStruct result = SpecialCodes.FirstOrDefault(x => x.Name.ToLower() == code);
-                result.IsUse = true;
-            }
-        }
 
         private void GiftReward(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Inventory inventory)
         {
             float w1 = ModConfig.DonateRewardNormalWeight.Value, w2 = ModConfig.DonateRewardEliteWeight.Value, w3 = ModConfig.DonateRewardPeculiarWeight.Value;
             double random = RNG.NextDouble() * (w1 + w2 + w3);
+            int tier = 0;
+            PickupIndex[] rewards = null;
             if (random <= w1)
             {
-                WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>(8);
-                weightedSelection.AddChoice(Run.instance.availableTier1DropList, 0.60f);
-                weightedSelection.AddChoice(Run.instance.availableTier2DropList, 0.35f);
-                weightedSelection.AddChoice(Run.instance.availableTier3DropList, 0.05f);
-                List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
-                PickupDef pickupDef = PickupCatalog.GetPickupDef(list[UnityEngine.Random.Range(0, list.Count)]);
-                inventory.GiveItem((pickupDef != null) ? pickupDef.itemIndex : ItemIndex.None, 1);
-
-                PurchaseInteraction.CreateItemTakenOrb(self.gameObject.transform.position, characterBody.gameObject, pickupDef.itemIndex);
-                ChatHelper.ThanksTip(networkUser, characterBody.master.playerCharacterMasterController, pickupDef);
+                tier = 1;
+                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardNormalList.Value);
             }
             else if (random <= w1 + w2)
             {
-                string equipCode = EquipmentCodes[RNG.Next(EquipmentCodes.Count)];
-                EquipmentIndex equipIndex = EquipmentCatalog.FindEquipmentIndex(equipCode);
-                EquipmentIndex IsHasEquip = inventory.GetEquipmentIndex();
-                EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(equipIndex);
-
-                if (IsHasEquip != EquipmentIndex.None)
-                    PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(IsHasEquip), characterBody.gameObject.transform.position + Vector3.up * 1.5f, Vector3.up * 20f + self.transform.forward * 2f);
-                inventory.SetEquipmentIndex(equipIndex);
-
-                ChatHelper.ThanksTip(networkUser, characterBody.master.playerCharacterMasterController, equipmentDef);
+                tier = 2;
+                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardEliteList.Value);
             }
             else
             {
-                SpecialItemStruct specialItemStruct = SpecialCodes[RNG.Next(SpecialCodes.Count)];
-                ItemIndex itemIndex = ItemCatalog.FindItemIndex(specialItemStruct.Name);
-                ItemDef itemDef = ItemCatalog.GetItemDef(itemIndex);
-                inventory.GiveItem(itemDef, specialItemStruct.Count);
-                PurchaseInteraction.CreateItemTakenOrb(self.gameObject.transform.position, characterBody.gameObject, itemIndex);
-                ChatHelper.ThanksTip(networkUser, characterBody.master.playerCharacterMasterController, itemDef, specialItemStruct.Count);
+                tier = 3;
+                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardPeculiarList.Value);
             }
+
+            if (rewards == null)
+            {
+                return;
+            }
+
+            var itemTakenOrbs = 0;
+            foreach (var pickupIndex in rewards)
+            {
+                var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
+                if (pickupDef.itemIndex != ItemIndex.None)
+                {
+                    if (itemTakenOrbs < 20)
+                    {
+                        PurchaseInteraction.CreateItemTakenOrb(self.transform.position + Vector3.up * 6.0f, characterBody.gameObject, pickupDef.itemIndex);
+                        itemTakenOrbs++;
+                    }
+                    inventory.GiveItem(pickupDef.itemIndex);
+                }
+                else if (pickupDef.equipmentIndex != EquipmentIndex.None)
+                {
+                    EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(pickupDef.equipmentIndex);
+                    EquipmentIndex IsHasEquip = inventory.GetEquipmentIndex();
+                    if (IsHasEquip != EquipmentIndex.None)
+                        PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(IsHasEquip), characterBody.gameObject.transform.position + Vector3.up * 1.5f, Vector3.up * 20f + self.transform.forward * 2f);
+                    inventory.SetEquipmentIndex(pickupDef.equipmentIndex);
+                }
+            }
+
+            switch(tier)
+            {
+                case 1:
+                    ChatHelper.ThanksTipNormal(networkUser, characterBody.master.playerCharacterMasterController, rewards);
+                    break;
+                case 2:
+                    ChatHelper.ThanksTipElite(networkUser, characterBody.master.playerCharacterMasterController, rewards);
+                    break;
+                case 3:
+                    ChatHelper.ThanksTipPeculiar(networkUser, characterBody.master.playerCharacterMasterController, rewards);
+                    break;
+            }
+
             SpawnEffect(LevelUpEffect, self.transform.position, new Color32(255, 255, 255, 255), 3f);
             SpawnEffect(MoneyPackPickupEffect, self.transform.position, new Color32(255, 255, 255, 255), 3f);
             SpawnEffect(TeamWarCryActivation, self.transform.position, new Color32(255, 255, 255, 255), 3f);
         }
 
-        private void SpawnShrineHealing()
+        private void SpawnDonateAltar()
         {
             GameObject gameObject = GameObject.Instantiate(BlueprintStation.WaitForCompletion(), new Vector3(-117.1011f, -24.1373f, -48.4219f), Quaternion.identity);
             // RoR2/Base/WarCryOnMultiKill/WarCryEffect.prefab: -17.2625f

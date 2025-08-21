@@ -66,6 +66,7 @@ namespace BazaarIsMyHaven
 
         // lunarShop
         public static ConfigEntry<bool> LunarShopSectionEnabled;
+        public static ConfigEntry<bool> LunarShopReplaceLunarBudsWithTerminals;
         public static ConfigEntry<int> LunarShopAmount;
         public static ConfigEntry<int> LunarShopCost;
         public static ConfigEntry<int> LunarShopBuyLimit;
@@ -101,7 +102,9 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> DonateCost;
         public static ConfigEntry<int> DonateRewardLimit;
         public static ConfigEntry<float> DonateRewardNormalWeight;
+        public static ConfigEntry<string> DonateRewardNormalList;
         public static ConfigEntry<float> DonateRewardEliteWeight;
+        public static ConfigEntry<string> DonateRewardEliteList;
         public static ConfigEntry<float> DonateRewardPeculiarWeight;
         public static ConfigEntry<string> DonateRewardPeculiarList;
 
@@ -156,29 +159,30 @@ namespace BazaarIsMyHaven
             EquipmentAmount = config.Bind("05 Equipment", "Amount", 3, "Number of Equipment Terminals (max 3 normally, 5 if replacing Lunar Seers).");
             EquipmentReplaceLunarSeersWithEquipment = config.Bind("05 Equipment", "ReplaceLunarSeersWithEquipment", false, "Replaces Lunar Seers with Equipment Terminals (increases equipment max to 5). Makes the Lunar Seer section irrelevant.");
             EquipmentInstancedPurchases = config.Bind("05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
-            EquipmentCost = config.Bind("05 Equipment", "Cost", 0, "Monetary cost for equipment purchases.");
+            EquipmentCost = config.Bind("05 Equipment", "Cost", 0, "Monetary cost for equipment purchases."); EquipmentCost.Value = Math.Abs(EquipmentCost.Value);
             EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground.");
             if (EquipmentAmount.Value > 3 && !EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentAmount.Value = 3;
             if (EquipmentAmount.Value > 5 && EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentAmount.Value = 5;
 
             // 06 LunarShop
             LunarShopSectionEnabled = config.Bind("06 LunarShop", "SectionEnabled", true, "Enables or disables the Lunar Shop section.");
-            LunarShopAmount = config.Bind("06 LunarShop", "Amount", 5, "Number of Lunar Shop Terminals (max 20). -1 = Vanilla Behavior (5 Lunar Buds)."); if (LunarShopAmount.Value > 20) LunarShopAmount.Value = 20;
+            LunarShopReplaceLunarBudsWithTerminals = config.Bind("06 LunarShop", "ReplaceLunarBudsWithTerminals", true, "Required so that Amount works. Otherwise it will always be 5 Lunar Buds.");
+            LunarShopAmount = config.Bind("06 LunarShop", "Amount", 5, "Number of Lunar Shop Terminals (max 20)."); if (LunarShopAmount.Value > 20) LunarShopAmount.Value = 20;
             LunarShopCost = config.Bind("06 LunarShop", "Cost", 1, "Lunar coin cost per Lunar Shop Terminal or Lunar Bud use."); LunarShopCost.Value = Math.Abs(LunarShopCost.Value);
-            LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar."); LunarShopBuyLimit.Value = Math.Abs(LunarShopBuyLimit.Value);
+            LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar. -1 = Unlimited."); LunarShopBuyLimit.Value = Math.Abs(LunarShopBuyLimit.Value);
             LunarShopStaticItems = config.Bind("06 LunarShop", "StaticItems", false, "Uses fixed/static items instead of randomized rolls.");
             var items = "LunarPrimaryReplacement, LunarSecondaryReplacement, LunarSpecialReplacement, AutoCastEquipment, LunarDagger, HalfSpeedDoubleHealth, LunarSun, LunarBadLuck, LunarBadLuck, LunarBadLuck, ShieldOnly, ShieldOnly, ShieldOnly, HalfAttackSpeedHalfCooldowns, HalfAttackSpeedHalfCooldowns, RandomDamageZone, Tonic";
-            var itemTiersString = "Tier1, Tier2, Tier3, Lunar, Boss, VoidTier1, VoidTier2, VoidTier3, VoidBoss";
-            LunarShopItemList = config.Bind("06 LunarShop", "ItemList", items, $"Comma-separated list of items available in Lunar Shop. Must use internal names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/) or item tier keywords ({itemTiersString}).");
+            var itemTiersString = "Tier1, Tier2, Tier3, Lunar, Boss, Void, VoidTier1, VoidTier2, VoidTier3, VoidBoss";
+            LunarShopItemList = config.Bind("06 LunarShop", "ItemList", "Lunar", $"Comma-separated list of items available in Lunar Shop. Must use internal names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/) or item tier keywords ({itemTiersString}).\nExample: {items}");
             LunarShopInstancedPurchases = config.Bind("06 LunarShop", "InstancedPurchases", true, "Each player can buy independently from Lunar Shop.");
             LunarShopBuyToInventory = config.Bind("06 LunarShop", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
 
             // 07 LunarRecycler
             LunarRecyclerSectionEnabled = config.Bind("07 LunarRecycler", "SectionEnabled", true, "Enables or disables the Lunar Recycler section.");
             LunarRecyclerAvailable = config.Bind("07 LunarRecycler", "Available", true, "If enabled, a Lunar Recycler is available in the Bazaar. Otherwise it will get removed.");
-            LunarRecyclerRerollLimit = config.Bind("07 LunarRecycler", "RerollLimit", 3, "Limit the amount of rerolls allowed per visit to the Bazaar.");
-            LunarRecyclerCost = config.Bind("07 LunarRecycler", "Cost", 1, "Initial lunar coin cost to reroll.");
-            LunarRecyclerCostMultiplier = config.Bind("07 LunarRecycler", "CostMultiplier", 2, "Cost multiplier applied after each reroll use.");
+            LunarRecyclerRerollLimit = config.Bind("07 LunarRecycler", "RerollLimit", 3, "Limit the amount of rerolls allowed per visit to the Bazaar. -1 = Unlimited.");
+            LunarRecyclerCost = config.Bind("07 LunarRecycler", "Cost", 1, "Initial lunar coin cost to reroll."); LunarRecyclerCost.Value = Math.Abs(LunarRecyclerCost.Value);
+            LunarRecyclerCostMultiplier = config.Bind("07 LunarRecycler", "CostMultiplier", 2, "Cost multiplier applied after each reroll use."); LunarRecyclerCostMultiplier.Value = Math.Abs(LunarRecyclerCostMultiplier.Value);
 
             // 08 CleansingPool
             CleansingPoolSectionEnabled = config.Bind("08 CleansingPool", "SectionEnabled", true, "Enables or disables the Cleansing Pool section.");
@@ -187,22 +191,24 @@ namespace BazaarIsMyHaven
             // 09 LunarSeer
             LunarSeerSectionEnabled = config.Bind("09 LunarSeer", "SectionEnabled", true, "Enables or disables the Lunar Seer Station section.");
             LunarSeerAvailable = config.Bind("09 LunarSeer", "Available", true, "If enabled, Seer Stations appear in the Bazaar.");
-            LunarSeerCost = config.Bind("09 LunarSeer", "Cost", 3, "Lunar coin cost for using Seer Stations.");
+            LunarSeerCost = config.Bind("09 LunarSeer", "Cost", 3, "Lunar coin cost for using Seer Stations."); LunarSeerCost.Value = Math.Abs(LunarSeerCost.Value);
 
             // 10 ShrineOfOrder
-            ShrineOfOrderSectionEnabled = config.Bind("10 ShrineOfOrder", "SectionEnabled", true, "Enables or disables the Shrine of Order section.");
-            ShrineOfOrderUseLimit = config.Bind("10 ShrineOfOrder", "UseLimit", 99, "Limit the amount of Shrine of Order uses per visit to the Bazaar.");
-            ShrineOfOrderCost = config.Bind("10 ShrineOfOrder", "Cost", 1, "Initial lunar coin cost for Shrine of Order.");
-            ShrineOfOrderCostMultiplier = config.Bind("10 ShrineOfOrder", "CostMultiplier", 1, "Cost multiplier applied after each Shrine of Order use.");
+            ShrineOfOrderSectionEnabled = config.Bind("10 ShrineOfOrder", "SectionEnabled", true, "Enables or disables the Shrine of Order section. Enabling spawns a Shrine of Order near the Newt.");
+            ShrineOfOrderUseLimit = config.Bind("10 ShrineOfOrder", "UseLimit", -1, "Limit the amount of Shrine of Order uses per visit to the Bazaar. -1 = Unlimited."); ShrineOfOrderUseLimit.Value = Math.Abs(ShrineOfOrderUseLimit.Value);
+            ShrineOfOrderCost = config.Bind("10 ShrineOfOrder", "Cost", 1, "Initial lunar coin cost for Shrine of Order."); ShrineOfOrderCost.Value = Math.Abs(ShrineOfOrderCost.Value);
+            ShrineOfOrderCostMultiplier = config.Bind("10 ShrineOfOrder", "CostMultiplier", 1, "Cost multiplier applied after each Shrine of Order use."); ShrineOfOrderCostMultiplier.Value = Math.Abs(ShrineOfOrderCostMultiplier.Value);
 
             // 11 Donation
-            DonateSectionEnabled = config.Bind("11 Donate", "SectionEnabled", true, "Enables or disables the Donate section.");
-            DonateRewardLimit = config.Bind("11 Donate", "RewardLimit", 3, "Limit the number of rewards each player can get per visit to the Bazaar. One reward is given every 10 donations.");
-            DonateCost = config.Bind("11 Donate", "Cost", 2, "Lunar coin cost per donation. 10 donations need to be done to get a reward.");
+            DonateSectionEnabled = config.Bind("11 Donate", "SectionEnabled", true, "Enables or disables the Donate section. Enabling spawns a Donation Altar near the Newt.");
+            DonateRewardLimit = config.Bind("11 Donate", "RewardLimit", 3, "Limit the number of rewards each player can get per visit to the Bazaar. One reward is given every 10 donations."); DonateRewardLimit.Value = Math.Abs(DonateRewardLimit.Value);
+            DonateCost = config.Bind("11 Donate", "Cost", 2, "Lunar coin cost per donation. 10 donations need to be done to get a reward."); DonateCost.Value = Math.Abs(DonateCost.Value);
             DonateRewardNormalWeight = config.Bind("11 Donate", "RewardNormalWeight", 0.5f, "Weight for regular item rewards (white, green, red items)."); DonateRewardNormalWeight.Value = Math.Abs(DonateRewardNormalWeight.Value);
+            DonateRewardNormalList = config.Bind("11 Donate", "RewardNormalList", "Tier1,Tier1,Tier1,Tier1,Tier1,Tier2,Tier2,Tier2,Tier3,Boss,Void", "Normal item reward pool. Comma-separated list in the format itemkeyword=amount for rewarding multiple of the item, or just the itemkeyword for single reward (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/) or item tier keywords ({itemTiersString}).");
             DonateRewardEliteWeight = config.Bind("11 Donate", "RewardEliteWeight", 0.25f, "Weight for elite equipment rewards."); DonateRewardEliteWeight.Value = Math.Abs(DonateRewardEliteWeight.Value);
+            DonateRewardEliteList = config.Bind("11 Donate", "RewardEliteList", "EliteEarthEquipment,EliteFireEquipment,EliteHauntedEquipment,EliteIceEquipment,EliteLightningEquipment,ElitePoisonEquipment,EliteVoidEquipment,EliteLunarEquipment,EliteAurelioniteEquipment,EliteBeadEquipment,LunarPortalOnUse", "Elite equipment reward pool. Comma-separated list in the format itemkeyword=amount for rewarding multiple of the item, or just the itemkeyword for single reward (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/) or item tier keywords ({itemTiersString}).");
             DonateRewardPeculiarWeight = config.Bind("11 Donate", "RewardPeculiarWeight", 0.25f, "Weight for odd or peculiar items (some unobtainable in normal gameplay)."); DonateRewardPeculiarWeight.Value = Math.Abs(DonateRewardPeculiarWeight.Value);
-            DonateRewardPeculiarList = config.Bind("11 Donate", "RewardPeculiarList", "BoostAttackSpeed,BoostDamage,BoostEquipmentRecharge,BoostHp,BurnNearby,CrippleWardOnLevel,EmpowerAlways,Ghost,Incubator,LevelBonus,WarCryOnCombat,TempestOnKill", "Comma-separated peculiar items available as prayer rewards.");
+            DonateRewardPeculiarList = config.Bind("11 Donate", "RewardPeculiarList", "BoostAttackSpeed=10,BoostDamage=10,BoostEquipmentRecharge=10,BoostHp=10,BurnNearby,CrippleWardOnLevel=10,EmpowerAlways,Ghost,Incubator=3,LevelBonus=10,WarCryOnCombat=10,TempestOnKill=10", "Peculiar item reward pool. Comma-separated list in the format itemkeyword=amount for rewarding multiple of the item, or just the itemkeyword for single reward (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/) or item tier keywords ({itemTiersString}).");
 
             if (ModCompatibilityInLobbyConfig.enabled)
             {
