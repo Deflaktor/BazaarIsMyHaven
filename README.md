@@ -78,9 +78,9 @@ These reward lists can be fully customized. See the below section *Item Keyword 
 
 Examples:
 
-`RewardNormalList = dtITDefaultWave=5`: The reward will be 5 random items of the droptable of void potentials from the Simulacrum mode.
+`RewardList1 = dtITDefaultWave=5`: The reward will be 5 random items of the droptable of void potentials from the Simulacrum mode.
 
-`RewardNormalList = dtChest1=5, dtChest2=2`: The reward will be either 5 random items of the small chest droptable or 2 random items of the large chest droptable.
+`RewardList1 = dtChest1=5, dtChest2=2`: The reward will be either 5 random items of the small chest droptable or 2 random items of the large chest droptable.
 
 ## Item Keywords
 

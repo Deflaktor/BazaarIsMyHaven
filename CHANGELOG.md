@@ -1,3 +1,7 @@
+# 2.0.1
+
+- Fix readme.md
+
 # 2.0.0
 
 - Rename RewardNormalList->RewardList1
