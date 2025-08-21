@@ -17,15 +17,15 @@
 		"NEWT_ANGRY_WELCOME_WORD_3": "<style=cWorldEvent><size=24px>{0}{1}：废物，你不配来这里。</size></style>",
 		"NEWT_ANGRY_WELCOME_WORD_4": "<style=cWorldEvent><size=24px>{0}{1}：想知道我怎么死的吗？就是你们干的。</size></style>",
 		"NEWT_ANGRY_WELCOME_WORD_5": "<style=cWorldEvent><size=24px>{0}{1}：真有脸来。</size></style>",
-		"NEWT_ATTACKED_WORD_1": "<style=cWorldEvent>{0}：别打我。</style>",
-		"NEWT_ATTACKED_WORD_2": "<style=cWorldEvent>{0}：用力点，没吃饭吗？</style>",
-		"NEWT_ATTACKED_WORD_3": "<style=cWorldEvent>{0}：按键盘Alt + F4获得最新Steam游戏，最低250%折起。</style>",
-		"NEWT_ATTACKED_WORD_4": "<style=cWorldEvent>{0}：做人锕，最重要是开心。</style>",
-		"NEWT_ATTACKED_WORD_5": "<style=cWorldEvent>{0}：作业，工作找到了吗？搁着玩游戏。</style>",
-		"NEWT_ATTACKED_WORD_6": "<style=cWorldEvent>{0}：你有车？有房？有存款？有对象？</style>",
-		"NEWT_ATTACKED_WORD_7": "<style=cWorldEvent>{0}：如果我死了，请把我的骨灰带在身边，遇到危险就撒出去，让我再最后保护你一次。</style>",
-		"NEWT_ATTACKED_WORD_8": "<style=cWorldEvent>{0}：如果我死了会有人伤心吗？</style>",
-		"NEWT_ATTACKED_WORD_9": "<style=cWorldEvent>{0}：怎么样做才可以死了让父母朋友不伤心? - 知乎</style>",
-		"NEWT_ATTACKED_WORD_10": "<style=cWorldEvent>{0}：一天内哪些时间自杀成功率最高？熬夜玩游戏。</style>"
+		"NEWT_ATTACKED_WORD_1": "<style=cWorldEvent>{0}{1}：别打我。</style>",
+		"NEWT_ATTACKED_WORD_2": "<style=cWorldEvent>{0}{1}：用力点，没吃饭吗？</style>",
+		"NEWT_ATTACKED_WORD_3": "<style=cWorldEvent>{0}{1}：按键盘Alt + F4获得最新Steam游戏，最低250%折起。</style>",
+		"NEWT_ATTACKED_WORD_4": "<style=cWorldEvent>{0}{1}：做人锕，最重要是开心。</style>",
+		"NEWT_ATTACKED_WORD_5": "<style=cWorldEvent>{0}{1}：作业，工作找到了吗？搁着玩游戏。</style>",
+		"NEWT_ATTACKED_WORD_6": "<style=cWorldEvent>{0}{1}：你有车？有房？有存款？有对象？</style>",
+		"NEWT_ATTACKED_WORD_7": "<style=cWorldEvent>{0}{1}：如果我死了，请把我的骨灰带在身边，遇到危险就撒出去，让我再最后保护你一次。</style>",
+		"NEWT_ATTACKED_WORD_8": "<style=cWorldEvent>{0}{1}：如果我死了会有人伤心吗？</style>",
+		"NEWT_ATTACKED_WORD_9": "<style=cWorldEvent>{0}{1}：怎么样做才可以死了让父母朋友不伤心? - 知乎</style>",
+		"NEWT_ATTACKED_WORD_10": "<style=cWorldEvent>{0}{1}：一天内哪些时间自杀成功率最高？熬夜玩游戏。</style>"
 	} 
 }

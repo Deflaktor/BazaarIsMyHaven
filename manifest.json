@@ -1,8 +1,8 @@
 {
     "name": "BazaarIsMyHaven",
-    "version_number": "1.0.0",
+    "version_number": "1.0.1",
     "website_url": "https://github.com/Deflaktor/BazaarIsMyHaven",
-    "description": "Based on the excellent BazaarIsMyHaven mod. Adds lots of configurable features to the Bazaar: Printers, Scrappers, Cauldrons, Equipment Terminals and more.",
+    "description": "Adds lots of configurable features to the Bazaar: Printers, Scrappers, Cauldrons, Equipment Terminals and more. Fork of BazaarIsMyHome.",
     "dependencies": [
         "bbepis-BepInExPack-5.4.2121",
 		"RiskofThunder-HookGenPatcher-1.2.9"
