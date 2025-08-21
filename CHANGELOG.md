@@ -1,5 +1,8 @@
-# 1.1.0
+# 2.0.0
 
+- Rename RewardNormalList->RewardList1
+- Rename RewardEliteList->RewardList2
+- Rename RewardPeculiarList->RewardList3
 - Add feature to replace equipment with elite aspects
 - Fix link in readme to the original mod for real
 

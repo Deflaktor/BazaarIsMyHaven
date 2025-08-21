@@ -100,24 +100,24 @@ namespace BazaarIsMyHaven
 
         private void GiftReward(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Inventory inventory)
         {
-            float w1 = ModConfig.DonateRewardNormalWeight.Value, w2 = ModConfig.DonateRewardEliteWeight.Value, w3 = ModConfig.DonateRewardPeculiarWeight.Value;
+            float w1 = ModConfig.DonateRewardList1Weight.Value, w2 = ModConfig.DonateRewardList2Weight.Value, w3 = ModConfig.DonateRewardList3Weight.Value;
             double random = RNG.NextDouble() * (w1 + w2 + w3);
             int tier = 0;
             PickupIndex[] rewards = null;
             if (random <= w1)
             {
                 tier = 1;
-                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardNormalList.Value);
+                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList1.Value);
             }
             else if (random <= w1 + w2)
             {
                 tier = 2;
-                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardEliteList.Value);
+                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList2.Value);
             }
             else
             {
                 tier = 3;
-                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardPeculiarList.Value);
+                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList3.Value);
             }
 
             if (rewards == null)
