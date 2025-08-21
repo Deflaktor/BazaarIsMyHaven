@@ -183,9 +183,9 @@ namespace BazaarIsMyHaven
         }
         private void GlobalEventManager_OnHitAll(On.RoR2.GlobalEventManager.orig_OnHitAll orig, GlobalEventManager self, DamageInfo damageInfo, GameObject hitObject)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.NewtTrashTalk.Value && IsCurrentMapInBazaar() && NetworkServer.active)
+            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.NewtTrashTalk.Value && IsCurrentMapInBazaar() && NetworkServer.active && hitObject != null)
             {
-                if (hitObject.name.StartsWith("ShopkeeperBody") && damageInfo.attacker)
+                if (hitObject.name.StartsWith("ShopkeeperBody") && damageInfo.attacker != null)
                 {
                     float damageAsPercentageOfHealth = damageInfo.damage / hitObject.GetComponent<HealthComponent>().fullCombinedHealth;
                     if(Random.NextDouble() < damageAsPercentageOfHealth / 2f) {
