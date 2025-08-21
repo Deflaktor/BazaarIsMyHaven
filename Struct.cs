@@ -34,18 +34,19 @@ namespace BazaarIsMyHaven
         public int RewardCount { get; set; }
         public int LunarShopUseCount { get; set; }
     }
-    public class SpecialItemStruct
+
+    public class ItemRewardStruct
     {
-        public SpecialItemStruct(string name, int count, bool isUse = false)
+        public ItemRewardStruct(PickupIndex pickup, int count, bool isUsed = false)
         {
-            Name = name;
+            Pickup = pickup;
             Count = count;
-            IsUse = isUse;
+            IsUsed = isUsed;
         }
 
-        public string Name { get; set; }
+        public PickupIndex Pickup { get; set; }
         public int Count { get; set; }
-        public bool IsUse { get; set; }
+        public bool IsUsed { get; set; }
     }
     public class ShopKeeper
     {

@@ -53,6 +53,7 @@ namespace BazaarIsMyHaven
             Log.Init(Logger);
             ModConfig.InitConfig(Config);
             Tokens.RegisterLanguageTokens();
+            BazaarBase.InitBazaarBaseDropTables();
 
             bazaarMods.Add(new BazaarCauldron());
             bazaarMods.Add(new BazaarPrinter());
@@ -259,7 +260,6 @@ namespace BazaarIsMyHaven
                     break;
                 case ShopKeeper.DeathState.Hostile:
                     body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Thorns")), 1);
-                    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BurnNearby")), 1);
                     break;
                 default:
                     break;

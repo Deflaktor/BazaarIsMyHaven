@@ -45,6 +45,17 @@ namespace BazaarIsMyHaven
             On.RoR2.PurchaseInteraction.ScaleCost += PurchaseInteraction_ScaleCost;
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
             On.RoR2.ShopTerminalBehavior.DropPickup += ShopTerminalBehavior_DropPickup;
+            On.RoR2.ShopTerminalBehavior.GenerateNewPickupServer += ShopTerminalBehavior_GenerateNewPickupServer;
+        }
+
+        private void ShopTerminalBehavior_GenerateNewPickupServer(On.RoR2.ShopTerminalBehavior.orig_GenerateNewPickupServer orig, ShopTerminalBehavior self)
+        {
+            if (self.name.StartsWith("LunarShopTerminal"))
+            {
+                var dropTable = self.dropTable;
+                Log.LogDebug("GenerateNewPickupServer");
+            }
+            orig(self);
         }
 
         public override void SetupBazaar()
@@ -102,7 +113,7 @@ namespace BazaarIsMyHaven
 
                     var usesLeft = ModConfig.LunarShopBuyLimit.Value - playerStruct.LunarShopUseCount;
 
-                    if (usesLeft <= 0) {
+                    if (usesLeft <= 0 && ModConfig.LunarShopBuyLimit.Value >= 0) {
                         ChatHelper.LunarShopTerminalUsesLeft(playerCharacterMasterController, usesLeft);
                         return;
                     }
@@ -121,7 +132,7 @@ namespace BazaarIsMyHaven
                     float time = 0f;
                     foreach (PurchaseInteraction interaction in ObjectLunarShopTerminals_Spawn)
                     {
-                        Main.instance.StartCoroutine(DelayEffect(interaction, time, true));
+                        Main.instance.StartCoroutine(DelayRerollEffect(interaction, time, true));
                         time = time + 0.1f;
                     }
                 }
@@ -142,12 +153,14 @@ namespace BazaarIsMyHaven
                         if (!whichStallsHaveBeenBoughtOnce.TryGetValue(self, out List<PlayerCharacterMasterController> buyers) || !buyers.Contains(playerCharacterMasterController))
                         {
                             playerStruct.LunarShopUseCount++;
-                            var usesLeft = ModConfig.LunarShopBuyLimit.Value - playerStruct.LunarShopUseCount;
-                            ChatHelper.LunarShopTerminalUsesLeft(playerCharacterMasterController, usesLeft);
+                            if (ModConfig.LunarShopBuyLimit.Value >= 0) {
+                                var usesLeft = ModConfig.LunarShopBuyLimit.Value - playerStruct.LunarShopUseCount;
+                                ChatHelper.LunarShopTerminalUsesLeft(playerCharacterMasterController, usesLeft);
+                            }
                             whichStallsHaveBeenBoughtOnce[self].Add(playerCharacterMasterController);
                         }
                     }
-                    if (self.name.StartsWith("LunarRecycler"))
+                    if (self.name.StartsWith("LunarRecycler") && ModConfig.LunarRecyclerRerollLimit.Value >= 0)
                     {
                         lunarRecyclerRerolledCount++;
                         var usesLeft = ModConfig.LunarRecyclerRerollLimit.Value - lunarRecyclerRerolledCount;
@@ -172,7 +185,7 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.EnableMod.Value && ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerAvailable.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
-                if (self.name.StartsWith("LunarRecycler"))
+                if (self.name.StartsWith("LunarRecycler") && ModConfig.LunarRecyclerRerollLimit.Value >= 0)
                 {
                     newAvailable = lunarRecyclerRerolledCount < ModConfig.LunarRecyclerRerollLimit.Value;
                 }
@@ -191,7 +204,7 @@ namespace BazaarIsMyHaven
                         var pickupDef = PickupCatalog.GetPickupDef(self.CurrentPickupIndex());
                         if (pickupDef.itemIndex != ItemIndex.None)
                         {
-                            PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, PickupCatalog.GetPickupDef(self.CurrentPickupIndex()).itemIndex);
+                            PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, pickupDef.itemIndex);
                             currentActivator.master.inventory.GiveItem(pickupDef.itemIndex);
 
                             self.SetHasBeenPurchased(newHasBeenPurchased: true);
@@ -227,7 +240,7 @@ namespace BazaarIsMyHaven
             }
         }
 
-        IEnumerator DelayEffect(PurchaseInteraction lunarShopTerminal, float time, bool spawnEffect)
+        IEnumerator DelayRerollEffect(PurchaseInteraction lunarShopTerminal, float time, bool spawnEffect)
         {
             yield return new WaitForSeconds(time);
 
@@ -240,89 +253,13 @@ namespace BazaarIsMyHaven
         {
             PickupIndex pickupIndex = PickupIndex.none;
 
-            // var index = ObjectLunarShopTerminals_Spawn.IndexOf(lunarShopTerminal);
-            if (!ModConfig.LunarShopItemList.Value.IsNullOrWhiteSpace())
+            if (ModConfig.LunarShopStaticItems.Value)
+                currentLunarShopStaticItemIndex = -1;
+            PickupIndex[] rewards = ResolveItemRewardFromStringList(ModConfig.LunarShopItemList.Value, currentLunarShopStaticItemIndex);
+
+            if (rewards != null)
             {
-                List<string> codes = ModConfig.LunarShopItemList.Value.Split(',').ToList();
-
-                TryAgain:
-
-                if(codes.Count > 0)
-                {
-                    var index = RNG.Next(codes.Count);
-                    if (ModConfig.LunarShopStaticItems.Value)
-                    {
-                        index = currentLunarShopStaticItemIndex % codes.Count;
-                    }
-                    var code = codes[index].Trim();
-
-                    ItemTier itemTier;
-                    var isItemTier = Enum.TryParse(code, out itemTier);
-                    if (isItemTier)
-                    {
-                        switch (itemTier)
-                        {
-                            case ItemTier.Tier1:
-                                pickupIndex = GetRandom(Run.instance.availableTier1DropList, PickupIndex.none);
-                                break;
-                            case ItemTier.Tier2:
-                                pickupIndex = GetRandom(Run.instance.availableTier2DropList, PickupIndex.none);
-                                break;
-                            case ItemTier.Tier3:
-                                pickupIndex = GetRandom(Run.instance.availableTier3DropList, PickupIndex.none);
-                                break;
-                            case ItemTier.Boss:
-                                pickupIndex = GetRandom(Run.instance.availableBossDropList, PickupIndex.none);
-                                break;
-                            case ItemTier.Lunar:
-                                pickupIndex = GetRandom(Run.instance.availableLunarItemDropList, PickupIndex.none);
-                                break;
-                            case ItemTier.VoidTier1:
-                                pickupIndex = GetRandom(Run.instance.availableVoidTier1DropList, PickupIndex.none);
-                                break;
-                            case ItemTier.VoidTier2:
-                                pickupIndex = GetRandom(Run.instance.availableVoidTier2DropList, PickupIndex.none);
-                                break;
-                            case ItemTier.VoidTier3:
-                                pickupIndex = GetRandom(Run.instance.availableVoidTier3DropList, PickupIndex.none);
-                                break;
-                            case ItemTier.VoidBoss:
-                                pickupIndex = GetRandom(Run.instance.availableVoidBossDropList, PickupIndex.none);
-                                break;
-                        }
-                        if (pickupIndex == PickupIndex.none)
-                        {
-                            Log.LogWarning($"LunarShopItemsList: Could not get pickup from item tier: {code}, skipping it.");
-                            codes.RemoveAt(index);
-                            goto TryAgain;
-                        }
-                    }
-                    else
-                    {
-                        ItemIndex itemIndex = ItemCatalog.FindItemIndex(code);
-                        if (itemIndex != ItemIndex.None)
-                        {
-                            pickupIndex = PickupCatalog.FindPickupIndex(itemIndex);
-                        }
-                        else
-                        {
-                            EquipmentIndex equipmentIndex = EquipmentCatalog.FindEquipmentIndex(code);
-                            if (equipmentIndex != EquipmentIndex.None)
-                            {
-                                pickupIndex = PickupCatalog.FindPickupIndex(equipmentIndex);
-                            }
-                            else
-                            {
-                                pickupIndex = PickupIndex.none;
-                                Log.LogError($"LunarShopItemsList: Could not find item name: {code}");
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    pickupIndex = GetRandom(Run.instance.availableLunarCombinedDropList, PickupIndex.none);
-                }
+                pickupIndex = rewards[0];
             }
             else
             {
@@ -402,13 +339,16 @@ namespace BazaarIsMyHaven
         {
             ObjectLunarShopTerminals_Spawn.Clear();
             LunarShopTerminalTotalCount = 0;
-            if (ModConfig.LunarShopAmount.Value >= 0)
+            if (ModConfig.LunarShopReplaceLunarBudsWithTerminals.Value)
             {
-                Main.instance.StartCoroutine(DestroyLunarShopTerminalsDelayed());
+                Main.instance.StartCoroutine(ReplaceLunarBudsWithTerminalsDelayed());
+            } else
+            {
+                Main.instance.StartCoroutine(ProcessLunarBudsDelayed());
             }
         }
 
-        private IEnumerator DestroyLunarShopTerminalsDelayed()
+        private IEnumerator ReplaceLunarBudsWithTerminalsDelayed()
         {
             yield return new WaitForSeconds(1.0f);
             foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
@@ -436,8 +376,38 @@ namespace BazaarIsMyHaven
                 // purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
                 ObjectLunarShopTerminals_Spawn.Add(purchaseInteraction);
                 whichStallsHaveBeenBoughtOnce.Add(purchaseInteraction, new List<PlayerCharacterMasterController>());
-                Main.instance.StartCoroutine(DelayEffect(purchaseInteraction, 0.1f, false));
+                Main.instance.StartCoroutine(DelayRerollEffect(purchaseInteraction, 0.1f, false));
             });
+        }
+
+        private IEnumerator ProcessLunarBudsDelayed()
+        {
+            yield return new WaitForSeconds(1.0f);
+            foreach (GameObject gameObject in UnityEngine.Object.FindObjectsOfType<GameObject>())
+            {
+                if (gameObject.name.StartsWith("LunarShopTerminal") && !gameObject.name.EndsWith("(Clone)"))
+                {
+                    gameObject.name = "LunarShopTerminal";
+                    var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
+                    var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
+                    if (ModConfig.LunarShopInstancedPurchases.Value)
+                    {
+                        var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
+                        instancedPurchase.original.available = purchaseInteraction.available;
+                        instancedPurchase.original.pickupIndex = shopTerminalBehavior.pickupIndex;
+                        instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
+                    }
+                    // purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
+                    // ObjectLunarShopTerminals_Spawn.Add(purchaseInteraction);
+                    whichStallsHaveBeenBoughtOnce.Add(purchaseInteraction, new List<PlayerCharacterMasterController>());
+                    Main.instance.StartCoroutine(DelayRerollEffect(purchaseInteraction, 0.1f, false));
+                }
+                //if (gameObject.name.StartsWith("LunarShopTerminal"))
+                //{
+                //    var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
+                //    purchaseInteraction.onPurchase.RemoveAllListeners();
+                //}
+            }
         }
     }
 }
