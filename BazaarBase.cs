@@ -73,6 +73,42 @@ namespace BazaarIsMyHaven
             dropTables.Add("dtCommandChest", Addressables.LoadAssetAsync<BasicPickupDropTable>("RoR2/CommandChest/dtCommandChest.asset"));
         }
 
+        public static void WriteDropTablesMarkdownFile()
+        {
+#if DEBUG
+            string filePath = $"{Main.PluginName}_droptables.md";
+
+            // This will write it next to the RiskOfRain2.exe file
+            using (System.IO.StreamWriter writer = new System.IO.StreamWriter(filePath))
+            {
+                writer.WriteLine("|                                 | canDropBeReplaced | requiredItemTags | bannedItemTags | tier1Weight | tier2Weight | tier3Weight | bossWeight | lunarEquipmentWeight | lunarItemWeight | lunarCombinedWeight | equipmentWeight | voidTier1Weight | voidTier2Weight | voidTier3Weight | voidBossWeight |");
+                writer.WriteLine("|---------------------------------|-------------------|------------------|----------------|-------------|-------------|-------------|------------|----------------------|-----------------|---------------------|-----------------|-----------------|-----------------|-----------------|----------------|");
+                foreach (var entry in dropTables)
+                {
+                    var dropTableName = entry.Key;
+                    var dropTable = entry.Value.WaitForCompletion();
+                    string canDropBeReplaced = dropTable.canDropBeReplaced.ToString();
+                    string requiredItemTags = string.Join(", ", dropTable.requiredItemTags.Select(e => e.ToString()));
+                    string bannedItemTags = string.Join(", ", dropTable.bannedItemTags.Select(e => e.ToString()));
+                    string tier1Weight = dropTable.tier1Weight.ToString();
+                    string tier2Weight = dropTable.tier2Weight.ToString();
+                    string tier3Weight = dropTable.tier3Weight.ToString();
+                    string bossWeight = dropTable.bossWeight.ToString();
+                    string lunarEquipmentWeight = dropTable.lunarEquipmentWeight.ToString();
+                    string lunarItemWeight = dropTable.lunarItemWeight.ToString();
+                    string lunarCombinedWeight = dropTable.lunarCombinedWeight.ToString();
+                    string equipmentWeight = dropTable.equipmentWeight.ToString();
+                    string voidTier1Weight = dropTable.voidTier1Weight.ToString();
+                    string voidTier2Weight = dropTable.voidTier2Weight.ToString();
+                    string voidTier3Weight = dropTable.voidTier3Weight.ToString();
+                    string voidBossWeight = dropTable.voidBossWeight.ToString();
+
+                    writer.WriteLine($"| {dropTableName} | {canDropBeReplaced} | {requiredItemTags} | {bannedItemTags} | {tier1Weight} | {tier2Weight} | {tier3Weight} | {bossWeight} | {lunarEquipmentWeight} | {lunarItemWeight} | {lunarCombinedWeight} | {equipmentWeight} | {voidTier1Weight} | {voidTier2Weight} | {voidTier3Weight} | {voidBossWeight} |");
+                }
+            }
+#endif
+        }
+
         public abstract void Init();
         public abstract void Hook();
         public abstract void SetupBazaar();
