@@ -18,9 +18,7 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject>[] LunarCauldronsCode;
         Dictionary<int, SpawnCardStruct> DicCauldrons = new Dictionary<int, SpawnCardStruct>();
 
-
-
-        public override void Init()
+        public override void Preload()
         {
             lunarCauldronWhiteToGreen = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, WhiteToGreen.prefab");
             lunarCauldronGreenToRed = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, GreenToRed Variant.prefab");
