@@ -1,4 +1,4 @@
-﻿using RoR2;
+using RoR2;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -100,8 +100,11 @@ namespace BazaarIsMyHaven
 
         private void GiftReward(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Inventory inventory)
         {
-            float w1 = ModConfig.DonateRewardList1Weight.Value, w2 = ModConfig.DonateRewardList2Weight.Value, w3 = ModConfig.DonateRewardList3Weight.Value;
-            double random = RNG.NextDouble() * (w1 + w2 + w3);
+            float w1 = ModConfig.DonateRewardList1Weight.Value;
+            float w2 = ModConfig.DonateRewardList2Weight.Value;
+            float w3 = ModConfig.DonateRewardList3Weight.Value;
+            float w4 = ModConfig.DonateRewardListCharacterWeight.Value;
+            double random = RNG.NextDouble() * (w1 + w2 + w3 + w4);
             int tier = 0;
             PickupIndex[] rewards = null;
             if (random <= w1)
@@ -114,10 +117,16 @@ namespace BazaarIsMyHaven
                 tier = 2;
                 rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList2.Value);
             }
-            else
+            else if (random <= w1 + w2 + w3)
             {
                 tier = 3;
                 rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList3.Value);
+            }
+            else
+            {
+                tier = 4;
+                var rewardList = ModConfig.DonateRewardListCharacters.GetValueOrDefault(characterBody.bodyIndex, ModConfig.DonateRewardListCharacterDefault).Value;
+                rewards = ResolveItemRewardFromStringList(rewardList);
             }
 
             if (rewards == null)
@@ -158,6 +167,9 @@ namespace BazaarIsMyHaven
                     break;
                 case 3:
                     ChatHelper.ThanksTipPeculiar(networkUser, characterBody.master.playerCharacterMasterController, rewards);
+                    break;
+                case 4:
+                    ChatHelper.ThanksTipCharacter(networkUser, characterBody.master.playerCharacterMasterController, rewards);
                     break;
             }
 

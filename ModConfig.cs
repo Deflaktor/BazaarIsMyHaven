@@ -1,5 +1,9 @@
+using BepInEx;
 using BepInEx.Configuration;
+using RoR2;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace BazaarIsMyHaven
 {
@@ -94,7 +98,7 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> ShrineOfOrderCost;
         public static ConfigEntry<int> ShrineOfOrderCostMultiplier;
 
-        // prayer
+        // donate
         public static ConfigEntry<bool> DonateSectionEnabled;
         public static ConfigEntry<int> DonateCost;
         public static ConfigEntry<int> DonateRewardLimit;
@@ -104,6 +108,10 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<string> DonateRewardList2;
         public static ConfigEntry<float> DonateRewardList3Weight;
         public static ConfigEntry<string> DonateRewardList3;
+        public static ConfigEntry<string> DonateRewardListAvailableCharacters;
+        public static ConfigEntry<float> DonateRewardListCharacterWeight;
+        public static ConfigEntry<string> DonateRewardListCharacterDefault;
+        public static Dictionary<BodyIndex, ConfigEntry<string>> DonateRewardListCharacters = new Dictionary<BodyIndex, ConfigEntry<string>>();
 
         public static void InitConfig(ConfigFile config)
         {
@@ -156,7 +164,7 @@ namespace BazaarIsMyHaven
             EquipmentAmount = config.Bind("05 Equipment", "Amount", 3, "Number of Equipment Terminals (max 3 normally, 5 if replacing Lunar Seers).");
             EquipmentReplaceLunarSeersWithEquipment = config.Bind("05 Equipment", "ReplaceLunarSeersWithEquipment", false, "Replaces Lunar Seers with Equipment Terminals (increases equipment max to 5). Makes the Lunar Seer section irrelevant.");
             EquipmentReplaceWithEliteChance = config.Bind("05 Equipment", "ReplaceWithEliteChance", 0.15f, "Chance for replacing the equipment with an elite equipment."); EquipmentReplaceWithEliteChance.Value = Math.Abs(EquipmentReplaceWithEliteChance.Value);
-            EquipmentReplaceWithEliteList = config.Bind("05 Equipment", "ReplaceWithEliteList", "EliteEarthEquipment, EliteFireEquipment, EliteIceEquipment, EliteLunarEquipment, EliteLightningEquipment", "With which elite equipments to replace. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)\\n\"");
+            EquipmentReplaceWithEliteList = config.Bind("05 Equipment", "ReplaceWithEliteList", "EliteEarthEquipment, EliteFireEquipment, EliteIceEquipment, EliteLunarEquipment, EliteLightningEquipment", "With which elite equipments to replace. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)");
             EquipmentInstancedPurchases = config.Bind("05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
             EquipmentCost = config.Bind("05 Equipment", "Cost", 0, "Monetary cost for equipment purchases."); EquipmentCost.Value = Math.Abs(EquipmentCost.Value);
             EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground.");
@@ -203,11 +211,93 @@ namespace BazaarIsMyHaven
             DonateRewardLimit = config.Bind("11 Donate", "RewardLimit", 3, "Limit the number of rewards each player can get per visit to the Bazaar. One reward is given every 10 donations."); DonateRewardLimit.Value = Math.Abs(DonateRewardLimit.Value);
             DonateCost = config.Bind("11 Donate", "Cost", 2, "Lunar coin cost per donation. 10 donations need to be done to get a reward."); DonateCost.Value = Math.Abs(DonateCost.Value);
             DonateRewardList1Weight = config.Bind("11 Donate", "RewardList1Weight", 0.85f, "Weight for choosing RewardList1."); DonateRewardList1Weight.Value = Math.Abs(DonateRewardList1Weight.Value);
-            DonateRewardList1 = config.Bind("11 Donate", "RewardList1", "dtChest1=4, Tier2=2", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)\n");
+            DonateRewardList1 = config.Bind("11 Donate", "RewardList1", "dtChest1=4, Tier2=2", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)");
             DonateRewardList2Weight = config.Bind("11 Donate", "RewardList2Weight", 0.15f, "Weight for choosing RewardList2."); DonateRewardList2Weight.Value = Math.Abs(DonateRewardList2Weight.Value);
-            DonateRewardList2 = config.Bind("11 Donate", "RewardList2", "Tier3, Boss", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)\\n\"");
+            DonateRewardList2 = config.Bind("11 Donate", "RewardList2", "Tier3, Boss", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)");
             DonateRewardList3Weight = config.Bind("11 Donate", "RewardList3Weight", 0f, "Weight for choosing RewardList3."); DonateRewardList3Weight.Value = Math.Abs(DonateRewardList3Weight.Value);
-            DonateRewardList3 = config.Bind("11 Donate", "RewardList3", "BoostAttackSpeed=10, BoostDamage=10, BoostEquipmentRecharge=10, BoostHp=10, BurnNearby, CrippleWardOnLevel=10, EmpowerAlways, Ghost, Incubator=3, LevelBonus=10, WarCryOnCombat=10, TempestOnKill=10", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)\\n\"");
+            DonateRewardList3 = config.Bind("11 Donate", "RewardList3", "BoostAttackSpeed=10, BoostDamage=10, BoostEquipmentRecharge=10, BoostHp=10, BurnNearby, CrippleWardOnLevel=10, EmpowerAlways, Ghost, Incubator=3, LevelBonus=10, WarCryOnCombat=10, TempestOnKill=10", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)");
+
+            DonateRewardListCharacterWeight = config.Bind("11 Donate", "RewardListCharacterWeight", 0f, "Weight for choosing the reward list of the respective character."); DonateRewardListCharacterWeight.Value = Math.Abs(DonateRewardListCharacterWeight.Value);
+            DonateRewardListCharacterDefault = config.Bind("11 Donate", "RewardListCharacterDefault", "ScrapGreen=3", "Item reward pool if the donating character does not have a reward list specified. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)");
+            string[] survivorNames = SurvivorCatalog.allSurvivorDefs.Select(survivor => survivor.cachedName).ToArray();
+            // string[] bodyNames = BodyCatalog.allBodyPrefabs.Select(prefab => prefab.name).ToArray();
+            DonateRewardListAvailableCharacters = config.Bind("11 Donate", "RewardListAvailableCharacters", string.Join(", ", survivorNames), "Available special reward lists for certain characters. Applies only if the donator is a character of the respective type. Comma-separated list of characters (see README.md)");
+            
+            DonateRewardListCharacters.Clear();
+            string[] availableCharacters = DonateRewardListAvailableCharacters.Value.Split(",");
+            foreach (string availableCharacter in availableCharacters)
+            {
+                var name = availableCharacter.Trim();
+                if (name.IsNullOrWhiteSpace())
+                    continue;
+                BodyIndex bodyIndex = CatalogHelper.FindBody(name);
+                if (bodyIndex == BodyIndex.None)
+                {
+                    Log.LogError($"RewardListAvailableCharacters: Could not find body or survivor: {name}");
+                    continue;
+                }
+                string defaultReward;
+                switch (name)
+                {
+                    case "Bandit2":
+                        defaultReward = "BleedOnHitAndExplode";
+                        break;
+                    case "Captain":
+                        defaultReward = "FreeChest";
+                        break;
+                    case "Commando":
+                        defaultReward = "StickyBomb=5";
+                        break;
+                    case "Croco":
+                        defaultReward = "TriggerEnemyDebuffs";
+                        break;
+                    case "Engi":
+                        defaultReward = "HealingPotion";
+                        break;
+                    case "Heretic":
+                        defaultReward = "HealWhileSafe";
+                        break;
+                    case "Huntress":
+                        defaultReward = "AttackSpeedOnCrit=2";
+                        break;
+                    case "Loader":
+                        defaultReward = "IceRing=2";
+                        break;
+                    case "Mage":
+                        defaultReward = "StrengthenBurn";
+                        break;
+                    case "Merc":
+                        defaultReward = "ElusiveAntlers=5";
+                        break;
+                    case "Toolbot":
+                        defaultReward = "SecondarySkillMagazine=5";
+                        break;
+                    case "Treebot":
+                        defaultReward = "Medkit=3";
+                        break;
+                    case "Railgunner":
+                        defaultReward = "CritDamage";
+                        break;
+                    case "VoidSurvivor":
+                        defaultReward = "SlowOnHitVoid=3";
+                        break;
+                    case "Chef":
+                        defaultReward = "AttackSpeedPerNearbyAllyOrEnemy=5";
+                        break;
+                    case "FalseSon":
+                        defaultReward = "Pearl";
+                        break;
+                    case "Seeker":
+                        defaultReward = "Infusion=2";
+                        break;
+                    default:
+                        defaultReward = "ScrapGreen=3";
+                        break;
+                }
+                ConfigEntry<string> donateRewardListCharacter = donateRewardListCharacter = config.Bind("11 Donate", $"RewardList{name}", defaultReward, $"Item reward pool for {name}. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)");
+                DonateRewardListCharacters.Add(bodyIndex, donateRewardListCharacter);
+            }
+            string.Join(", ", BodyCatalog.allBodyPrefabs.Select(prefab => prefab.name));
 
             if (ModCompatibilityInLobbyConfig.enabled)
             {

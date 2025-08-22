@@ -1,10 +1,11 @@
 {
 	"strings": 
 	{
-		"NEWT_PRAY_FIRST_TIME": "<style=cWorldEvent>{0}{1}：谢您嘞{2}，好人一生大富大贵！</style>",
-		"NEWT_PRAY_NORMAL": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，送你<style=cIsHealth>{3}</style></style>",
-		"NEWT_PRAY_ELITE": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，小小心意送你<style=cIsHealth>{3}</style></style>",
-		"NEWT_PRAY_PECULIAR": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，送你特别礼物<style=cIsHealth>{3}</style></style>",
+		"NEWT_DONATE_FIRST_TIME": "<style=cWorldEvent>{0}{1}：谢您嘞{2}，好人一生大富大贵！</style>",
+		"NEWT_DONATE_LIST1": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，送你<style=cIsHealth>{3}</style></style>",
+		"NEWT_DONATE_LIST2": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，小小心意送你<style=cIsHealth>{3}</style></style>",
+		"NEWT_DONATE_LIST3": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，送你特别礼物<style=cIsHealth>{3}</style></style>",
+		"NEWT_DONATE_LIST_CHARACTER": "<style=cWorldEvent>{0}{1}：{2}，您的慷慨与众不同。请收下这份专属赠礼：<style=cIsHealth>{3}</style></style>",
 		"NEWT_DEATH_STATE": "灵魂",
 		"NEWT_DEATH_INFO": "{0}<style=cDeath>已死亡</style>",
 		"NEWT_WELCOME_WORD_1": "<style=cWorldEvent><size=24px>{0}：欢迎光临，好又多月店！</size></style>",
