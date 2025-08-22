@@ -50,10 +50,9 @@ namespace BazaarIsMyHaven
             PluginInfo = Info;
             instance = this;
             Log.Init(Logger);
-            ModConfig.InitConfig(Config);
+
             Tokens.RegisterLanguageTokens();
             BazaarBase.InitBazaarBaseDropTables();
-
             bazaarMods.Add(new BazaarCauldron());
             bazaarMods.Add(new BazaarPrinter());
             bazaarMods.Add(new BazaarRestack());
@@ -68,6 +67,19 @@ namespace BazaarIsMyHaven
             {
                 bazaarMod.Preload();
             }
+            R2API.Utils.CommandHelper.AddToConsoleWhenReady();
+            RoR2Application.onLoad += () =>
+            {
+                ModConfig.InitConfig(Config);
+#if DEBUG
+                BazaarBase.WriteDropTablesMarkdownFile();
+#endif
+                Hook();
+            };
+        }
+
+        private void Hook()
+        {
             foreach (var bazaarMod in bazaarMods)
             {
                 bazaarMod.Hook();
@@ -85,14 +97,10 @@ namespace BazaarIsMyHaven
             On.RoR2.GlobalEventManager.OnHitAll += GlobalEventManager_OnHitAll;
             On.RoR2.CharacterMaster.OnBodyDeath += CharacterMaster_OnBodyDeath;
             On.EntityStates.NewtMonster.SpawnState.OnEnter += SpawnState_OnEnter;
-            R2API.Utils.CommandHelper.AddToConsoleWhenReady();
         }
 
         private void Run_Start(On.RoR2.Run.orig_Start orig, Run self)
         {
-#if DEBUG
-            BazaarBase.WriteDropTablesMarkdownFile();
-#endif
             ShopKeeper.DiedAtLeastOnce = false;
             ShopKeeper.Body = null;
             orig(self);

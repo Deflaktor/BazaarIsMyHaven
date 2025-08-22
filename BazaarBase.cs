@@ -1,4 +1,4 @@
-using BepInEx;
+﻿using BepInEx;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RoR2;
@@ -81,6 +81,19 @@ namespace BazaarIsMyHaven
             // This will write it next to the RiskOfRain2.exe file
             using (System.IO.StreamWriter writer = new System.IO.StreamWriter(filePath))
             {
+                writer.WriteLine("# Survivors");
+                string[] survivorNames = SurvivorCatalog.allSurvivorDefs.Select(survivor => survivor.cachedName).ToArray();
+                foreach (var entry in survivorNames)
+                {
+                    writer.WriteLine($"{entry}");
+                }
+                writer.WriteLine("# Bodies");
+                string[] bodyNames = BodyCatalog.allBodyPrefabs.Select(prefab => prefab.name).ToArray();
+                foreach (var entry in bodyNames)
+                {
+                    writer.WriteLine($"{entry}");
+                }
+                writer.WriteLine("# DropTables");
                 writer.WriteLine("|                                 | canDropBeReplaced | requiredItemTags | bannedItemTags | tier1Weight | tier2Weight | tier3Weight | bossWeight | lunarEquipmentWeight | lunarItemWeight | lunarCombinedWeight | equipmentWeight | voidTier1Weight | voidTier2Weight | voidTier3Weight | voidBossWeight |");
                 writer.WriteLine("|---------------------------------|-------------------|------------------|----------------|-------------|-------------|-------------|------------|----------------------|-----------------|---------------------|-----------------|-----------------|-----------------|-----------------|----------------|");
                 foreach (var entry in dropTables)

@@ -49,10 +49,11 @@ namespace BazaarIsMyHaven
 
     class LanguageAPI
     {
-        public static string NEWT_PRAY_FIRST_TIME = "NEWT_PRAY_FIRST_TIME";
-        public static string NEWT_PRAY_NORMAL = "NEWT_PRAY_NORMAL";
-        public static string NEWT_PRAY_ELITE = "NEWT_PRAY_ELITE";
-        public static string NEWT_PRAY_PECULIAR = "NEWT_PRAY_PECULIAR";
+        public static string NEWT_DONATE_FIRST_TIME = "NEWT_DONATE_FIRST_TIME";
+        public static string NEWT_DONATE_LIST1 = "NEWT_DONATE_LIST1";
+        public static string NEWT_DONATE_LIST2 = "NEWT_DONATE_LIST2";
+        public static string NEWT_DONATE_LIST3 = "NEWT_DONATE_LIST3";
+        public static string NEWT_DONATE_LIST_CHARACTER = "NEWT_DONATE_LIST_CHARACTER";
         public static string NEWT_DEATH_STATE = "NEWT_DEATH_STATE";
         public static string NEWT_DEATH_INFO = "NEWT_DEATH_INFO";
         public static string[] NEWT_WELCOME_WORD = new string[]
