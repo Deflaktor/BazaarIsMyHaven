@@ -2,7 +2,7 @@
 
 **server-side mod** - only the host needs it installed.
 
-This is a fork of Lunzir’s excellent [BazaarIsMyHome](https://thunderstore.io/package/Lunzir2/BazaarIsMyHome/) mod.
+This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/package/Lunzir2/BazaarIsMyHome/) mod.
 
 ## Features
 
