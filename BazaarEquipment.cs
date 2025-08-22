@@ -20,7 +20,7 @@ namespace BazaarIsMyHaven
         PlayerCharacterMasterController currentActivator = null;
         PickupIndex placeEquipment = PickupIndex.none;
 
-        public override void Init()
+        public override void Preload()
         {
             multiShopEquipmentTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MultiShopEquipmentTerminal/MultiShopEquipmentTerminal.prefab");
             //iscTripleShopEquipment = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/TripleShopEquipment/iscTripleShopEquipment.asset");

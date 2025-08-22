@@ -27,7 +27,7 @@ namespace BazaarIsMyHaven
 
         AsyncOperationHandle<GameObject> TeleporterBeaconEffect;
 
-        public override void Init()
+        public override void Preload()
         {
             iscChest1 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest1/iscChest1.asset");
             iscChest2 = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Chest2/iscChest2.asset");

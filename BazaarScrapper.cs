@@ -15,7 +15,7 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<InteractableSpawnCard> iscScrapper;
 
         Dictionary<int, SpawnCardStruct> DicScrapers = new Dictionary<int, SpawnCardStruct>();
-        public override void Init()
+        public override void Preload()
         {
             iscScrapper = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Scrapper/iscScrapper.asset");
         }

@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RoR2;
@@ -109,7 +109,7 @@ namespace BazaarIsMyHaven
 #endif
         }
 
-        public abstract void Init();
+        public abstract void Preload();
         public abstract void Hook();
         public abstract void SetupBazaar();
 

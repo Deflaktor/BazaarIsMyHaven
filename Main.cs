@@ -66,7 +66,7 @@ namespace BazaarIsMyHaven
 
             foreach (var bazaarMod in bazaarMods)
             {
-                bazaarMod.Init();
+                bazaarMod.Preload();
             }
             foreach (var bazaarMod in bazaarMods)
             {

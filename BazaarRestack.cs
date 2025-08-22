@@ -13,7 +13,7 @@ namespace BazaarIsMyHaven
     public class BazaarRestack : BazaarBase
     {
         AsyncOperationHandle<InteractableSpawnCard> iscShrineRestack;
-        public override void Init()
+        public override void Preload()
         {
             iscShrineRestack = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineRestack/iscShrineRestack.asset");
         }

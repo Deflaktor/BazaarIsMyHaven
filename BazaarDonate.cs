@@ -19,7 +19,7 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> TeamWarCryActivation;
         AsyncOperationHandle<GameObject> ShrineUseEffect;
 
-        public override void Init()
+        public override void Preload()
         {
             // iscShrineHealing = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineHealing/iscShrineHealing.asset");
             BlueprintStation = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/BlueprintStation.prefab");
