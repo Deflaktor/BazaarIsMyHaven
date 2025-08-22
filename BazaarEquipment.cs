@@ -18,7 +18,6 @@ namespace BazaarIsMyHaven
 
         Dictionary<int, SpawnCardStruct> DicEquipments = new Dictionary<int, SpawnCardStruct>();
         PlayerCharacterMasterController currentActivator = null;
-        PickupIndex placeEquipment = PickupIndex.none;
 
         public override void Preload()
         {

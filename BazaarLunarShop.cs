@@ -20,7 +20,6 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> LunarRerollEffect;
 
         Dictionary<int, SpawnCardStruct> DicLunarShopTerminals = new Dictionary<int, SpawnCardStruct>();
-        int LunarShopTerminalTotalCount = 0;
         int currentLunarShopStaticItemIndex = 0;
         int lunarRecyclerRerolledCount = 0;
         List<ShopTerminalBehavior> ObjectLunarShopTerminals_Spawn = new List<ShopTerminalBehavior>();
@@ -339,7 +338,6 @@ namespace BazaarIsMyHaven
         private void SpawnLunarShopTerminal()
         {
             ObjectLunarShopTerminals_Spawn.Clear();
-            LunarShopTerminalTotalCount = 0;
             if (ModConfig.LunarShopReplaceLunarBudsWithTerminals.Value)
             {
                 Main.instance.StartCoroutine(ReplaceLunarBudsWithTerminalsDelayed());

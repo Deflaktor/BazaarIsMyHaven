@@ -80,10 +80,10 @@ namespace BazaarIsMyHaven
                     playerStruct.DonateCount += 1;
                     if (playerStruct.DonateCount % 10 == 0)
                     {
-                        playerStruct.RewardCount += 1;
-                        if (playerStruct.RewardCount <= ModConfig.DonateRewardLimit.Value)
+                        if (playerStruct.RewardCount < ModConfig.DonateRewardLimit.Value)
                         {
-                            GiftReward(self, networkUser, characterBody, inventory);
+                            GiftReward(self, networkUser, characterBody, inventory, playerStruct);
+                            playerStruct.RewardCount += 1;
                         }
                     }
                     if (playerStruct.DonateCount <= (ModConfig.DonateRewardLimit.Value * 10))
@@ -98,35 +98,59 @@ namespace BazaarIsMyHaven
             orig(self, activator);
         }
 
-        private void GiftReward(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Inventory inventory)
+        private void GiftReward(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Inventory inventory, PlayerStruct playerStruct)
         {
-            float w1 = ModConfig.DonateRewardList1Weight.Value;
-            float w2 = ModConfig.DonateRewardList2Weight.Value;
-            float w3 = ModConfig.DonateRewardList3Weight.Value;
-            float w4 = ModConfig.DonateRewardListCharacterWeight.Value;
-            double random = RNG.NextDouble() * (w1 + w2 + w3 + w4);
             int tier = 0;
             PickupIndex[] rewards = null;
-            if (random <= w1)
+            if (ModConfig.DonateSequentialRewards.Value)
             {
-                tier = 1;
-                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList1.Value);
-            }
-            else if (random <= w1 + w2)
-            {
-                tier = 2;
-                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList2.Value);
-            }
-            else if (random <= w1 + w2 + w3)
-            {
-                tier = 3;
-                rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList3.Value);
+                var combined = new List<(float weight, int tier)>
+                {
+                    (ModConfig.DonateRewardList1Weight.Value, 1),
+                    (ModConfig.DonateRewardList2Weight.Value, 2),
+                    (ModConfig.DonateRewardList3Weight.Value, 3),
+                    (ModConfig.DonateRewardListCharacterWeight.Value, 4),
+                };
+                // Remove entries where weight is 0
+                combined.RemoveAll(item => item.weight == 0);
+
+                // Sort by descending weight
+                combined.Sort((a, b) => b.weight.CompareTo(a.weight));
+
+                tier = combined[playerStruct.RewardCount % combined.Count].tier;
             }
             else
             {
-                tier = 4;
-                var rewardList = ModConfig.DonateRewardListCharacters.GetValueOrDefault(characterBody.bodyIndex, ModConfig.DonateRewardListCharacterDefault).Value;
-                rewards = ResolveItemRewardFromStringList(rewardList);
+                float w1 = ModConfig.DonateRewardList1Weight.Value;
+                float w2 = ModConfig.DonateRewardList2Weight.Value;
+                float w3 = ModConfig.DonateRewardList3Weight.Value;
+                float w4 = ModConfig.DonateRewardListCharacterWeight.Value;
+                double random = RNG.NextDouble() * (w1 + w2 + w3 + w4);
+                if (random <= w1)
+                    tier = 1;
+                else if (random <= w1 + w2)
+                    tier = 2;
+                else if (random <= w1 + w2 + w3)
+                    tier = 3;
+                else
+                    tier = 4;
+            }
+
+            switch (tier)
+            {
+                case 1:
+                    rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList1.Value);
+                    break;
+                case 2:
+                    rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList2.Value);
+                    break;
+                case 3:
+                    rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList3.Value);
+                    break;
+                case 4:
+                    var rewardList = ModConfig.DonateRewardListCharacters.GetValueOrDefault(characterBody.bodyIndex, ModConfig.DonateRewardListCharacterDefault).Value;
+                    rewards = ResolveItemRewardFromStringList(rewardList);
+                    break;
             }
 
             if (rewards == null)
