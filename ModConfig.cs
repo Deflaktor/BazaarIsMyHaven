@@ -102,6 +102,7 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<bool> DonateSectionEnabled;
         public static ConfigEntry<int> DonateCost;
         public static ConfigEntry<int> DonateRewardLimit;
+        public static ConfigEntry<bool> DonateSequentialRewards;
         public static ConfigEntry<float> DonateRewardList1Weight;
         public static ConfigEntry<string> DonateRewardList1;
         public static ConfigEntry<float> DonateRewardList2Weight;
@@ -210,14 +211,15 @@ namespace BazaarIsMyHaven
             DonateSectionEnabled = config.Bind("11 Donate", "SectionEnabled", true, "Enables or disables the Donate section. Enabling spawns a Donation Altar near the Newt.");
             DonateRewardLimit = config.Bind("11 Donate", "RewardLimit", 3, "Limit the number of rewards each player can get per visit to the Bazaar. One reward is given every 10 donations."); DonateRewardLimit.Value = Math.Abs(DonateRewardLimit.Value);
             DonateCost = config.Bind("11 Donate", "Cost", 2, "Lunar coin cost per donation. 10 donations need to be done to get a reward."); DonateCost.Value = Math.Abs(DonateCost.Value);
-            DonateRewardList1Weight = config.Bind("11 Donate", "RewardList1Weight", 0.85f, "Weight for choosing RewardList1."); DonateRewardList1Weight.Value = Math.Abs(DonateRewardList1Weight.Value);
-            DonateRewardList1 = config.Bind("11 Donate", "RewardList1", "dtChest1=4, Tier2=2", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)");
-            DonateRewardList2Weight = config.Bind("11 Donate", "RewardList2Weight", 0.15f, "Weight for choosing RewardList2."); DonateRewardList2Weight.Value = Math.Abs(DonateRewardList2Weight.Value);
+            DonateSequentialRewards = config.Bind("11 Donate", "SequentialRewards", false, "If enabled, the reward lists will be choosen sequentially, ordered from heighest weight to lowest weight. Reward lists with weight = 0 will be ignored.");
+            DonateRewardList1Weight = config.Bind("11 Donate", "RewardList1Weight", 0.60f, "Weight for choosing RewardList1."); DonateRewardList1Weight.Value = Math.Abs(DonateRewardList1Weight.Value);
+            DonateRewardList1 = config.Bind("11 Donate", "RewardList1", "dtChest1=2, Tier2=1", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)");
+            DonateRewardList2Weight = config.Bind("11 Donate", "RewardList2Weight", 0.10f, "Weight for choosing RewardList2."); DonateRewardList2Weight.Value = Math.Abs(DonateRewardList2Weight.Value);
             DonateRewardList2 = config.Bind("11 Donate", "RewardList2", "Tier3, Boss", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)");
             DonateRewardList3Weight = config.Bind("11 Donate", "RewardList3Weight", 0f, "Weight for choosing RewardList3."); DonateRewardList3Weight.Value = Math.Abs(DonateRewardList3Weight.Value);
             DonateRewardList3 = config.Bind("11 Donate", "RewardList3", "BoostAttackSpeed=10, BoostDamage=10, BoostEquipmentRecharge=10, BoostHp=10, BurnNearby, CrippleWardOnLevel=10, EmpowerAlways, Ghost, Incubator=3, LevelBonus=10, WarCryOnCombat=10, TempestOnKill=10", "Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)");
 
-            DonateRewardListCharacterWeight = config.Bind("11 Donate", "RewardListCharacterWeight", 0f, "Weight for choosing the reward list of the respective character."); DonateRewardListCharacterWeight.Value = Math.Abs(DonateRewardListCharacterWeight.Value);
+            DonateRewardListCharacterWeight = config.Bind("11 Donate", "RewardListCharacterWeight", 0.30f, "Weight for choosing the reward list of the respective character."); DonateRewardListCharacterWeight.Value = Math.Abs(DonateRewardListCharacterWeight.Value);
             DonateRewardListCharacterDefault = config.Bind("11 Donate", "RewardListCharacterDefault", "ScrapGreen=3", "Item reward pool if the donating character does not have a reward list specified. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)");
             string[] survivorNames = SurvivorCatalog.allSurvivorDefs.Select(survivor => survivor.cachedName).ToArray();
             // string[] bodyNames = BodyCatalog.allBodyPrefabs.Select(prefab => prefab.name).ToArray();
@@ -243,7 +245,7 @@ namespace BazaarIsMyHaven
                         defaultReward = "BleedOnHitAndExplode";
                         break;
                     case "Captain":
-                        defaultReward = "FreeChest";
+                        defaultReward = "BleedOnHit=3";
                         break;
                     case "Commando":
                         defaultReward = "StickyBomb=5";
@@ -255,7 +257,7 @@ namespace BazaarIsMyHaven
                         defaultReward = "HealingPotion";
                         break;
                     case "Heretic":
-                        defaultReward = "HealWhileSafe";
+                        defaultReward = "HealWhileSafe=2";
                         break;
                     case "Huntress":
                         defaultReward = "AttackSpeedOnCrit=2";
@@ -264,10 +266,10 @@ namespace BazaarIsMyHaven
                         defaultReward = "IceRing=2";
                         break;
                     case "Mage":
-                        defaultReward = "StrengthenBurn";
+                        defaultReward = "MissileVoid";
                         break;
                     case "Merc":
-                        defaultReward = "ElusiveAntlers=5";
+                        defaultReward = "AlienHead";
                         break;
                     case "Toolbot":
                         defaultReward = "SecondarySkillMagazine=5";
@@ -285,10 +287,10 @@ namespace BazaarIsMyHaven
                         defaultReward = "AttackSpeedPerNearbyAllyOrEnemy=5";
                         break;
                     case "FalseSon":
-                        defaultReward = "Pearl";
+                        defaultReward = "Infusion=3";
                         break;
                     case "Seeker":
-                        defaultReward = "Infusion=2";
+                        defaultReward = "ArmorPlate=5";
                         break;
                     default:
                         defaultReward = "ScrapGreen=3";

@@ -1,10 +1,11 @@
 # 2.1.0
 
 - Add feature for custom donation reward lists depending on the character
+- Add feature for sequential rewards at donation altar
 
 # 2.0.1
 
-- Fix readme.md
+- Fix readme
 
 # 2.0.0
 
