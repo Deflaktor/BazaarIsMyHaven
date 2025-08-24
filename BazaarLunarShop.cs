@@ -22,7 +22,7 @@ namespace BazaarIsMyHaven
         Dictionary<int, SpawnCardStruct> DicLunarShopTerminals = new Dictionary<int, SpawnCardStruct>();
         int currentLunarShopStaticItemIndex = 0;
         int lunarRecyclerRerolledCount = 0;
-        List<ShopTerminalBehavior> ObjectLunarShopTerminals_Spawn = new List<ShopTerminalBehavior>();
+        List<GameObject> ObjectLunarShopTerminals_Spawn = new List<GameObject>();
         PlayerCharacterMasterController currentActivator = null;
         Dictionary<PurchaseInteraction, List<PlayerCharacterMasterController>> whichStallsHaveBeenBoughtOnce = new Dictionary<PurchaseInteraction, List<PlayerCharacterMasterController>>();
 
@@ -53,7 +53,7 @@ namespace BazaarIsMyHaven
             {
                 lunarRecyclerRerolledCount = 0;
             }
-            if(ModConfig.LunarShopSectionEnabled.Value) {
+            if (ModConfig.LunarShopSectionEnabled.Value) {
                 currentLunarShopStaticItemIndex = 0;
                 whichStallsHaveBeenBoughtOnce.Clear();
                 SpawnLunarShopTerminal();
@@ -65,7 +65,7 @@ namespace BazaarIsMyHaven
             orig(self);
             if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
-                if(ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopCost.Value >= 0) 
+                if (ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopCost.Value >= 0) 
                 {
                     if (self.name.StartsWith("LunarShopTerminal"))
                     {
@@ -119,9 +119,9 @@ namespace BazaarIsMyHaven
                 if (self.name.StartsWith("LunarRecycler") && ModConfig.LunarShopReplaceLunarBudsWithTerminals.Value)
                 {
                     float time = 0f;
-                    foreach (ShopTerminalBehavior shopTerminal in ObjectLunarShopTerminals_Spawn)
+                    foreach (GameObject lunarShopTerminal in ObjectLunarShopTerminals_Spawn)
                     {
-                        Main.instance.StartCoroutine(DelayRerollEffect(shopTerminal, time, true));
+                        Main.instance.StartCoroutine(DelayRerollEffect(lunarShopTerminal, time, true));
                         time = time + 0.1f;
                     }
                 }
@@ -261,13 +261,13 @@ namespace BazaarIsMyHaven
             }
         }
 
-        IEnumerator DelayRerollEffect(ShopTerminalBehavior lunarShopTerminal, float time, bool spawnEffect)
+        IEnumerator DelayRerollEffect(GameObject lunarShopTerminal, float time, bool spawnEffect)
         {
             yield return new WaitForSeconds(time);
 
-            lunarShopTerminal.GenerateNewPickupServer();
+            lunarShopTerminal.GetComponent<ShopTerminalBehavior>().GenerateNewPickupServer();
             if(spawnEffect)
-                SpawnEffect(LunarRerollEffect, lunarShopTerminal.gameObject.transform.position - Vector3.up * 2.5f, new Color32(255, 255, 255, 255), 2f);
+                SpawnEffect(LunarRerollEffect, lunarShopTerminal.transform.position - Vector3.up * 2.5f, new Color32(255, 255, 255, 255), 2f);
         }
 
         private void SetLunarShopTerminal()
@@ -339,31 +339,29 @@ namespace BazaarIsMyHaven
         private void SpawnLunarShopTerminal()
         {
             ObjectLunarShopTerminals_Spawn.Clear();
-            if (ModConfig.LunarShopReplaceLunarBudsWithTerminals.Value)
-            {
-                Main.instance.StartCoroutine(ReplaceLunarBudsWithTerminalsDelayed());
-            }
-            else
-            {
-                Main.instance.StartCoroutine(ProcessLunarBudsDelayed());
-            }
-        }
+            currentLunarShopStaticItemIndex = 0;
+            DicLunarShopTerminals.Clear();
+            SetLunarShopTerminal();
 
-        private IEnumerator ReplaceLunarBudsWithTerminalsDelayed()
-        {
-            yield return new WaitForSeconds(1.0f);
+            // find original lunar buds
+            var gameObjects = new List<GameObject>();
             foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
             {
-                if (obj.name.StartsWith("LunarShopTerminal") && !obj.name.EndsWith("(Clone)"))
+                if (obj.name.StartsWith("LunarShopTerminal"))
                 {
-                    NetworkServer.Destroy(obj);
+                    gameObjects.Add(obj);
                 }
             }
 
-            DicLunarShopTerminals.Clear();
-            SetLunarShopTerminal();
-            currentLunarShopStaticItemIndex = 0;
-            var gameObjects = DoSpawnGameObject(DicLunarShopTerminals, lunarShopTerminal, ModConfig.LunarShopAmount.Value);
+            if (ModConfig.LunarShopReplaceLunarBudsWithTerminals.Value)
+            {
+                // Remove original Lunar Buds
+                gameObjects.ForEach(NetworkServer.Destroy);
+                // Spawn Shop Terminals
+                gameObjects = DoSpawnGameObject(DicLunarShopTerminals, lunarShopTerminal, ModConfig.LunarShopAmount.Value);
+                ObjectLunarShopTerminals_Spawn.AddRange(gameObjects);
+            }
+
             gameObjects.ForEach(gameObject => {
                 gameObject.name = "LunarShopTerminal";
                 var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
@@ -376,40 +374,10 @@ namespace BazaarIsMyHaven
                     instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
                 }
                 // purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
-                ObjectLunarShopTerminals_Spawn.Add(shopTerminalBehavior);
+                
                 whichStallsHaveBeenBoughtOnce.Add(purchaseInteraction, new List<PlayerCharacterMasterController>());
                 //Main.instance.StartCoroutine(DelayRerollEffect(shopTerminalBehavior, 0.1f, false));
             });
-        }
-
-        private IEnumerator ProcessLunarBudsDelayed()
-        {
-            yield return new WaitForSeconds(1.0f);
-            foreach (GameObject gameObject in UnityEngine.Object.FindObjectsOfType<GameObject>())
-            {
-                if (gameObject.name.StartsWith("LunarShopTerminal") && !gameObject.name.EndsWith("(Clone)"))
-                {
-                    gameObject.name = "LunarShopTerminal";
-                    var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
-                    var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
-                    if (ModConfig.LunarShopInstancedPurchases.Value)
-                    {
-                        var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
-                        instancedPurchase.original.available = purchaseInteraction.available;
-                        instancedPurchase.original.pickupIndex = shopTerminalBehavior.pickupIndex;
-                        instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
-                    }
-                    // purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
-                    // ObjectLunarShopTerminals_Spawn.Add(purchaseInteraction);
-                    whichStallsHaveBeenBoughtOnce.Add(purchaseInteraction, new List<PlayerCharacterMasterController>());
-                    //Main.instance.StartCoroutine(DelayRerollEffect(shopTerminalBehavior, 0.1f, false));
-                }
-                //if (gameObject.name.StartsWith("LunarShopTerminal"))
-                //{
-                //    var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
-                //    purchaseInteraction.onPurchase.RemoveAllListeners();
-                //}
-            }
         }
     }
 }
