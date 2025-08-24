@@ -90,14 +90,14 @@ namespace BazaarIsMyHaven
 
             On.RoR2.Run.Start += Run_Start;
             On.RoR2.BazaarController.SetUpSeerStations += BazaarController_SetUpSeerStations;
-            On.RoR2.BazaarController.Awake += BazaarController_Awake;
-            On.RoR2.SceneDirector.Start += SceneDirector_Start;
+            RoR2.SceneDirector.onPrePopulateSceneServer += SceneDirector_onPrePopulateSceneServer;
             On.RoR2.TeleporterInteraction.Start += TeleporterInteraction_Start;
             On.EntityStates.NewtMonster.KickFromShop.FixedUpdate += KickFromShop_FixedUpdate;
             On.RoR2.GlobalEventManager.OnHitAll += GlobalEventManager_OnHitAll;
             On.RoR2.CharacterMaster.OnBodyDeath += CharacterMaster_OnBodyDeath;
             On.EntityStates.NewtMonster.SpawnState.OnEnter += SpawnState_OnEnter;
         }
+
 
         private void Run_Start(On.RoR2.Run.orig_Start orig, Run self)
         {
@@ -133,10 +133,11 @@ namespace BazaarIsMyHaven
             orig(self);
         }
 
-        private void BazaarController_Awake(On.RoR2.BazaarController.orig_Awake orig, BazaarController self)
+        private void SceneDirector_onPrePopulateSceneServer(SceneDirector obj)
         {
-            if (ModConfig.EnableMod.Value && NetworkServer.active)
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
+                ShopKeeper.Body = null;
                 ShopKeeper.DeathCount = 0;
                 playerStructs_.Clear();
 
@@ -153,17 +154,8 @@ namespace BazaarIsMyHaven
                 }
                 if (isEnableSacrifice) RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, true);
             }
-            orig(self);
         }
 
-        private void SceneDirector_Start(On.RoR2.SceneDirector.orig_Start orig, SceneDirector self)
-        {
-            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar() && NetworkServer.active)
-            {
-                ShopKeeper.Body = null;
-            }
-            orig(self);
-        }
         private void TeleporterInteraction_Start(On.RoR2.TeleporterInteraction.orig_Start orig, TeleporterInteraction self)
         {
             orig(self);
