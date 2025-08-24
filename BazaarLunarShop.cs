@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using RoR2;
 using ShareSuite.Networking;
 using System;
@@ -254,7 +254,8 @@ namespace BazaarIsMyHaven
                 }
                 self.SetPickupIndex(pickupIndex, newHidden);
                 currentLunarShopStaticItemIndex += 1;
-            } else
+            }
+            else
             {
                 orig(self, newHidden);
             }
@@ -341,7 +342,8 @@ namespace BazaarIsMyHaven
             if (ModConfig.LunarShopReplaceLunarBudsWithTerminals.Value)
             {
                 Main.instance.StartCoroutine(ReplaceLunarBudsWithTerminalsDelayed());
-            } else
+            }
+            else
             {
                 Main.instance.StartCoroutine(ProcessLunarBudsDelayed());
             }
@@ -360,6 +362,7 @@ namespace BazaarIsMyHaven
 
             DicLunarShopTerminals.Clear();
             SetLunarShopTerminal();
+            currentLunarShopStaticItemIndex = 0;
             var gameObjects = DoSpawnGameObject(DicLunarShopTerminals, lunarShopTerminal, ModConfig.LunarShopAmount.Value);
             gameObjects.ForEach(gameObject => {
                 gameObject.name = "LunarShopTerminal";

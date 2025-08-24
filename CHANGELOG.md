@@ -1,3 +1,7 @@
+# 2.1.1
+
+- Fix sequential items in lunar shop starting with wrong index
+
 # 2.1.0
 
 - Add feature for custom donation reward lists depending on the character

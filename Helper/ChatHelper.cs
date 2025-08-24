@@ -54,7 +54,7 @@ namespace BazaarIsMyHaven
             }
             else if (usesLeft == 1)
             {
-                Send($"{coloredPlayerName}  <color=#{GrayColor}>can use a shop terminal</color> <color=#{RedColor}>{usesLeft}</color> <color=#{GrayColor}>more time.</color>");
+                Send($"{coloredPlayerName} <color=#{GrayColor}>can use a shop terminal</color> <color=#{RedColor}>{usesLeft}</color> <color=#{GrayColor}>more time.</color>");
             }
             else
             {
