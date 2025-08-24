@@ -1,4 +1,4 @@
-using BepInEx;
+﻿using BepInEx;
 using RoR2;
 using ShareSuite.Networking;
 using System;
@@ -310,6 +310,7 @@ namespace BazaarIsMyHaven
                     tableEndAngleMiddle -= angleDiff / (float)(count + 1f);
                 }
                 points = Lloyd.GenerateCirclePoints(tableRadiusMiddle, tableStartAngleMiddle, tableEndAngleMiddle, orientation, count);
+                points.Reverse();
             }
             else
             {
@@ -317,8 +318,8 @@ namespace BazaarIsMyHaven
                 var innerSamples = Lloyd.GenerateCirclePoints(tableRadiusInner, tableStartAngleInner, tableEndAngleInner, orientation, (int)(2f * Mathf.PI * tableRadiusInner * 10f));
                 var outerSamples = Lloyd.GenerateCirclePoints(tableRadiusOuter, tableStartAngleOuter, tableEndAngleOuter, orientation, (int)(2f * Mathf.PI * tableRadiusOuter * 10f));
                 outerSamples.Reverse();
-                samples.AddRange(innerSamples);
                 samples.AddRange(outerSamples);
+                samples.AddRange(innerSamples);
                 List<Vector2> centroids = Lloyd.Centroids(samples, count);
                 points = Lloyd.MapSamplesOrderToCentroids(samples, centroids);
             }
