@@ -21,6 +21,7 @@ namespace BazaarIsMyHaven
 
         Dictionary<int, SpawnCardStruct> DicLunarShopTerminals = new Dictionary<int, SpawnCardStruct>();
         int currentLunarShopStaticItemIndex = 0;
+        int generateNewPickupIndex = 0;
         int lunarRecyclerRerolledCount = 0;
         List<GameObject> ObjectLunarShopTerminals_Spawn = new List<GameObject>();
         PlayerCharacterMasterController currentActivator = null;
@@ -116,15 +117,6 @@ namespace BazaarIsMyHaven
                         currentActivator = null;
                     }
                 }
-                if (self.name.StartsWith("LunarRecycler") && ModConfig.LunarShopReplaceLunarBudsWithTerminals.Value)
-                {
-                    float time = 0f;
-                    foreach (GameObject lunarShopTerminal in ObjectLunarShopTerminals_Spawn)
-                    {
-                        Main.instance.StartCoroutine(DelayRerollEffect(lunarShopTerminal, time, true));
-                        time = time + 0.1f;
-                    }
-                }
             }
             orig(self, activator);
         }
@@ -149,7 +141,23 @@ namespace BazaarIsMyHaven
                             whichStallsHaveBeenBoughtOnce[self].Add(playerCharacterMasterController);
                         }
                     }
-                    if (self.name.StartsWith("LunarRecycler") && ModConfig.LunarRecyclerRerollLimit.Value >= 0)
+                    if (self.name.StartsWith("LunarRecycler"))
+                    {
+                        if (ModConfig.LunarShopReplaceLunarBudsWithTerminals.Value)
+                        {
+                            float time = 0f;
+                            foreach (GameObject lunarShopTerminal in ObjectLunarShopTerminals_Spawn)
+                            {
+                                Main.instance.StartCoroutine(DelayRerollEffect(lunarShopTerminal, time, currentLunarShopStaticItemIndex));
+                                currentLunarShopStaticItemIndex += 1;
+                                time = time + 0.1f;
+                            }
+                        }
+                    }
+                }
+                if (ModConfig.EnableMod.Value && ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerRerollLimit.Value >= 0 && IsCurrentMapInBazaar() && NetworkServer.active)
+                {
+                    if(self.name.StartsWith("LunarRecycler"))
                     {
                         lunarRecyclerRerolledCount++;
                         var usesLeft = ModConfig.LunarRecyclerRerollLimit.Value - lunarRecyclerRerolledCount;
@@ -241,8 +249,8 @@ namespace BazaarIsMyHaven
                 PickupIndex pickupIndex = PickupIndex.none;
 
                 if (!ModConfig.LunarShopSequentialItems.Value)
-                    currentLunarShopStaticItemIndex = -1;
-                PickupIndex[] rewards = ResolveItemRewardFromStringList(ModConfig.LunarShopItemList.Value, currentLunarShopStaticItemIndex);
+                    generateNewPickupIndex = -1;
+                PickupIndex[] rewards = ResolveItemRewardFromStringList(ModConfig.LunarShopItemList.Value, generateNewPickupIndex);
 
                 if (rewards != null)
                 {
@@ -253,7 +261,7 @@ namespace BazaarIsMyHaven
                     pickupIndex = PickupIndex.none;
                 }
                 self.SetPickupIndex(pickupIndex, newHidden);
-                currentLunarShopStaticItemIndex += 1;
+                generateNewPickupIndex += 1;
             }
             else
             {
@@ -261,13 +269,33 @@ namespace BazaarIsMyHaven
             }
         }
 
-        IEnumerator DelayRerollEffect(GameObject lunarShopTerminal, float time, bool spawnEffect)
+        IEnumerator DelayRerollEffect(GameObject lunarShopTerminal, float time, int itemIndex)
         {
             yield return new WaitForSeconds(time);
 
+            generateNewPickupIndex = itemIndex;
             lunarShopTerminal.GetComponent<ShopTerminalBehavior>().GenerateNewPickupServer();
-            if(spawnEffect)
-                SpawnEffect(LunarRerollEffect, lunarShopTerminal.transform.position - Vector3.up * 2.5f, new Color32(255, 255, 255, 255), 2f);
+            SpawnEffect(LunarRerollEffect, lunarShopTerminal.transform.position - Vector3.up * 2.5f, new Color32(255, 255, 255, 255), 2f);
+        }
+
+        public static List<Vector2> GenerateCirclePoints(float radius, float startAngle, float endAngle, float orientation, int numberOfPoints)
+        {
+            List<Vector2> points = new List<Vector2>();
+            float angleStep = (endAngle - startAngle) / (numberOfPoints - 1);
+            if (numberOfPoints <= 1)
+            {
+                angleStep = 0;
+            }
+
+            for (int i = 0; i < numberOfPoints; i++)
+            {
+                float angleInDegrees = startAngle + i * angleStep + orientation;
+                float angleInRadians = angleInDegrees * Mathf.Deg2Rad;
+                float x = radius * Mathf.Cos(angleInRadians);
+                float y = radius * Mathf.Sin(angleInRadians);
+                points.Add(new Vector2(x, y));
+            }
+            return points;
         }
 
         private void SetLunarShopTerminal()
@@ -288,9 +316,8 @@ namespace BazaarIsMyHaven
             float tableEndAngleOuter = 339f;
             
             const float minDistance = 19f;
-            const float innerCapacity = 5;//(int)(2 * Math.PI * tableRadiusInner * (tableEndAngleInner - tableStartAngleInner) / 360f / minDistance);
-            const float middleCapacity = 8;//(int)(2 * Math.PI * tableRadiusMiddle * (tableEndAngleMiddle - tableStartAngleMiddle) / 360f / minDistance);
-            const float outerCapacity = 10;//(int)(2 * Math.PI * tableRadiusOuter * (tableEndAngleOuter - tableStartAngleOuter) / 360f / minDistance);
+            const float middleCapacity = 10;
+            const float maxCapacity = 20;
 
             List<Vector2> points = new List<Vector2>();
 
@@ -309,19 +336,52 @@ namespace BazaarIsMyHaven
                     tableStartAngleMiddle += angleDiff / (float)(count + 1f);
                     tableEndAngleMiddle -= angleDiff / (float)(count + 1f);
                 }
-                points = Lloyd.GenerateCirclePoints(tableRadiusMiddle, tableStartAngleMiddle, tableEndAngleMiddle, orientation, count);
+                points = GenerateCirclePoints(tableRadiusMiddle, tableStartAngleMiddle, tableEndAngleMiddle, orientation, count);
                 points.Reverse();
             }
             else
             {
                 List<Vector2> samples = new List<Vector2>();
-                var innerSamples = Lloyd.GenerateCirclePoints(tableRadiusInner, tableStartAngleInner, tableEndAngleInner, orientation, (int)(2f * Mathf.PI * tableRadiusInner * 10f));
-                var outerSamples = Lloyd.GenerateCirclePoints(tableRadiusOuter, tableStartAngleOuter, tableEndAngleOuter, orientation, (int)(2f * Mathf.PI * tableRadiusOuter * 10f));
+                var innerCountIdeal = count * tableRadiusInner / (tableRadiusInner + tableRadiusOuter);
+                var outerCountIdeal = count * tableRadiusOuter / (tableRadiusInner + tableRadiusOuter);
+                int innerCount = Mathf.RoundToInt(innerCountIdeal);
+                int outerCount = Mathf.RoundToInt(outerCountIdeal);
+                if(innerCount + outerCount != count)
+                {
+                    // possibility 1: round inner
+                    var innerDistanceInnerRounded = 2f * Mathf.PI + tableRadiusInner / innerCount;
+                    var outerDistanceInnerRounded = 2f * Mathf.PI + tableRadiusOuter / (count - innerCount);
+                    // possibility 2: round outer
+                    var innerDistanceOuterRounded = 2f * Mathf.PI + tableRadiusInner / outerCount;
+                    var outerDistanceOuterRounded = 2f * Mathf.PI + tableRadiusOuter / (count - outerCount);
+                    // choose the one where the distance is more equal
+                    if(Math.Abs(innerDistanceInnerRounded - outerDistanceInnerRounded) < Math.Abs(innerDistanceOuterRounded - outerDistanceOuterRounded))
+                    {
+                        outerCount = count - innerCount;
+                    }
+                    else
+                    {
+                        innerCount = count - outerCount;
+                    }
+                }
+                if (count < maxCapacity)
+                {
+                    // place them closer together
+                    float angleDiff = tableEndAngleOuter - tableStartAngleOuter;
+                    tableStartAngleOuter += angleDiff / (float)(outerCount + 1f);
+                    tableEndAngleOuter -= angleDiff / (float)(outerCount + 1f);
+                    angleDiff = tableEndAngleInner - tableStartAngleInner;
+                    tableStartAngleInner += angleDiff / (float)(innerCount + 1f);
+                    tableEndAngleInner -= angleDiff / (float)(innerCount + 1f);
+                }
+
+                var innerSamples = GenerateCirclePoints(tableRadiusInner, tableStartAngleInner, tableEndAngleInner, orientation, innerCount);
+                var outerSamples = GenerateCirclePoints(tableRadiusOuter, tableStartAngleOuter, tableEndAngleOuter, orientation, outerCount);
                 outerSamples.Reverse();
-                samples.AddRange(outerSamples);
-                samples.AddRange(innerSamples);
-                List<Vector2> centroids = Lloyd.Centroids(samples, count);
-                points = Lloyd.MapSamplesOrderToCentroids(samples, centroids);
+                points.AddRange(outerSamples);
+                points.AddRange(innerSamples);
+                //List<Vector2> centroids = Lloyd.Centroids(samples, count);
+                //points = Lloyd.MapSamplesOrderToCentroids(samples, centroids);
             }
             for (int i = 0; i < points.Count; i++) {
                 Quaternion rotation = Quaternion.LookRotation(new Vector3(-points[i].x, 0, -points[i].y));
