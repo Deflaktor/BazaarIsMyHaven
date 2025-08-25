@@ -22,6 +22,7 @@ namespace BazaarIsMyHaven
         private const string GrayColor = "7e91af";
         private const string RedColor = "ed4c40";
         private const string LunarColor = "5cb1ed";
+
         
         private static string GetPlayerColor(PlayerCharacterMasterController pc)
         {
@@ -91,21 +92,27 @@ namespace BazaarIsMyHaven
                 var count = entry.Value;
                 var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
                 var itemName = pickupDef.internalName;
+                ColorCatalog.ColorIndex colorIndex = ColorCatalog.ColorIndex.Error;
                 if (pickupDef.itemIndex != ItemIndex.None)
                 {
-                    itemName = Language.GetString(ItemCatalog.GetItemDef(pickupDef.itemIndex).nameToken);
+                    var itemDef = ItemCatalog.GetItemDef(pickupDef.itemIndex);
+                    itemName = Language.GetString(itemDef.nameToken);
+                    colorIndex = ItemTierCatalog.GetItemTierDef(itemDef.tier).colorIndex;
                 }
                 else if (pickupDef.equipmentIndex != EquipmentIndex.None)
                 {
-                    itemName = Language.GetString(EquipmentCatalog.GetEquipmentDef(pickupDef.equipmentIndex).nameToken);
+                    var equipmentDef = EquipmentCatalog.GetEquipmentDef(pickupDef.equipmentIndex);
+                    itemName = Language.GetString(equipmentDef.nameToken);
+                    colorIndex = equipmentDef.colorIndex;
                 }
+                var colorHexString = ColorCatalog.GetColorHexString(colorIndex);
                 if (count > 1)
                 {
-                    itemNames.Add(string.Format("{0} x {1}", itemName, count));
+                    itemNames.Add($"<color=#{colorHexString}>{itemName}</color> x {count}");
                 }
                 else
                 {
-                    itemNames.Add(itemName);
+                    itemNames.Add($"<color=#{colorHexString}>{itemName}</color>");
                 }
             }
 
