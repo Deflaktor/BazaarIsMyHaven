@@ -1,3 +1,8 @@
+# 2.1.2
+
+- Add item colors in donate chat message
+- Better placement of lunar shop terminals
+
 # 2.1.1
 
 - Fix sequential items in lunar shop starting with wrong index
