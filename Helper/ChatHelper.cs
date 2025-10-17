@@ -119,11 +119,6 @@ namespace BazaarIsMyHaven
             return string.Join(", ", itemNames);
         }
 
-        public static void ThanksTip(NetworkUser networkUser, PlayerCharacterMasterController pc)
-        {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_DONATE_FIRST_TIME, NewtName, GetDeathState(), GetColoredPlayerName(pc)));
-        }
-
         public static void ThanksTipNormal(NetworkUser networkUser, PlayerCharacterMasterController pc, PickupIndex[] pickupIndexes)
         {
             Send(Language.GetStringFormatted(LanguageAPI.NEWT_DONATE_LIST1, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
@@ -143,7 +138,7 @@ namespace BazaarIsMyHaven
         {
             Send(Language.GetStringFormatted(LanguageAPI.NEWT_DONATE_LIST_CHARACTER, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
         }
-
+        
         public static void WelcomeWord()
         {
             int length = LanguageAPI.NEWT_WELCOME_WORD.Length;

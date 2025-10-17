@@ -31,7 +31,7 @@ namespace BazaarIsMyHaven
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "Def";
         public const string PluginName = "BazaarIsMyHaven";
-        public const string PluginVersion = "2.1.2";
+        public const string PluginVersion = "3.0.0";
 
         private static System.Random Random = new System.Random();
         List<BazaarBase> bazaarMods = new List<BazaarBase>();
@@ -304,7 +304,7 @@ namespace BazaarIsMyHaven
             ChatHelper.Send($"name = {name}, DisplayName = {player.masterController.GetDisplayName()}");
             Vector3 vector = player.GetCurrentBody().footPosition;
 
-            SpawnCard card = LegacyResourcesAPI.Load<SpawnCard>(name);
+            SpawnCard card = Addressables.LoadAssetAsync<SpawnCard>(name).WaitForCompletion();
             DirectorPlacementRule pr2 = new DirectorPlacementRule
             {
                 placementMode = DirectorPlacementRule.PlacementMode.Direct
@@ -321,7 +321,7 @@ namespace BazaarIsMyHaven
             ChatHelper.Send($"name = {name}, DisplayName = {player.masterController.GetDisplayName()}");
             Vector3 vector = player.GetCurrentBody().footPosition;
 
-            GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(LegacyResourcesAPI.Load<GameObject>(name), vector, Quaternion.identity); ;
+            GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(Addressables.LoadAssetAsync<GameObject>(name).WaitForCompletion(), vector, Quaternion.identity); ;
             gameObject.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f);
             NetworkServer.Spawn(gameObject);
         }
@@ -332,11 +332,16 @@ namespace BazaarIsMyHaven
             NetworkUser player = PlayerCharacterMasterController.instances[0].networkUser;
             Vector3 vector = player.GetCurrentBody().corePosition;
 
-            EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>(name), new EffectData()
+            float scale = 1.0f;
+            var result = args.TryGetArgFloat(1);
+            if(result.HasValue)
+                scale = result.Value;
+            
+            EffectManager.SpawnEffect(Addressables.LoadAssetAsync<GameObject>(name).WaitForCompletion(), new EffectData()
             {
                 origin = vector,
                 rotation = Quaternion.identity,
-                scale = 1f,
+                scale = scale,
                 color = Color.yellow
             }, true);
         }

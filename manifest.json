@@ -1,6 +1,6 @@
 {
     "name": "BazaarIsMyHaven",
-    "version_number": "2.1.2",
+    "version_number": "3.0.0",
     "website_url": "https://github.com/Deflaktor/BazaarIsMyHaven",
     "description": "Adds lots of configurable features to the Bazaar: Printers, Scrappers, Cauldrons, Equipment Terminals and more. Fork of BazaarIsMyHome.",
     "dependencies": [

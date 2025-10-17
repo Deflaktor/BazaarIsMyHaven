@@ -1,3 +1,7 @@
+# 3.0.0
+
+- Donation Shrine no longer requires to donate 10 times to get reward
+
 # 2.1.2
 
 - Add item colors in donate chat message

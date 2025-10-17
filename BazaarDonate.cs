@@ -73,25 +73,13 @@ namespace BazaarIsMyHaven
                     Inventory inventory = characterBody.inventory;
 
                     var playerStruct = Main.instance.GetPlayerStruct(characterMaster.playerCharacterMasterController);
-                    if(playerStruct.DonateCount == 0)
+                    if (playerStruct.RewardCount < ModConfig.DonateRewardLimit.Value)
                     {
-                        ChatHelper.ThanksTip(networkUser, characterMaster.playerCharacterMasterController);
-                    }
-                    playerStruct.DonateCount += 1;
-                    if (playerStruct.DonateCount % 10 == 0)
-                    {
-                        if (playerStruct.RewardCount < ModConfig.DonateRewardLimit.Value)
-                        {
-                            GiftReward(self, networkUser, characterBody, inventory, playerStruct);
-                            playerStruct.RewardCount += 1;
-                        }
-                    }
-                    if (playerStruct.DonateCount <= (ModConfig.DonateRewardLimit.Value * 10))
-                    {
+                        GiftReward(self, networkUser, characterBody, inventory, playerStruct);
+                        playerStruct.RewardCount += 1;
                         SpawnEffect(ShrineUseEffect, self.transform.position, new Color32(64, 127, 255, 255), 5f);
                         networkUser.DeductLunarCoins((uint)self.Networkcost);
                     }
-                    //ChatHelper.Send($"DonateCount = {playerStruct.DonateCount }, RewardCount = {playerStruct.RewardCount}");
                     return;
                 }
             }
