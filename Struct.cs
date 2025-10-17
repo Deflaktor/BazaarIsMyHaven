@@ -24,13 +24,11 @@ namespace BazaarIsMyHaven
         public PlayerStruct(PlayerCharacterMasterController master)
         {
             Master = master;
-            DonateCount = 0;
             RewardCount = 0;
             LunarShopUseCount = 0;
         }
 
         public PlayerCharacterMasterController Master { get; set; }
-        public int DonateCount { get; set; }
         public int RewardCount { get; set; }
         public int LunarShopUseCount { get; set; }
     }

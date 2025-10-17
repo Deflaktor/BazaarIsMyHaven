@@ -1,7 +1,6 @@
 {
 	"strings": 
 	{
-		"NEWT_DONATE_FIRST_TIME": "<style=cWorldEvent>{0}{1}: Appreciate your kindness, {2}.</style>",
 		"NEWT_DONATE_LIST1": "<style=cWorldEvent>{0}{1}: Thank you so much, {2}! Please accept this gift: <style=cIsHealth>{3}</style></style>",
 		"NEWT_DONATE_LIST2": "<style=cWorldEvent>{0}{1}: Much obliged, {2}! Take this — it might aid you: <style=cIsHealth>{3}</style></style>",
 		"NEWT_DONATE_LIST3": "<style=cWorldEvent>{0}{1}: Divine blessings upon you, {2}. Heres something unique: <style=cIsHealth>{3}</style></style>",

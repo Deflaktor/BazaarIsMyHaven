@@ -25,6 +25,7 @@ namespace BazaarIsMyHaven
                 return System.IO.Path.GetDirectoryName(Main.PluginInfo.Location);
             }
         }
+
         public static void RegisterLanguageTokens()
         {
             On.RoR2.Language.SetFolders += Language_SetFolders;
@@ -49,7 +50,6 @@ namespace BazaarIsMyHaven
 
     class LanguageAPI
     {
-        public static string NEWT_DONATE_FIRST_TIME = "NEWT_DONATE_FIRST_TIME";
         public static string NEWT_DONATE_LIST1 = "NEWT_DONATE_LIST1";
         public static string NEWT_DONATE_LIST2 = "NEWT_DONATE_LIST2";
         public static string NEWT_DONATE_LIST3 = "NEWT_DONATE_LIST3";

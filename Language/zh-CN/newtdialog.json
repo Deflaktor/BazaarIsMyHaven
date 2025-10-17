@@ -1,7 +1,6 @@
 {
 	"strings": 
 	{
-		"NEWT_DONATE_FIRST_TIME": "<style=cWorldEvent>{0}{1}：谢您嘞{2}，好人一生大富大贵！</style>",
 		"NEWT_DONATE_LIST1": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，送你<style=cIsHealth>{3}</style></style>",
 		"NEWT_DONATE_LIST2": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，小小心意送你<style=cIsHealth>{3}</style></style>",
 		"NEWT_DONATE_LIST3": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，送你特别礼物<style=cIsHealth>{3}</style></style>",
