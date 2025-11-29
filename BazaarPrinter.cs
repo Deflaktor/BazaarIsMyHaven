@@ -36,7 +36,10 @@ namespace BazaarIsMyHaven
         {
             On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
         }
+        public override void RunStart()
+        {
 
+        }
         public override void SetupBazaar()
         {
             if(ModConfig.PrinterSectionEnabled.Value)

@@ -42,7 +42,10 @@ namespace BazaarIsMyHaven
         {
             
         }
+        public override void RunStart()
+        {
 
+        }
         public override void SetupBazaar()
         {
             if (ModConfig.DecorateBazaar.Value)

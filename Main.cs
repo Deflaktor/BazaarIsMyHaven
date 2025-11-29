@@ -17,9 +17,11 @@ using UnityEngine.UIElements;
 
 namespace BazaarIsMyHaven
 {
-    [BepInDependency("com.bepis.r2api")]
+    [BepInDependency(R2API.R2API.PluginGUID)]
+    [BepInDependency(R2API.LanguageAPI.PluginGUID)]
     [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.funkfrog_sipondo.sharesuite", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(ItemStringParser.ItemStringParser.PluginGUID)]
     [BepInIncompatibility("com.Lunzir.BazaarLunarForEveryone")]
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync, VersionStrictness.DifferentModVersionsAreOk)]
@@ -31,7 +33,7 @@ namespace BazaarIsMyHaven
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "Def";
         public const string PluginName = "BazaarIsMyHaven";
-        public const string PluginVersion = "3.0.0";
+        public const string PluginVersion = "4.0.0";
 
         private static System.Random Random = new System.Random();
         List<BazaarBase> bazaarMods = new List<BazaarBase>();
@@ -51,8 +53,6 @@ namespace BazaarIsMyHaven
             instance = this;
             Log.Init(Logger);
 
-            Tokens.RegisterLanguageTokens();
-            BazaarBase.InitBazaarBaseDropTables();
             bazaarMods.Add(new BazaarCauldron());
             bazaarMods.Add(new BazaarPrinter());
             bazaarMods.Add(new BazaarRestack());
@@ -67,12 +67,11 @@ namespace BazaarIsMyHaven
             {
                 bazaarMod.Preload();
             }
-            R2API.Utils.CommandHelper.AddToConsoleWhenReady();
             RoR2Application.onLoad += () =>
             {
                 ModConfig.InitConfig(Config);
 #if DEBUG
-                BazaarBase.WriteDropTablesMarkdownFile();
+                ItemStringParser.ItemStringParser.WriteDropTablesMarkdownFile("Markdownfile.md");
 #endif
                 Hook();
             };
@@ -101,9 +100,17 @@ namespace BazaarIsMyHaven
 
         private void Run_Start(On.RoR2.Run.orig_Start orig, Run self)
         {
+
             ShopKeeper.DiedAtLeastOnce = false;
             ShopKeeper.Body = null;
             orig(self);
+            if (ModConfig.EnableMod.Value && NetworkServer.active)
+            {
+                foreach (var bazaarMod in bazaarMods)
+                {
+                    bazaarMod.RunStart();
+                }
+            }
         }
 
 

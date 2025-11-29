@@ -18,12 +18,13 @@ namespace BazaarIsMyHaven
         {
             IL.RoR2.PurchaseInteraction.OnSerialize += PurchaseInteraction_OnSerialize;
             IL.RoR2.ShopTerminalBehavior.OnSerialize += ShopTerminalBehavior_OnSerialize;
-            On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
+            On.RoR2.ShopTerminalBehavior.SetPickup += ShopTerminalBehavior_SetPickup;
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
             On.RoR2.ShopTerminalBehavior.SetHasBeenPurchased += ShopTerminalBehavior_SetHasBeenPurchased;
             On.RoR2.PurchaseInteraction.GetInteractability += PurchaseInteraction_GetInteractability;
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.ShopTerminalBehavior.CurrentPickupIndex += ShopTerminalBehavior_CurrentPickupIndex;
+            On.RoR2.ShopTerminalBehavior.CurrentPickup += ShopTerminalBehavior_CurrentPickup;
         }
 
         private Interactability PurchaseInteraction_GetInteractability(On.RoR2.PurchaseInteraction.orig_GetInteractability orig, PurchaseInteraction self, Interactor activator)
@@ -105,35 +106,45 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
+
+        private void ShopTerminalBehavior_SetPickup(On.RoR2.ShopTerminalBehavior.orig_SetPickup orig, ShopTerminalBehavior self, UniquePickup newPickup, bool newHidden)
         {
             if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase) && NetworkServer.active)
             {
                 if (currentInteractor != null)
                 {
                     // someone is interacting with the shop terminal -> set the pickup index only for the interactor
-                    instancedPurchase.GetOrCreate(currentInteractor).pickupIndex = newPickupIndex;
+                    instancedPurchase.GetOrCreate(currentInteractor).pickup = newPickup;
                     instancedPurchase.GetOrCreate(currentInteractor).hidden = newHidden;
                     UpdateShop(self.gameObject, currentInteractor);
                 }
                 else
                 {
                     // no one is interacting with the shop terminal -> host sets the pickup index
-                    instancedPurchase.original.pickupIndex = newPickupIndex;
+                    instancedPurchase.original.pickup = newPickup;
                     instancedPurchase.original.hidden = newHidden;
-                    orig(self, newPickupIndex, newHidden);
+                    orig(self, newPickup, newHidden);
                 }
             }
             else
             {
-                orig(self, newPickupIndex, newHidden);
+                orig(self, newPickup, newHidden);
             }
         }
+
         private PickupIndex ShopTerminalBehavior_CurrentPickupIndex(On.RoR2.ShopTerminalBehavior.orig_CurrentPickupIndex orig, ShopTerminalBehavior self)
         {
             if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase) && NetworkServer.active)
             {
-                return instancedPurchase.GetOrOriginal(currentInteractor).pickupIndex;
+                return instancedPurchase.GetOrOriginal(currentInteractor).pickup.pickupIndex;
+            }
+            return orig(self);
+        }
+        private UniquePickup ShopTerminalBehavior_CurrentPickup(On.RoR2.ShopTerminalBehavior.orig_CurrentPickup orig, ShopTerminalBehavior self)
+        {
+            if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase) && NetworkServer.active)
+            {
+                return instancedPurchase.GetOrOriginal(currentInteractor).pickup;
             }
             return orig(self);
         }
@@ -141,17 +152,17 @@ namespace BazaarIsMyHaven
         private void ShopTerminalBehavior_OnSerialize(ILContext il)
         {
             ILCursor c = new ILCursor(il);
-            while (c.TryGotoNext(x => x.MatchLdfld<ShopTerminalBehavior>("pickupIndex")))
+            while (c.TryGotoNext(x => x.MatchLdfld<ShopTerminalBehavior>("pickup")))
             {
                 c.Remove();
                 c.EmitDelegate((ShopTerminalBehavior shopTerminalBehavior) =>
                 {
                     if(shopTerminalBehavior.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
                     {
-                        return instancedPurchase.GetOrOriginal(instancedPurchase.pcClient).pickupIndex;
+                        return instancedPurchase.GetOrOriginal(instancedPurchase.pcClient).pickup;
                     }
                     // vanilla
-                    return shopTerminalBehavior.pickupIndex;
+                    return shopTerminalBehavior.pickup;
                 });
             }
             c.Goto(0);
@@ -210,7 +221,7 @@ namespace BazaarIsMyHaven
                 if (shop.TryGetComponent(out ShopTerminalBehavior shopTerminalBehavior))
                 {
                     shopTerminalBehavior.hasBeenPurchased = instancedPurchase.GetOrOriginal(pc).hasBeenPurchased;
-                    shopTerminalBehavior.pickupIndex = instancedPurchase.GetOrOriginal(pc).pickupIndex;
+                    shopTerminalBehavior.pickup = instancedPurchase.GetOrOriginal(pc).pickup;
                     shopTerminalBehavior.UpdatePickupDisplayAndAnimations();
                 }
             }
@@ -225,13 +236,13 @@ namespace BazaarIsMyHaven
                 if (shop.TryGetComponent(out ShopTerminalBehavior shopTerminalBehavior))
                 {
                     syncVarDirtyBitsBackups[shopTerminalBehavior] = shopTerminalBehavior.m_SyncVarDirtyBits;
-                    shopTerminalBehavior.m_SyncVarDirtyBits |= 1u; // pickupIndex
+                    shopTerminalBehavior.m_SyncVarDirtyBits |= 1u; // pickup
                     shopTerminalBehavior.m_SyncVarDirtyBits |= 4u; // hasBeenPurchased
                 }
                 if (shop.TryGetComponent(out PurchaseInteraction purchaseInteraction))
                 {
                     syncVarDirtyBitsBackups[purchaseInteraction] = purchaseInteraction.m_SyncVarDirtyBits;
-                    purchaseInteraction.m_SyncVarDirtyBits |= 4u; // available
+                    purchaseInteraction.m_SyncVarDirtyBits |= 8u; // available
                 }
 
                 NetworkWriter updateWriter = new NetworkWriter();

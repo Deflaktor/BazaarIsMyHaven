@@ -16,7 +16,7 @@ namespace BazaarIsMyHaven
             {
                 purchases[pc] = new InstancedPurchaseStruct();
                 purchases[pc].available = original.available;
-                purchases[pc].pickupIndex = original.pickupIndex;
+                purchases[pc].pickup = original.pickup;
                 purchases[pc].hasBeenPurchased = original.hasBeenPurchased;
                 purchases[pc].hidden = original.hidden;
             }
@@ -36,7 +36,7 @@ namespace BazaarIsMyHaven
     public class InstancedPurchaseStruct
     {
         public bool available = false;
-        public PickupIndex pickupIndex = PickupIndex.none;
+        public UniquePickup pickup = UniquePickup.none;
         public bool hasBeenPurchased = false;
         public bool hidden = false;
         public bool hasBeenPurchasedOnce = false;
