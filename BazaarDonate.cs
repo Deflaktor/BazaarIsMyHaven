@@ -1,4 +1,5 @@
 using RoR2;
+using RoR2.Skills;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,8 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> TeamWarCryActivation;
         AsyncOperationHandle<GameObject> ShrineUseEffect;
 
+        private readonly Dictionary<PlayerCharacterMasterController, int> donationsDuringRun = new Dictionary<PlayerCharacterMasterController, int>();
+
         public override void Preload()
         {
             // iscShrineHealing = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineHealing/iscShrineHealing.asset");
@@ -34,7 +37,10 @@ namespace BazaarIsMyHaven
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.BlueprintTerminal.Rebuild += BlueprintTerminal_Rebuild;
         }
-
+        public override void RunStart()
+        {
+            donationsDuringRun.Clear();
+        }
 
         public override void SetupBazaar()
         {
@@ -71,12 +77,15 @@ namespace BazaarIsMyHaven
                     CharacterMaster characterMaster = activator.GetComponent<CharacterBody>().master;
                     CharacterBody characterBody = activator.GetComponent<CharacterBody>();
                     Inventory inventory = characterBody.inventory;
+                    var pc = characterMaster.playerCharacterMasterController;
 
-                    var playerStruct = Main.instance.GetPlayerStruct(characterMaster.playerCharacterMasterController);
-                    if (playerStruct.RewardCount < ModConfig.DonateRewardLimit.Value)
+
+                    var playerStruct = Main.instance.GetPlayerStruct(pc);
+                    if (playerStruct.RewardCount < ModConfig.DonateRewardLimitPerVisit.Value && donationsDuringRun.GetValueOrDefault(pc) < ModConfig.DonateRewardLimitPerRun.Value)
                     {
-                        GiftReward(self, networkUser, characterBody, inventory, playerStruct);
+                        GiftReward(self, networkUser, characterBody, inventory, donationsDuringRun.GetValueOrDefault(pc));
                         playerStruct.RewardCount += 1;
+                        donationsDuringRun[pc] = donationsDuringRun.GetValueOrDefault(pc) + 1;
                         SpawnEffect(ShrineUseEffect, self.transform.position, new Color32(64, 127, 255, 255), 5f);
                         networkUser.DeductLunarCoins((uint)self.Networkcost);
                     }
@@ -86,11 +95,10 @@ namespace BazaarIsMyHaven
             orig(self, activator);
         }
 
-        private void GiftReward(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Inventory inventory, PlayerStruct playerStruct)
+        private void GiftReward(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Inventory inventory, int donations)
         {
             int tier = 0;
-            PickupIndex[] rewards = null;
-            if (ModConfig.DonateSequentialRewards.Value)
+            if (ModConfig.DonateSequentialRewardLists.Value)
             {
                 var combined = new List<(float weight, int tier)>
                 {
@@ -105,7 +113,7 @@ namespace BazaarIsMyHaven
                 // Sort by descending weight
                 combined.Sort((a, b) => b.weight.CompareTo(a.weight));
 
-                tier = combined[playerStruct.RewardCount % combined.Count].tier;
+                tier = combined[donations % combined.Count].tier;
             }
             else
             {
@@ -124,64 +132,103 @@ namespace BazaarIsMyHaven
                     tier = 4;
             }
 
+            Dictionary<PickupIndex, int> resolvedItems = new Dictionary<PickupIndex, int>();
             switch (tier)
             {
                 case 1:
-                    rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList1.Value);
+                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList1.Value, resolvedItems, Log.GetSource(), false);
                     break;
                 case 2:
-                    rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList2.Value);
+                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList2.Value, resolvedItems, Log.GetSource(), false);
                     break;
                 case 3:
-                    rewards = ResolveItemRewardFromStringList(ModConfig.DonateRewardList3.Value);
+                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList3.Value, resolvedItems, Log.GetSource(), false);
                     break;
                 case 4:
                     var rewardList = ModConfig.DonateRewardListCharacters.GetValueOrDefault(characterBody.bodyIndex, ModConfig.DonateRewardListCharacterDefault).Value;
-                    rewards = ResolveItemRewardFromStringList(rewardList);
+                    ItemStringParser.ItemStringParser.ParseItemString(rewardList, resolvedItems, Log.GetSource(), false);
                     break;
             }
 
-            if (rewards == null)
-            {
-                return;
-            }
-
             var itemTakenOrbs = 0;
-            foreach (var pickupIndex in rewards)
+            uint equipmentsGiven = 0;
+            int equipSkip = 0;
+            bool equipLoop = false;
+            foreach (var (pickupIndex, itemAmount) in resolvedItems)
             {
+                if (itemAmount <= 0)
+                    continue;
                 var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
-                if (pickupDef.itemIndex != ItemIndex.None)
+                // handle items
+                var itemIndex = pickupDef.itemIndex;
+                var equipmentIndex = pickupDef.equipmentIndex;
+                if (itemIndex != ItemIndex.None)
                 {
                     if (itemTakenOrbs < 20)
                     {
                         PurchaseInteraction.CreateItemTakenOrb(self.transform.position + Vector3.up * 6.0f, characterBody.gameObject, pickupDef.itemIndex);
                         itemTakenOrbs++;
                     }
-                    inventory.GiveItem(pickupDef.itemIndex);
-                }
-                else if (pickupDef.equipmentIndex != EquipmentIndex.None)
-                {
-                    EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(pickupDef.equipmentIndex);
-                    EquipmentIndex IsHasEquip = inventory.GetEquipmentIndex();
-                    if (IsHasEquip != EquipmentIndex.None)
-                        PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(IsHasEquip), characterBody.gameObject.transform.position + Vector3.up * 1.5f, Vector3.up * 20f + self.transform.forward * 2f);
-                    inventory.SetEquipmentIndex(pickupDef.equipmentIndex);
+                    inventory.GiveItemPermanent(itemIndex, itemAmount);
+                } else { 
+                    // handle equipments
+                    var equipmentAmount = itemAmount;
+                    int maxEquipmentSlots = Helper.IsToolbotWithSwapSkill(characterBody.master) ? 2 : 1;
+                    int maxEquipmentSets = inventory.GetItemCountEffective(DLC3Content.Items.ExtraEquipment.itemIndex) + 1;
+                    int maxEquipmentCount = maxEquipmentSlots * maxEquipmentSets;
+                    while (equipmentIndex != EquipmentIndex.None && equipmentAmount > 0 && equipmentsGiven < maxEquipmentCount)
+                    {
+                        var index = equipmentsGiven + equipSkip;
+                        if(index >= maxEquipmentCount)
+                        {
+                            equipLoop = true;
+                            index = 0;
+                        }
+                        uint slot = (uint)(index % maxEquipmentSlots);
+                        uint set = (uint)(index / maxEquipmentSlots);
+                        var equipmentState = inventory.GetEquipment(slot, set);
+                        if(EquipmentState.empty.Equals(equipmentState))
+                        {
+                            // has no equipment in this slot -> set it
+                            inventory.SetEquipmentIndexForSlot(equipmentIndex, slot, set);
+                            equipmentAmount--;
+                            equipmentsGiven++;
+                        }
+                        else
+                        {
+                            if(!equipLoop)
+                            {
+                                // skip this slot, because it already has an equip
+                                equipSkip++;
+                            }
+                            else
+                            {
+                                // we already looped once -> time to drop the old equipment
+                                var oldEquipment = new UniquePickup(PickupCatalog.FindPickupIndex(equipmentState.equipmentIndex));
+                                PickupDropletController.CreatePickupDroplet(oldEquipment, characterBody.gameObject.transform.position + Vector3.up * 1.5f, Vector3.up * 20f + self.transform.forward * 2f, false);
+                                inventory.SetEquipmentIndexForSlot(equipmentIndex, slot, set);
+                                equipmentAmount--;
+                                equipmentsGiven++;
+                            }
+                                
+                        }
+                    }
                 }
             }
 
             switch(tier)
             {
                 case 1:
-                    ChatHelper.ThanksTipNormal(networkUser, characterBody.master.playerCharacterMasterController, rewards);
+                    ChatHelper.ThanksTipNormal(networkUser, characterBody.master.playerCharacterMasterController, resolvedItems);
                     break;
                 case 2:
-                    ChatHelper.ThanksTipElite(networkUser, characterBody.master.playerCharacterMasterController, rewards);
+                    ChatHelper.ThanksTipElite(networkUser, characterBody.master.playerCharacterMasterController, resolvedItems);
                     break;
                 case 3:
-                    ChatHelper.ThanksTipPeculiar(networkUser, characterBody.master.playerCharacterMasterController, rewards);
+                    ChatHelper.ThanksTipPeculiar(networkUser, characterBody.master.playerCharacterMasterController, resolvedItems);
                     break;
                 case 4:
-                    ChatHelper.ThanksTipCharacter(networkUser, characterBody.master.playerCharacterMasterController, rewards);
+                    ChatHelper.ThanksTipCharacter(networkUser, characterBody.master.playerCharacterMasterController, resolvedItems);
                     break;
             }
 

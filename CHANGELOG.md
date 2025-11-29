@@ -1,3 +1,12 @@
+# 4.0.0
+
+- Update for Alloyed Collective
+- Add proper R2API dependencies
+- Use ItemStringParser for all item lists
+- Fix donation of unused items
+- Limit amount of donations per visit to the Bazaar and per run
+- Fix equipments in bazaar not getting replaced with the elite list
+
 # 3.0.0
 
 - Donation Shrine no longer requires to donate 10 times to get reward

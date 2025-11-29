@@ -6,6 +6,8 @@ namespace BazaarIsMyHaven
     {
         internal static ManualLogSource _logSource;
 
+        public static ManualLogSource GetSource() { return _logSource; }
+
         internal static void Init(ManualLogSource logSource)
         {
             _logSource = logSource;

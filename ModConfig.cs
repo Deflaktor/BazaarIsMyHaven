@@ -101,8 +101,9 @@ namespace BazaarIsMyHaven
         // donate
         public static ConfigEntry<bool> DonateSectionEnabled;
         public static ConfigEntry<int> DonateCost;
-        public static ConfigEntry<int> DonateRewardLimit;
-        public static ConfigEntry<bool> DonateSequentialRewards;
+        public static ConfigEntry<int> DonateRewardLimitPerVisit;
+        public static ConfigEntry<int> DonateRewardLimitPerRun;
+        public static ConfigEntry<bool> DonateSequentialRewardLists;
         public static ConfigEntry<float> DonateRewardList1Weight;
         public static ConfigEntry<string> DonateRewardList1;
         public static ConfigEntry<float> DonateRewardList2Weight;
@@ -165,7 +166,7 @@ namespace BazaarIsMyHaven
             EquipmentAmount = config.Bind("05 Equipment", "Amount", 3, "Number of Equipment Terminals (max 3 normally, 5 if replacing Lunar Seers).");
             EquipmentReplaceLunarSeersWithEquipment = config.Bind("05 Equipment", "ReplaceLunarSeersWithEquipment", false, "Replaces Lunar Seers with Equipment Terminals (increases equipment max to 5). Makes the Lunar Seer section irrelevant.");
             EquipmentReplaceWithEliteChance = config.Bind("05 Equipment", "ReplaceWithEliteChance", 0.15f, "Chance for replacing the equipment with an elite equipment."); EquipmentReplaceWithEliteChance.Value = Math.Abs(EquipmentReplaceWithEliteChance.Value);
-            EquipmentReplaceWithEliteList = config.Bind("05 Equipment", "ReplaceWithEliteList", "EliteEarthEquipment, EliteFireEquipment, EliteIceEquipment, EliteLunarEquipment, EliteLightningEquipment", "With which elite equipments to replace. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md)");
+            EquipmentReplaceWithEliteList = config.Bind("05 Equipment", "ReplaceWithEliteList", "EliteEarthEquipment | EliteFireEquipment | EliteIceEquipment | EliteLunarEquipment | EliteLightningEquipment", "With which elite equipments to replace. List in the format equipment1 | equipment2. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md). Follows ItemStringParser format.");
             EquipmentInstancedPurchases = config.Bind("05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
             EquipmentCost = config.Bind("05 Equipment", "Cost", 0, "Monetary cost for equipment purchases."); EquipmentCost.Value = Math.Abs(EquipmentCost.Value);
             EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground.");
@@ -179,10 +180,10 @@ namespace BazaarIsMyHaven
             LunarShopCost = config.Bind("06 LunarShop", "Cost", 1, "Lunar coin cost per Lunar Shop Terminal or Lunar Bud use."); LunarShopCost.Value = Math.Abs(LunarShopCost.Value);
             LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar. -1 = Unlimited.");
             LunarShopSequentialItems = config.Bind("06 LunarShop", "SequentialItems", false, "Picks items sequentially from the list instead of randomly.");
-            var items = "Tonic, AutoCastEquipment, RandomDamageZone, LunarDagger, HalfSpeedDoubleHealth, ShieldOnly, ShieldOnly, ShieldOnly, LunarPrimaryReplacement, LunarSecondaryReplacement, LunarSpecialReplacement, LunarBadLuck, LunarBadLuck, LunarBadLuck, HalfAttackSpeedHalfCooldowns, HalfAttackSpeedHalfCooldowns, LunarSun";
-            var itemTiersString = "Tier1, Tier2, Tier3, Lunar, Boss, VoidTier1, VoidTier2, VoidTier3, VoidBoss";
-            var itemKeyWordsExplanation = $"Can use:\n - internal item names(see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)\nExample: {items}";
-            LunarShopItemList = config.Bind("06 LunarShop", "ItemList", "dtLunarChest", $"Comma-separated list of items available in Lunar Shop. {itemKeyWordsExplanation}");
+            var items = "Tonic | AutoCastEquipment | RandomDamageZone | LunarDagger | HalfSpeedDoubleHealth | ShieldOnly | ShieldOnly | ShieldOnly | LunarPrimaryReplacement | LunarSecondaryReplacement | LunarSpecialReplacement | LunarBadLuck | LunarBadLuck | LunarBadLuck | HalfAttackSpeedHalfCooldowns | HalfAttackSpeedHalfCooldowns | LunarSun";
+            var itemTiersString = "Tier1 | Tier2 | Tier3 | Lunar | Boss | VoidTier1 | VoidTier2 | VoidTier3 | VoidBoss | FoodTier";
+            var itemKeyWordsExplanation = $"Can use:\n - internal item names(see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)\nFollows ItemStringParser format.";
+            LunarShopItemList = config.Bind("06 LunarShop", "ItemList", "dtLunarChest", $"List of items available in Lunar Shop. {itemKeyWordsExplanation} Example: {items}");
             LunarShopInstancedPurchases = config.Bind("06 LunarShop", "InstancedPurchases", true, "Each player can buy independently from Lunar Shop.");
             LunarShopBuyToInventory = config.Bind("06 LunarShop", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
 
@@ -210,18 +211,19 @@ namespace BazaarIsMyHaven
 
             // 11 Donation
             DonateSectionEnabled = config.Bind("11 Donate", "SectionEnabled", true, "Enables or disables the Donate section. Enabling spawns a Donation Altar near the Newt.");
-            DonateRewardLimit = config.Bind("11 Donate", "RewardLimit", 1, "Limit the number of rewards each player can get per visit to the Bazaar."); DonateRewardLimit.Value = Math.Abs(DonateRewardLimit.Value);
+            DonateRewardLimitPerVisit = config.Bind("11 Donate", "RewardLimitPerVisit", 1, "Limit the number of rewards each player can get per visit to the Bazaar."); DonateRewardLimitPerVisit.Value = Math.Abs(DonateRewardLimitPerVisit.Value);
+            DonateRewardLimitPerRun = config.Bind("11 Donate", "RewardLimitPerRun", 1, "Limit the number of rewards each player can get in total over the course of the complete run. Must be equal or higher than RewardLimitPerVisit."); DonateRewardLimitPerRun.Value = Math.Abs(DonateRewardLimitPerRun.Value);
             DonateCost = config.Bind("11 Donate", "Cost", 5, "Lunar coin cost for reward."); DonateCost.Value = Math.Abs(DonateCost.Value);
-            DonateSequentialRewards = config.Bind("11 Donate", "SequentialRewards", false, "If enabled, the reward lists will be choosen sequentially, ordered from heighest weight to lowest weight. Reward lists with weight = 0 will be ignored.");
+            DonateSequentialRewardLists = config.Bind("11 Donate", "SequentialRewardLists", false, "If enabled, the reward lists will be choosen sequentially, ordered from heighest weight to lowest weight. The current reward list is stored for each player per run and swaps around. Reward lists with weight = 0 will be ignored.");
             DonateRewardList1Weight = config.Bind("11 Donate", "RewardList1Weight", 0.60f, "Weight for choosing RewardList1."); DonateRewardList1Weight.Value = Math.Abs(DonateRewardList1Weight.Value);
-            DonateRewardList1 = config.Bind("11 Donate", "RewardList1", "dtChest1=2, Tier2=1", $"Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation}");
+            DonateRewardList1 = config.Bind("11 Donate", "RewardList1", "2xdtChest1 | Tier2", $"Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation} Example: Hoof & Tier1");
             DonateRewardList2Weight = config.Bind("11 Donate", "RewardList2Weight", 0.10f, "Weight for choosing RewardList2."); DonateRewardList2Weight.Value = Math.Abs(DonateRewardList2Weight.Value);
-            DonateRewardList2 = config.Bind("11 Donate", "RewardList2", "Tier3, Boss", $"Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation}");
+            DonateRewardList2 = config.Bind("11 Donate", "RewardList2", "Tier3 | Boss", $"Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation} Example: AlienHead | 2xTier2");
             DonateRewardList3Weight = config.Bind("11 Donate", "RewardList3Weight", 0f, "Weight for choosing RewardList3."); DonateRewardList3Weight.Value = Math.Abs(DonateRewardList3Weight.Value);
-            DonateRewardList3 = config.Bind("11 Donate", "RewardList3", "BoostAttackSpeed=10, BoostDamage=10, BoostEquipmentRecharge=10, BoostHp=10, BurnNearby, CrippleWardOnLevel=10, EmpowerAlways, Ghost, Incubator=3, LevelBonus=10, WarCryOnCombat=10, TempestOnKill=10", $"Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation}");
+            DonateRewardList3 = config.Bind("11 Donate", "RewardList3", "10xBoostAttackSpeed | 10xBoostDamage | 10xBoostEquipmentRecharge | 10xBoostHp | BurnNearby | 10xCrippleWardOnLevel | EmpowerAlways | Ghost | 3xIncubator | 10xLevelBonus | 10xWarCryOnCombat | 10xTempestOnKill", $"Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation}");
 
             DonateRewardListCharacterWeight = config.Bind("11 Donate", "RewardListCharacterWeight", 0.30f, "Weight for choosing the reward list of the respective character."); DonateRewardListCharacterWeight.Value = Math.Abs(DonateRewardListCharacterWeight.Value);
-            DonateRewardListCharacterDefault = config.Bind("11 Donate", "RewardListCharacterDefault", "ScrapGreen=3", $"Item reward pool if the donating character does not have a reward list specified. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation}");
+            DonateRewardListCharacterDefault = config.Bind("11 Donate", "RewardListCharacterDefault", "3xScrapGreen", $"Item reward pool if the donating character does not have a reward list specified. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation}");
             string[] survivorNames = SurvivorCatalog.allSurvivorDefs.Select(survivor => survivor.cachedName).ToArray();
             // string[] bodyNames = BodyCatalog.allBodyPrefabs.Select(prefab => prefab.name).ToArray();
             DonateRewardListAvailableCharacters = config.Bind("11 Donate", "RewardListAvailableCharacters", string.Join(", ", survivorNames), "Available special reward lists for certain characters. Applies only if the donator is a character of the respective type. Comma-separated list of characters (see README.md)");
@@ -246,10 +248,10 @@ namespace BazaarIsMyHaven
                         defaultReward = "BleedOnHitAndExplode";
                         break;
                     case "Captain":
-                        defaultReward = "BleedOnHit=3";
+                        defaultReward = "3xBleedOnHit";
                         break;
                     case "Commando":
-                        defaultReward = "StickyBomb=5";
+                        defaultReward = "5xStickyBomb";
                         break;
                     case "Croco":
                         defaultReward = "TriggerEnemyDebuffs";
@@ -258,49 +260,48 @@ namespace BazaarIsMyHaven
                         defaultReward = "HealingPotion";
                         break;
                     case "Heretic":
-                        defaultReward = "HealWhileSafe=2";
+                        defaultReward = "2xHealWhileSafe";
                         break;
                     case "Huntress":
-                        defaultReward = "AttackSpeedOnCrit=2";
+                        defaultReward = "2xAttackSpeedOnCrit";
                         break;
                     case "Loader":
-                        defaultReward = "IceRing=2";
+                        defaultReward = "2xIceRing";
                         break;
                     case "Mage":
-                        defaultReward = "MissileVoid";
+                        defaultReward = "StrengthenBurn";
                         break;
                     case "Merc":
                         defaultReward = "AlienHead";
                         break;
                     case "Toolbot":
-                        defaultReward = "SecondarySkillMagazine=5";
+                        defaultReward = "5xSecondarySkillMagazine";
                         break;
                     case "Treebot":
-                        defaultReward = "Medkit=3";
+                        defaultReward = "3xMedkit";
                         break;
                     case "Railgunner":
                         defaultReward = "CritDamage";
                         break;
                     case "VoidSurvivor":
-                        defaultReward = "SlowOnHitVoid=3";
+                        defaultReward = "3xSlowOnHitVoid";
                         break;
                     case "Chef":
-                        defaultReward = "AttackSpeedPerNearbyAllyOrEnemy=5";
+                        defaultReward = "5xAttackSpeedPerNearbyAllyOrEnemy";
                         break;
                     case "FalseSon":
-                        defaultReward = "Infusion=3";
+                        defaultReward = "3xInfusion";
                         break;
                     case "Seeker":
-                        defaultReward = "ArmorPlate=5";
+                        defaultReward = "5xArmorPlate";
                         break;
                     default:
-                        defaultReward = "ScrapGreen=3";
+                        defaultReward = "3xScrapGreen";
                         break;
                 }   
-                ConfigEntry<string> donateRewardListCharacter = donateRewardListCharacter = config.Bind("11 Donate", $"RewardList{name}", defaultReward, $"Item reward pool for {name}. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation}");
+                ConfigEntry<string> donateRewardListCharacter = config.Bind("11 Donate", $"RewardList{name}", defaultReward, $"Item reward pool for {name} in the format <amount1>x<item1> & <amount2>x<item2>. See README.md for more detailed description. {itemKeyWordsExplanation}");
                 DonateRewardListCharacters.Add(bodyIndex, donateRewardListCharacter);
             }
-            string.Join(", ", BodyCatalog.allBodyPrefabs.Select(prefab => prefab.name));
 
             if (ModCompatibilityInLobbyConfig.enabled)
             {

@@ -1,6 +1,35 @@
 {
 	"strings": 
 	{
+		"NEWT_DONATE_LIST1": "<style=cWorldEvent>{0}{1}: Thank you so much, {2}! Please accept this gift: <style=cIsHealth>{3}</style></style>",
+		"NEWT_DONATE_LIST2": "<style=cWorldEvent>{0}{1}: Much obliged, {2}! Take this — it might aid you: <style=cIsHealth>{3}</style></style>",
+		"NEWT_DONATE_LIST3": "<style=cWorldEvent>{0}{1}: Divine blessings upon you, {2}. Heres something unique: <style=cIsHealth>{3}</style></style>",
+		"NEWT_DONATE_LIST_CHARACTER": "<style=cWorldEvent>{0}{1}: Your generosity stands apart, {2}. Accept this personal token, chosen just for you: <style=cIsHealth>{3}</style></style>",
+		"NEWT_DEATH_STATE": "Ghost",
+		"NEWT_DEATH_INFO": "Alas... {0} has been <style=cDeath>killed</style>.",
+		"NEWT_WELCOME_WORD_1": "<style=cWorldEvent><size=24px>{0}: Make yourself at home, traveler.</size></style>",
+		"NEWT_WELCOME_WORD_2": "<style=cWorldEvent><size=24px>{0}: Greetings.</size></style>",
+		"NEWT_WELCOME_WORD_3": "<style=cWorldEvent><size=24px>{0}: Hello, wanderer.</size></style>",
+		"NEWT_WELCOME_WORD_4": "<style=cWorldEvent><size=24px>{0}: How may I assist you?</size></style>",
+		"NEWT_WELCOME_WORD_5": "<style=cWorldEvent><size=24px>{0}: Welcome, good sir.</size></style>",
+		"NEWT_ANGRY_WELCOME_WORD_1": "<style=cWorldEvent><size=24px>{0}{1}: You are not welcome here.</size></style>",
+		"NEWT_ANGRY_WELCOME_WORD_2": "<style=cWorldEvent><size=24px>{0}{1}: GET OUT, NOW!</size></style>",
+		"NEWT_ANGRY_WELCOME_WORD_3": "<style=cWorldEvent><size=24px>{0}{1}: How dare you return here?</size></style>",
+		"NEWT_ANGRY_WELCOME_WORD_4": "<style=cWorldEvent><size=24px>{0}{1}: Shame on you!</size></style>",
+		"NEWT_ANGRY_WELCOME_WORD_5": "<style=cWorldEvent><size=24px>{0}{1}: Hello, failure.</size></style>",
+		"NEWT_ATTACKED_WORD_1": "<style=cWorldEvent>{0}{1}: Really? That tickles more than it hurts.</style>",
+		"NEWT_ATTACKED_WORD_2": "<style=cWorldEvent>{0}{1}: Is that all? Hit harder, weakling.</style>",
+		"NEWT_ATTACKED_WORD_3": "<style=cWorldEvent>{0}{1}: Is that the best you've got? Pathetic.</style>",
+		"NEWT_ATTACKED_WORD_4": "<style=cWorldEvent>{0}{1}: Was that an attack or just an accident?</style>",
+		"NEWT_ATTACKED_WORD_5": "<style=cWorldEvent>{0}{1}: Want to hear a joke? Look in the mirror.</style>",
+		"NEWT_ATTACKED_WORD_6": "<style=cWorldEvent>{0}{1}: Try harder; I'm not impressed.</style>",
+		"NEWT_ATTACKED_WORD_7": "<style=cWorldEvent>{0}{1}: All bark, no bite.</style>",
+		"NEWT_ATTACKED_WORD_8": "<style=cWorldEvent>{0}{1}: You'll need more than that to get my attention.</style>",
+		"NEWT_ATTACKED_WORD_9": "<style=cWorldEvent>{0}{1}: Did you forget to bring your strength today?</style>",
+		"NEWT_ATTACKED_WORD_10": "<style=cWorldEvent>{0}{1}: Weak hit. Try something stronger.</style>",
+	},
+	"zh-CN": 
+	{
 		"NEWT_DONATE_LIST1": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，送你<style=cIsHealth>{3}</style></style>",
 		"NEWT_DONATE_LIST2": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，小小心意送你<style=cIsHealth>{3}</style></style>",
 		"NEWT_DONATE_LIST3": "<style=cWorldEvent>{0}{1}：谢您嘞老铁{2}，送你特别礼物<style=cIsHealth>{3}</style></style>",
@@ -28,4 +57,5 @@
 		"NEWT_ATTACKED_WORD_9": "<style=cWorldEvent>{0}{1}：怎么样做才可以死了让父母朋友不伤心? - 知乎</style>",
 		"NEWT_ATTACKED_WORD_10": "<style=cWorldEvent>{0}{1}：一天内哪些时间自杀成功率最高？熬夜玩游戏。</style>"
 	} 
+
 }

@@ -32,6 +32,10 @@ namespace BazaarIsMyHaven
             On.RoR2.ShopTerminalBehavior.DropPickup += ShopTerminalBehavior_DropPickup;
             On.RoR2.ShopTerminalBehavior.GenerateNewPickupServer_bool += ShopTerminalBehavior_GenerateNewPickupServer_bool;
         }
+        public override void RunStart()
+        {
+
+        }
 
         public override void SetupBazaar()
         {
@@ -129,16 +133,18 @@ namespace BazaarIsMyHaven
             {
                 if(Run.instance.stageRng.nextNormalizedFloat < ModConfig.EquipmentReplaceWithEliteChance.Value)
                 {
-                    PickupIndex pickupIndex = PickupIndex.none;
-                    PickupIndex[] rewards = ResolveItemRewardFromStringList(ModConfig.EquipmentReplaceWithEliteList.Value);
-
-                    if (rewards != null)
+                    Dictionary<PickupIndex, int> resolvedItems = new Dictionary<PickupIndex, int>();
+                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.EquipmentReplaceWithEliteList.Value, resolvedItems, Log.GetSource(), false);
+                    bool set = false;
+                    foreach(var (pickupIndex, amount) in resolvedItems)
                     {
-                        pickupIndex = rewards[0];
-                        self.SetPickupIndex(pickupIndex, newHidden);
-                        return;
+                        if (amount > 0) {
+                            self.SetPickup(new UniquePickup(pickupIndex), newHidden);
+                            set = true;
+                            return;
+                        }
                     }
-                    else
+                    if (!set)
                     {
                         Log.LogError($"Could not get a proper pickup index from EquipmentReplaceWithEliteList: {ModConfig.EquipmentReplaceWithEliteList.Value}");
                     }
@@ -194,7 +200,7 @@ namespace BazaarIsMyHaven
                     if(ModConfig.EquipmentInstancedPurchases.Value) {
                         var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
                         instancedPurchase.original.available = purchaseInteraction.available;
-                        instancedPurchase.original.pickupIndex = shopTerminalBehavior.pickupIndex;
+                        instancedPurchase.original.pickup = shopTerminalBehavior.pickup;
                         instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
                     }
                 });

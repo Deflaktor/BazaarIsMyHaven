@@ -22,6 +22,10 @@ namespace BazaarIsMyHaven
         {
             On.RoR2.PurchaseInteraction.ScaleCost += PurchaseInteraction_ScaleCost;
         }
+        public override void RunStart()
+        {
+
+        }
 
         public override void SetupBazaar()
         {

@@ -81,28 +81,37 @@ namespace BazaarIsMyHaven
 
         private static string GetDeathState() => ShopKeeper.DiedAtLeastOnce && ModConfig.NewtDeathBehavior.Value == ShopKeeper.DeathState.Ghost ? $" ({Language.GetString(LanguageAPI.NEWT_DEATH_STATE)})" : "";
 
-        public static string GetItemNames(PickupIndex[] pickupIndexes)
+        public static string GetItemNames(Dictionary<PickupIndex, int> pickupIndexes)
         {
-            var counts = pickupIndexes.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
-
             var itemNames = new List<string>();
-            foreach (var entry in counts)
+            foreach (var (pickupIndex, count) in pickupIndexes)
             {
-                var pickupIndex = entry.Key;
-                var count = entry.Value;
+                if (count <= 0)
+                    continue;
                 var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
                 var itemName = pickupDef.internalName;
-                ColorCatalog.ColorIndex colorIndex = ColorCatalog.ColorIndex.Error;
+                ColorCatalog.ColorIndex colorIndex = ColorCatalog.ColorIndex.Tier1Item;
                 if (pickupDef.itemIndex != ItemIndex.None)
                 {
                     var itemDef = ItemCatalog.GetItemDef(pickupDef.itemIndex);
-                    itemName = Language.GetString(itemDef.nameToken);
-                    colorIndex = ItemTierCatalog.GetItemTierDef(itemDef.tier).colorIndex;
+                    if (string.IsNullOrWhiteSpace(itemDef.nameToken))
+                        itemName = itemDef.name;
+                    else
+                        itemName = Language.GetString(itemDef.nameToken);
+                    if (string.IsNullOrWhiteSpace(itemName))
+                        itemName = itemDef.name;
+                    if (itemDef.tier != ItemTier.NoTier)
+                        colorIndex = ItemTierCatalog.GetItemTierDef(itemDef.tier).colorIndex;
                 }
                 else if (pickupDef.equipmentIndex != EquipmentIndex.None)
                 {
                     var equipmentDef = EquipmentCatalog.GetEquipmentDef(pickupDef.equipmentIndex);
-                    itemName = Language.GetString(equipmentDef.nameToken);
+                    if (string.IsNullOrWhiteSpace(equipmentDef.nameToken))
+                        itemName = equipmentDef.name;
+                    else
+                        itemName = Language.GetString(equipmentDef.nameToken);
+                    if (string.IsNullOrWhiteSpace(itemName))
+                        itemName = equipmentDef.name;
                     colorIndex = equipmentDef.colorIndex;
                 }
                 var colorHexString = ColorCatalog.GetColorHexString(colorIndex);
@@ -119,22 +128,22 @@ namespace BazaarIsMyHaven
             return string.Join(", ", itemNames);
         }
 
-        public static void ThanksTipNormal(NetworkUser networkUser, PlayerCharacterMasterController pc, PickupIndex[] pickupIndexes)
+        public static void ThanksTipNormal(NetworkUser networkUser, PlayerCharacterMasterController pc, Dictionary<PickupIndex, int> pickupIndexes)
         {
             Send(Language.GetStringFormatted(LanguageAPI.NEWT_DONATE_LIST1, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
         }
 
-        public static void ThanksTipElite(NetworkUser networkUser, PlayerCharacterMasterController pc, PickupIndex[] pickupIndexes)
+        public static void ThanksTipElite(NetworkUser networkUser, PlayerCharacterMasterController pc, Dictionary<PickupIndex, int> pickupIndexes)
         {
             Send(Language.GetStringFormatted(LanguageAPI.NEWT_DONATE_LIST2, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
         }
 
-        public static void ThanksTipPeculiar(NetworkUser networkUser, PlayerCharacterMasterController pc, PickupIndex[] pickupIndexes)
+        public static void ThanksTipPeculiar(NetworkUser networkUser, PlayerCharacterMasterController pc, Dictionary<PickupIndex, int> pickupIndexes)
         {
             Send(Language.GetStringFormatted(LanguageAPI.NEWT_DONATE_LIST3, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
         }
 
-        public static void ThanksTipCharacter(NetworkUser networkUser, PlayerCharacterMasterController pc, PickupIndex[] pickupIndexes)
+        public static void ThanksTipCharacter(NetworkUser networkUser, PlayerCharacterMasterController pc, Dictionary<PickupIndex, int> pickupIndexes)
         {
             Send(Language.GetStringFormatted(LanguageAPI.NEWT_DONATE_LIST_CHARACTER, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
         }

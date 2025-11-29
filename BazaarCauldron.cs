@@ -36,6 +36,10 @@ namespace BazaarIsMyHaven
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
         }
+        public override void RunStart()
+        {
+            
+        }
 
         public override void SetupBazaar()
         {

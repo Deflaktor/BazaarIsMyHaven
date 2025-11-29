@@ -47,7 +47,10 @@ namespace BazaarIsMyHaven
             On.RoR2.ShopTerminalBehavior.DropPickup += ShopTerminalBehavior_DropPickup;
             On.RoR2.ShopTerminalBehavior.GenerateNewPickupServer_bool += ShopTerminalBehavior_GenerateNewPickupServer_bool;
         }
+        public override void RunStart()
+        {
 
+        }
         public override void SetupBazaar()
         {
             if (ModConfig.LunarRecyclerSectionEnabled.Value)
@@ -246,22 +249,26 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("LunarShopTerminal"))
             {
-                PickupIndex pickupIndex = PickupIndex.none;
-
                 if (!ModConfig.LunarShopSequentialItems.Value)
                     generateNewPickupIndex = -1;
-                PickupIndex[] rewards = ResolveItemRewardFromStringList(ModConfig.LunarShopItemList.Value, generateNewPickupIndex);
 
-                if (rewards != null)
+                Dictionary<PickupIndex, int> resolvedItems = new Dictionary<PickupIndex, int>();
+                ItemStringParser.ItemStringParser.ParseItemString(ModConfig.LunarShopItemList.Value, resolvedItems, Log.GetSource(), false, generateNewPickupIndex);
+                bool set = false;
+                foreach (var (pickupIndex, amount) in resolvedItems)
                 {
-                    pickupIndex = rewards[0];
+                    if (amount > 0)
+                    {
+                        self.SetPickup(new UniquePickup(pickupIndex), newHidden);
+                        set = true;
+                        generateNewPickupIndex += 1;
+                        break;
+                    }
                 }
-                else
+                if (!set)
                 {
-                    pickupIndex = PickupIndex.none;
+                    Log.LogError($"Could not get a proper pickup index from EquipmentReplaceWithEliteList: {ModConfig.EquipmentReplaceWithEliteList.Value}");
                 }
-                self.SetPickupIndex(pickupIndex, newHidden);
-                generateNewPickupIndex += 1;
             }
             else
             {
@@ -431,7 +438,7 @@ namespace BazaarIsMyHaven
                 {
                     var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
                     instancedPurchase.original.available = purchaseInteraction.available;
-                    instancedPurchase.original.pickupIndex = shopTerminalBehavior.pickupIndex;
+                    instancedPurchase.original.pickup = shopTerminalBehavior.pickup;
                     instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
                 }
                 // purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
