@@ -32,8 +32,9 @@ namespace BazaarIsMyHaven
 
         public override void Hook()
         {
-            On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
+            On.RoR2.ShopTerminalBehavior.SetPickup += ShopTerminalBehavior_SetPickup;
         }
+
         public override void RunStart()
         {
 
@@ -45,21 +46,21 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
+        private void ShopTerminalBehavior_SetPickup(On.RoR2.ShopTerminalBehavior.orig_SetPickup orig, ShopTerminalBehavior self, UniquePickup newPickup, bool newHidden)
         {
             if (ModConfig.EnableMod.Value && ModConfig.CleansingPoolSectionEnabled.Value && ModConfig.CleansingPoolRewardsLunarCoins.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("ShrineCleanse"))
                 {
-                    newPickupIndex = PickupCatalog.FindPickupIndex(RoR2Content.MiscPickups.LunarCoin.miscPickupIndex);
+                    newPickup.pickupIndex = PickupCatalog.FindPickupIndex(RoR2Content.MiscPickups.LunarCoin.miscPickupIndex);
                 }
                 if (self.name.StartsWith("HoveringLunarCoin"))
                 {
-                    newPickupIndex = PickupCatalog.FindPickupIndex(RoR2Content.MiscPickups.LunarCoin.miscPickupIndex);
+                    newPickup.pickupIndex = PickupCatalog.FindPickupIndex(RoR2Content.MiscPickups.LunarCoin.miscPickupIndex);
                     self.gameObject.GetComponent<PurchaseInteraction>().SetAvailable(false);
                 }
             }
-            orig(self, newPickupIndex, newHidden);
+            orig(self, newPickup, newHidden);
         }
 
         private void SpawnShrineCleanse()
@@ -80,7 +81,7 @@ namespace BazaarIsMyHaven
 
         private void SetLunarPool()
         {
-            DicLunarPools.Add(0, new SpawnCardStruct(new Vector3(-72.4183f, -24.4958f, -28.9289f), new Vector3(6.4123f, 272.6046f, 356.459f)));
+            DicLunarPools.Add(0, new SpawnCardStruct(new Vector3(-71.5092f, -25.5622f, -44.2288f), new Vector3(6.4123f, 0f, 356.459f)));
         }
     }
 }
