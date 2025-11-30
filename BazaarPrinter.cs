@@ -34,8 +34,10 @@ namespace BazaarIsMyHaven
 
         public override void Hook()
         {
-            On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
+            On.RoR2.ShopTerminalBehavior.SetPickup += ShopTerminalBehavior_SetPickup;
         }
+
+        
         public override void RunStart()
         {
 
@@ -48,7 +50,7 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
+        private void ShopTerminalBehavior_SetPickup(On.RoR2.ShopTerminalBehavior.orig_SetPickup orig, ShopTerminalBehavior self, UniquePickup newPickup, bool newHidden)
         {
             if (ModConfig.EnableMod.Value && ModConfig.PrinterSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
@@ -81,11 +83,11 @@ namespace BazaarIsMyHaven
                                 break;
                         }
                         List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
-                        newPickupIndex = list[UnityEngine.Random.Range(0, list.Count)];
+                        newPickup.pickupIndex = list[UnityEngine.Random.Range(0, list.Count)];
                     }
                 }
             }
-            orig(self, newPickupIndex, newHidden);
+            orig(self, newPickup, newHidden);
         }
 
         private void SpawnPrinters()

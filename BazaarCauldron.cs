@@ -34,8 +34,9 @@ namespace BazaarIsMyHaven
         {
             On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
-            On.RoR2.ShopTerminalBehavior.SetPickupIndex += ShopTerminalBehavior_SetPickupIndex;
+            On.RoR2.ShopTerminalBehavior.SetPickup += ShopTerminalBehavior_SetPickup;
         }
+
         public override void RunStart()
         {
             
@@ -80,34 +81,34 @@ namespace BazaarIsMyHaven
                     {
                         Inventory inventory = activator.GetComponent<CharacterBody>().inventory;
                         ShopTerminalBehavior shop = self.GetComponent<ShopTerminalBehavior>();
-                        inventory.GiveItem(PickupCatalog.GetPickupDef(shop.CurrentPickupIndex()).itemIndex, 2);
+                        inventory.GiveItemPermanent(PickupCatalog.GetPickupDef(shop.CurrentPickup().pickupIndex).itemIndex, 2);
                     }
                 }
             }
             orig(self, activator);
         }
 
-        public void ShopTerminalBehavior_SetPickupIndex(On.RoR2.ShopTerminalBehavior.orig_SetPickupIndex orig, ShopTerminalBehavior self, PickupIndex newPickupIndex, bool newHidden)
+        public void ShopTerminalBehavior_SetPickup(On.RoR2.ShopTerminalBehavior.orig_SetPickup orig, ShopTerminalBehavior self, UniquePickup newPickup, bool newHidden)
         {
             if (ModConfig.EnableMod.Value && ModConfig.CauldronSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
                 if (self.name.StartsWith("LunarCauldronGreen"))
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickupIndex = list[RNG.Next(0, list.Count)];
+                    newPickup.pickupIndex = list[RNG.Next(0, list.Count)];
                 }
                 if (self.name.StartsWith("LunarCauldronRed"))
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickupIndex = list[RNG.Next(0, list.Count)];
+                    newPickup.pickupIndex = list[RNG.Next(0, list.Count)];
                 }
                 if (self.name.StartsWith("LunarCauldronWhite"))
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickupIndex = list[RNG.Next(0, list.Count)];
+                    newPickup.pickupIndex = list[RNG.Next(0, list.Count)];
                 }
             }
-            orig(self, newPickupIndex, newHidden);
+            orig(self, newPickup, newHidden);
         }
 
         public void SpawnLunarCauldron()
