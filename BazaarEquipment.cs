@@ -89,11 +89,11 @@ namespace BazaarIsMyHaven
                     var body = currentActivator.master.GetBody();
                     if (body != null)
                     {
-                        var pickupDef = PickupCatalog.GetPickupDef(self.CurrentPickupIndex());
+                        var pickupDef = PickupCatalog.GetPickupDef(self.CurrentPickup().pickupIndex);
                         if (pickupDef.itemIndex != ItemIndex.None)
                         {
-                            PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, PickupCatalog.GetPickupDef(self.CurrentPickupIndex()).itemIndex);
-                            currentActivator.master.inventory.GiveItem(pickupDef.itemIndex);
+                            PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, PickupCatalog.GetPickupDef(self.CurrentPickup().pickupIndex).itemIndex);
+                            currentActivator.master.inventory.GiveItemPermanent(pickupDef.itemIndex);
                             self.SetHasBeenPurchased(newHasBeenPurchased: true);
                             self.SetNoPickup();
                         }
@@ -102,7 +102,7 @@ namespace BazaarIsMyHaven
                             if(currentActivator.master.inventory.GetEquipmentIndex() != EquipmentIndex.None)
                             {
                                 var placeEquipment = PickupCatalog.FindPickupIndex(currentActivator.master.inventory.GetEquipmentIndex());
-                                self.SetPickupIndex(placeEquipment);
+                                self.SetPickup(new UniquePickup(placeEquipment));
                                 var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
                                 purchaseInteraction.SetAvailable(true);
                             }
@@ -111,7 +111,9 @@ namespace BazaarIsMyHaven
                                 self.SetHasBeenPurchased(newHasBeenPurchased: true);
                                 self.SetNoPickup();
                             }
-                            currentActivator.master.inventory.SetEquipmentIndex(pickupDef.equipmentIndex);
+                            uint slot = currentActivator.master.inventory.activeEquipmentSlot;
+                            uint set = currentActivator.master.inventory.activeEquipmentSet[slot];
+                            currentActivator.master.inventory.SetEquipmentIndexForSlot(pickupDef.equipmentIndex, slot, set);
                         }
                     }
                 }
