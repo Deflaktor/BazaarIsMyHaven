@@ -62,6 +62,7 @@ namespace BazaarIsMyHaven
             bazaarMods.Add(new BazaarLunarShop());
             bazaarMods.Add(new BazaarCleansingPool());
             bazaarMods.Add(new BazaarDecorate());
+            bazaarMods.Add(new BazaarWanderingChef());
 
             foreach (var bazaarMod in bazaarMods)
             {
