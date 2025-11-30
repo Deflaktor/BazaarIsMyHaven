@@ -351,5 +351,3 @@ WorkerUnitBody
 ## Known issues
 
 - Lunar Shop Terminal Price and Equipment Price labels are **not** displayed. This can't be fixed with a server-side mod.
-- Having FunctionalCoupler can result in duplicating equipment in the bazaar when BuyToInventory is enabled.
-
