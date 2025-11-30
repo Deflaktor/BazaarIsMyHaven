@@ -33,7 +33,7 @@ namespace BazaarIsMyHaven
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "Def";
         public const string PluginName = "BazaarIsMyHaven";
-        public const string PluginVersion = "4.0.0";
+        public const string PluginVersion = "4.1.0";
 
         private static System.Random Random = new System.Random();
         List<BazaarBase> bazaarMods = new List<BazaarBase>();

@@ -1,3 +1,9 @@
+# 4.1.0
+
+- Add Wandering Chef to the bazaar
+- Fix Cleansing Pool not giving Lunar Coins as intended
+- Fix equipment duplication when having Functional Coupler
+
 # 4.0.0
 
 - Update for Alloyed Collective
