@@ -87,8 +87,7 @@ namespace BazaarIsMyHaven
                 bazaarMod.Hook();
             }
 
-            var instancedPurchases = new InstancedPurchases();
-            instancedPurchases.Hook();
+            InstancedPurchases.Hook();
 
             On.RoR2.Run.Start += Run_Start;
             On.RoR2.BazaarController.SetUpSeerStations += BazaarController_SetUpSeerStations;

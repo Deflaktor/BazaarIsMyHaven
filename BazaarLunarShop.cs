@@ -134,6 +134,7 @@ namespace BazaarIsMyHaven
                     var playerStruct = Main.instance.GetPlayerStruct(playerCharacterMasterController);
                     if (self.name.StartsWith("LunarShopTerminal"))
                     {
+                        // this is a special check which is required because characters can swap an equip in here
                         if (!whichStallsHaveBeenBoughtOnce.TryGetValue(self, out List<PlayerCharacterMasterController> buyers) || !buyers.Contains(playerCharacterMasterController))
                         {
                             playerStruct.LunarShopUseCount++;
@@ -417,7 +418,9 @@ namespace BazaarIsMyHaven
                 ObjectLunarShopTerminals_Spawn.AddRange(gameObjects);
             }
 
-            gameObjects.ForEach(gameObject => {
+            for (int i = 0; i < gameObjects.Count; i++)
+            {
+                GameObject gameObject = gameObjects[i];
                 gameObject.name = "LunarShopTerminal";
                 var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
                 var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
@@ -427,12 +430,28 @@ namespace BazaarIsMyHaven
                     instancedPurchase.original.available = purchaseInteraction.available;
                     instancedPurchase.original.pickup = shopTerminalBehavior.pickup;
                     instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
+
+                    foreach (var pc in PlayerCharacterMasterController.instances)
+                    {
+                        if (pc != null && pc.master != null && pc.master.bodyPrefab != null)
+                        {
+                            var bodyIndex = BodyCatalog.FindBodyIndex(pc.master.bodyPrefab);
+                            var amount = ModConfig.LunarShopAmountDependingOnCharacterParsed.GetValueOrDefault(bodyIndex, -1);
+                            if (amount > 0 && i >= amount)
+                            {
+                                instancedPurchase.GetOrCreate(pc).available = false;
+                                instancedPurchase.GetOrCreate(pc).pickup = UniquePickup.none;
+                                instancedPurchase.GetOrCreate(pc).hasBeenPurchased = true;
+                                InstancedPurchases.UpdateShop(gameObject, pc);
+                            }
+                        }
+                    }
                 }
                 // purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
-                
+
                 whichStallsHaveBeenBoughtOnce.Add(purchaseInteraction, new List<PlayerCharacterMasterController>());
                 //Main.instance.StartCoroutine(DelayRerollEffect(shopTerminalBehavior, 0.1f, false));
-            });
+            }
         }
     }
 }
