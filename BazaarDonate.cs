@@ -149,72 +149,7 @@ namespace BazaarIsMyHaven
                     ItemStringParser.ItemStringParser.ParseItemString(rewardList, resolvedItems, Log.GetSource(), false);
                     break;
             }
-
-            var itemTakenOrbs = 0;
-            uint equipmentsGiven = 0;
-            int equipSkip = 0;
-            bool equipLoop = false;
-            foreach (var (pickupIndex, itemAmount) in resolvedItems)
-            {
-                if (itemAmount <= 0)
-                    continue;
-                var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
-                // handle items
-                var itemIndex = pickupDef.itemIndex;
-                var equipmentIndex = pickupDef.equipmentIndex;
-                if (itemIndex != ItemIndex.None)
-                {
-                    if (itemTakenOrbs < 20)
-                    {
-                        PurchaseInteraction.CreateItemTakenOrb(self.transform.position + Vector3.up * 6.0f, characterBody.gameObject, pickupDef.itemIndex);
-                        itemTakenOrbs++;
-                    }
-                    inventory.GiveItemPermanent(itemIndex, itemAmount);
-                } else { 
-                    // handle equipments
-                    var equipmentAmount = itemAmount;
-                    int maxEquipmentSlots = Helper.IsToolbotWithSwapSkill(characterBody.master) ? 2 : 1;
-                    int maxEquipmentSets = inventory.GetItemCountEffective(DLC3Content.Items.ExtraEquipment.itemIndex) + 1;
-                    int maxEquipmentCount = maxEquipmentSlots * maxEquipmentSets;
-                    while (equipmentIndex != EquipmentIndex.None && equipmentAmount > 0 && equipmentsGiven < maxEquipmentCount)
-                    {
-                        var index = equipmentsGiven + equipSkip;
-                        if(index >= maxEquipmentCount)
-                        {
-                            equipLoop = true;
-                            index = 0;
-                        }
-                        uint slot = (uint)(index % maxEquipmentSlots);
-                        uint set = (uint)(index / maxEquipmentSlots);
-                        var equipmentState = inventory.GetEquipment(slot, set);
-                        if(EquipmentState.empty.Equals(equipmentState))
-                        {
-                            // has no equipment in this slot -> set it
-                            inventory.SetEquipmentIndexForSlot(equipmentIndex, slot, set);
-                            equipmentAmount--;
-                            equipmentsGiven++;
-                        }
-                        else
-                        {
-                            if(!equipLoop)
-                            {
-                                // skip this slot, because it already has an equip
-                                equipSkip++;
-                            }
-                            else
-                            {
-                                // we already looped once -> time to drop the old equipment
-                                var oldEquipment = new UniquePickup(PickupCatalog.FindPickupIndex(equipmentState.equipmentIndex));
-                                PickupDropletController.CreatePickupDroplet(oldEquipment, characterBody.gameObject.transform.position + Vector3.up * 1.5f, Vector3.up * 20f + self.transform.forward * 2f, false);
-                                inventory.SetEquipmentIndexForSlot(equipmentIndex, slot, set);
-                                equipmentAmount--;
-                                equipmentsGiven++;
-                            }
-                                
-                        }
-                    }
-                }
-            }
+            Helper.GivePickups(characterBody, resolvedItems, self.transform.position + Vector3.up * 6.0f, true);
 
             switch(tier)
             {

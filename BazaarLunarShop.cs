@@ -206,30 +206,17 @@ namespace BazaarIsMyHaven
                     var body = currentActivator.master.GetBody();
                     if (body != null)
                     {
-                        var pickupDef = PickupCatalog.GetPickupDef(self.CurrentPickupIndex());
-                        if (pickupDef.itemIndex != ItemIndex.None)
+                        var droppedEquipment = Helper.GivePickup(body, self.CurrentPickup().pickupIndex, self.transform.position, false);
+                        if (droppedEquipment != EquipmentIndex.None)
                         {
-                            PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, pickupDef.itemIndex);
-                            currentActivator.master.inventory.GiveItem(pickupDef.itemIndex);
-
+                            self.SetPickup(new UniquePickup(PickupCatalog.FindPickupIndex(droppedEquipment)));
+                            var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
+                            purchaseInteraction.SetAvailable(true);
+                        }
+                        else
+                        {
                             self.SetHasBeenPurchased(newHasBeenPurchased: true);
                             self.SetNoPickup();
-                        }
-                        else if (pickupDef.equipmentIndex != EquipmentIndex.None)
-                        {
-                            if (currentActivator.master.inventory.GetEquipmentIndex() != EquipmentIndex.None)
-                            {
-                                var placeEquipment = PickupCatalog.FindPickupIndex(currentActivator.master.inventory.GetEquipmentIndex());
-                                self.SetPickupIndex(placeEquipment);
-                                var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
-                                purchaseInteraction.SetAvailable(true);
-                            }
-                            else
-                            {
-                                self.SetHasBeenPurchased(newHasBeenPurchased: true);
-                                self.SetNoPickup();
-                            }
-                            currentActivator.master.inventory.SetEquipmentIndex(pickupDef.equipmentIndex);
                         }
                     }
                 }

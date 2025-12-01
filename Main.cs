@@ -38,6 +38,7 @@ namespace BazaarIsMyHaven
         private static System.Random Random = new System.Random();
         List<BazaarBase> bazaarMods = new List<BazaarBase>();
         private readonly Dictionary<PlayerCharacterMasterController, PlayerStruct> playerStructs_ = new Dictionary<PlayerCharacterMasterController, PlayerStruct>();
+        public AsyncOperationHandle<GameObject> pickupTakenOrbPrefab;
 
         public PlayerStruct GetPlayerStruct(PlayerCharacterMasterController master)
         {
@@ -64,6 +65,7 @@ namespace BazaarIsMyHaven
             bazaarMods.Add(new BazaarDecorate());
             bazaarMods.Add(new BazaarWanderingChef());
 
+            pickupTakenOrbPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/MealPrep/PickupTakenOrbEffect.prefab");
             foreach (var bazaarMod in bazaarMods)
             {
                 bazaarMod.Preload();
