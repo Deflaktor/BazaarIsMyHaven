@@ -1,3 +1,8 @@
+# 4.1.1
+
+- Fix various issues with the Wandering Chef
+- Fix equipments not working when buy to inventory is set
+
 # 4.1.0
 
 - Add Wandering Chef to the bazaar
