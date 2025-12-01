@@ -1,3 +1,8 @@
+# 4.2.0
+
+- Add LunarShop AmountDependingOnCharacter
+- Add the two new surivors to the default DonateRewardListCharacters
+
 # 4.1.1
 
 - Fix various issues with the Wandering Chef
