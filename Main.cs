@@ -33,7 +33,7 @@ namespace BazaarIsMyHaven
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "Def";
         public const string PluginName = "BazaarIsMyHaven";
-        public const string PluginVersion = "4.1.0";
+        public const string PluginVersion = "4.1.1";
 
         private static System.Random Random = new System.Random();
         List<BazaarBase> bazaarMods = new List<BazaarBase>();
@@ -354,6 +354,19 @@ namespace BazaarIsMyHaven
                 scale = scale,
                 color = Color.yellow
             }, true);
+        }
+
+        [ConCommand(commandName = "next_chef_item", flags = ConVarFlags.ExecuteOnServer, helpText = "生成特效")]
+        private static void Command_NextChefItem(ConCommandArgs args)
+        {
+            foreach (var bazaarMod in Main.instance.bazaarMods)
+            {
+                if (bazaarMod is BazaarWanderingChef bazaarWanderingChef)
+                {
+                    bazaarWanderingChef.NextRecipe();
+                }
+            }
+            
         }
     }
 }
