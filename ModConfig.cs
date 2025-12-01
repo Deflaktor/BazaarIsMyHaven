@@ -115,8 +115,10 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<string> DonateRewardListCharacterDefault;
         public static Dictionary<BodyIndex, ConfigEntry<string>> DonateRewardListCharacters = new Dictionary<BodyIndex, ConfigEntry<string>>();
 
+        // wandering chef
         public static ConfigEntry<bool> WanderingChefSectionEnabled;
-        public static ConfigEntry<bool> WanderingChefSingleRecipe;
+        public static ConfigEntry<bool> WanderingChefUnrestrictedCrafting;
+        public static ConfigEntry<bool> WanderingChefBuyToInventory;
 
         public static void InitConfig(ConfigFile config)
         {
@@ -308,7 +310,8 @@ namespace BazaarIsMyHaven
 
             // 12 Wandering Chef
             WanderingChefSectionEnabled = config.Bind("12 WanderingChef", "SectionEnabled", true, "Enables or disables the Wandering Chef section. Enabling spawns a Wandering Chef near the Lunar Shop.");
-            WanderingChefSingleRecipe = config.Bind("12 WanderingChef", "SingleRecipe", true, "Limits the Wandering Chef inside the Bazaar to allow cooking only a single randomly selected target item type.");
+            WanderingChefUnrestrictedCrafting = config.Bind("12 WanderingChef", "UnrestrictedCrafting", false, "Allows you to craft anything. Otherwise crafting is restricted to a single randomly selected target pickup.");
+            WanderingChefBuyToInventory = config.Bind("12 WanderingChef", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
 
             if (ModCompatibilityInLobbyConfig.enabled)
             {
