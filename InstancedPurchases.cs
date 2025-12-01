@@ -12,9 +12,9 @@ namespace BazaarIsMyHaven
 {
     public partial class InstancedPurchases
     {
-        public PlayerCharacterMasterController currentInteractor;
+        public static PlayerCharacterMasterController currentInteractor;
 
-        public void Hook()
+        public static void Hook()
         {
             IL.RoR2.PurchaseInteraction.OnSerialize += PurchaseInteraction_OnSerialize;
             IL.RoR2.ShopTerminalBehavior.OnSerialize += ShopTerminalBehavior_OnSerialize;
@@ -27,7 +27,7 @@ namespace BazaarIsMyHaven
             On.RoR2.ShopTerminalBehavior.CurrentPickup += ShopTerminalBehavior_CurrentPickup;
         }
 
-        private Interactability PurchaseInteraction_GetInteractability(On.RoR2.PurchaseInteraction.orig_GetInteractability orig, PurchaseInteraction self, Interactor activator)
+        private static Interactability PurchaseInteraction_GetInteractability(On.RoR2.PurchaseInteraction.orig_GetInteractability orig, PurchaseInteraction self, Interactor activator)
         {
             if (!activator.hasAuthority && self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
             {
@@ -42,7 +42,7 @@ namespace BazaarIsMyHaven
             return orig(self, activator);
         }
 
-        private void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
+        private static void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
             try { 
                 currentInteractor = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
@@ -62,14 +62,17 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private void ShopTerminalBehavior_SetHasBeenPurchased(On.RoR2.ShopTerminalBehavior.orig_SetHasBeenPurchased orig, ShopTerminalBehavior self, bool newHasBeenPurchased)
+        private static void ShopTerminalBehavior_SetHasBeenPurchased(On.RoR2.ShopTerminalBehavior.orig_SetHasBeenPurchased orig, ShopTerminalBehavior self, bool newHasBeenPurchased)
         {
             if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
             {
                 if (currentInteractor != null)
                 {
                     instancedPurchase.GetOrCreate(currentInteractor).hasBeenPurchased = newHasBeenPurchased;
-                    UpdateShop(self.gameObject, currentInteractor);
+                    if (currentInteractor.hasAuthority)
+                    {
+                        UpdateShopForServer(self.gameObject, currentInteractor);
+                    }
                 }
                 else
                 {
@@ -85,13 +88,16 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private void PurchaseInteraction_SetAvailable(On.RoR2.PurchaseInteraction.orig_SetAvailable orig, PurchaseInteraction self, bool newAvailable)
+        private static void PurchaseInteraction_SetAvailable(On.RoR2.PurchaseInteraction.orig_SetAvailable orig, PurchaseInteraction self, bool newAvailable)
         {
             if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
             {
                 if (currentInteractor != null) {
                     instancedPurchase.GetOrCreate(currentInteractor).available = newAvailable;
-                    UpdateShop(self.gameObject, currentInteractor);
+                    if (currentInteractor.hasAuthority)
+                    {
+                        UpdateShopForServer(self.gameObject, currentInteractor);
+                    }
                 }
                 else
                 {
@@ -107,7 +113,7 @@ namespace BazaarIsMyHaven
         }
 
 
-        private void ShopTerminalBehavior_SetPickup(On.RoR2.ShopTerminalBehavior.orig_SetPickup orig, ShopTerminalBehavior self, UniquePickup newPickup, bool newHidden)
+        private static void ShopTerminalBehavior_SetPickup(On.RoR2.ShopTerminalBehavior.orig_SetPickup orig, ShopTerminalBehavior self, UniquePickup newPickup, bool newHidden)
         {
             if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase) && NetworkServer.active)
             {
@@ -116,7 +122,10 @@ namespace BazaarIsMyHaven
                     // someone is interacting with the shop terminal -> set the pickup index only for the interactor
                     instancedPurchase.GetOrCreate(currentInteractor).pickup = newPickup;
                     instancedPurchase.GetOrCreate(currentInteractor).hidden = newHidden;
-                    UpdateShop(self.gameObject, currentInteractor);
+                    if (currentInteractor.hasAuthority)
+                    {
+                        UpdateShopForServer(self.gameObject, currentInteractor);
+                    }
                 }
                 else
                 {
@@ -132,7 +141,7 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private PickupIndex ShopTerminalBehavior_CurrentPickupIndex(On.RoR2.ShopTerminalBehavior.orig_CurrentPickupIndex orig, ShopTerminalBehavior self)
+        private static PickupIndex ShopTerminalBehavior_CurrentPickupIndex(On.RoR2.ShopTerminalBehavior.orig_CurrentPickupIndex orig, ShopTerminalBehavior self)
         {
             if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase) && NetworkServer.active)
             {
@@ -140,7 +149,7 @@ namespace BazaarIsMyHaven
             }
             return orig(self);
         }
-        private UniquePickup ShopTerminalBehavior_CurrentPickup(On.RoR2.ShopTerminalBehavior.orig_CurrentPickup orig, ShopTerminalBehavior self)
+        private static UniquePickup ShopTerminalBehavior_CurrentPickup(On.RoR2.ShopTerminalBehavior.orig_CurrentPickup orig, ShopTerminalBehavior self)
         {
             if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase) && NetworkServer.active)
             {
@@ -149,7 +158,7 @@ namespace BazaarIsMyHaven
             return orig(self);
         }
 
-        private void ShopTerminalBehavior_OnSerialize(ILContext il)
+        private static void ShopTerminalBehavior_OnSerialize(ILContext il)
         {
             ILCursor c = new ILCursor(il);
             while (c.TryGotoNext(x => x.MatchLdfld<ShopTerminalBehavior>("pickup")))
@@ -181,7 +190,7 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private void PurchaseInteraction_OnSerialize(MonoMod.Cil.ILContext il)
+        private static void PurchaseInteraction_OnSerialize(MonoMod.Cil.ILContext il)
         {
             ILCursor c = new ILCursor(il);
             while(c.TryGotoNext(x => x.MatchLdfld<PurchaseInteraction>("available")))
@@ -199,19 +208,20 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private void UpdateShop(GameObject gameObject, PlayerCharacterMasterController pc)
+
+        public static void UpdateShop(GameObject gameObject, PlayerCharacterMasterController pc)
         {
-            if (currentInteractor == null)
+            if (pc.hasAuthority)
             {
-                Log.LogError("Internal Error: During UpdateShop it is expected that currentInteractor is not null. Either the game code has changed or there is an incompatibility with another mod.");
+                UpdateShopForServer(gameObject, pc);
             }
-            if (currentInteractor.hasAuthority)
+            else
             {
-                UpdateShopForServer(gameObject, currentInteractor);
+                UpdateShopForClient(gameObject, pc);
             }
         }
 
-        private void UpdateShopForServer(GameObject shop, PlayerCharacterMasterController pc)
+        private static void UpdateShopForServer(GameObject shop, PlayerCharacterMasterController pc)
         {
             if (shop.TryGetComponent(out InstancedPurchase instancedPurchase)) {
                 if (shop.TryGetComponent(out PurchaseInteraction purchaseInteraction))
@@ -227,7 +237,7 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private void UpdateShopForClient(GameObject shop, PlayerCharacterMasterController pc)
+        private static void UpdateShopForClient(GameObject shop, PlayerCharacterMasterController pc)
         {
             if (shop.TryGetComponent(out InstancedPurchase instancedPurchase))
             {

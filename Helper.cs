@@ -118,7 +118,7 @@ namespace BazaarIsMyHaven
             bool equipLoop = false;
             foreach (var (pickupIndex, itemAmount) in itemsToGive)
             {
-                if (itemAmount <= 0)
+                if (itemAmount <= 0 || pickupIndex == PickupIndex.none)
                     continue;
                 var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
                 // handle items
@@ -176,7 +176,7 @@ namespace BazaarIsMyHaven
                                 droppedEquipments[equipmentState.equipmentIndex] = droppedEquipments.GetValueOrDefault(equipmentIndex) + 1;
                                 if (dropReplacedEquipmentsAsPickupDroplets) { 
                                     var oldEquipment = new UniquePickup(PickupCatalog.FindPickupIndex(equipmentState.equipmentIndex));
-                                    PickupDropletController.CreatePickupDroplet(oldEquipment, characterBody.corePosition + Vector3.up * 1.5f, Vector3.up * 20f + characterBody.coreTransform.forward * 2f, false);
+                                    PickupDropletController.CreatePickupDroplet(oldEquipment, characterBody.corePosition + Vector3.up * 1.5f, Vector3.up * 15f - characterBody.coreTransform.forward * 15f, false);
                                 }
                                 if (itemTakenOrbs < 20 && itemOrbSource != null)
                                 {
