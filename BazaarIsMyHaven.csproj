@@ -4,8 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>preview</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	<DefaultProfilePath>C:\Users\xXBenutzerNameXx\AppData\Roaming\com.kesomannen.gale\riskofrain2\profiles\VanillaMyModsDev</DefaultProfilePath>
-    <ProfilePath>$(DefaultProfilePath)</ProfilePath>
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -63,9 +62,5 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    del /Q &quot;$(TargetDir)*.deps.json&quot;&#xD;&#xA;    del /Q &quot;$(TargetDir)*.pdb&quot;&#xD;&#xA;)&#xD;&#xA;xcopy /e /v /y &quot;$(TargetDir)&quot; &quot;$(DefaultProfilePath)\BepInEx\plugins\Def-$(ProjectName)\&quot;&#xD;&#xA;powershell.exe -Command &quot;Compress-Archive -Path '$(TargetDir)*' -DestinationPath '$(TargetDir)$(TargetName).zip' -Force&quot;&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    mkdir &quot;$(SolutionDir)releases&quot; /p&#xD;&#xA;    xcopy /Y /Q &quot;$(TargetDir)$(TargetName).zip&quot; &quot;$(SolutionDir)releases&quot;&#xD;&#xA;)" />
-  </Target>
 
 </Project>
