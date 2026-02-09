@@ -4,6 +4,8 @@
 
 This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/package/Lunzir2/BazaarIsMyHome/) mod.
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/E1E71PHUJ2)
+
 ## Features
 
 - **Extra Interactables in the Bazaar** (configurable):
@@ -15,6 +17,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
   - Cleansing Pool
   - Shrine of Order
   - Donation Altar
+  - Wandering Chef
 
 - **Newt Behavior Options**:
   - Stop him from throwing you out.
@@ -42,22 +45,22 @@ This settings makes it so that the more stage are completed, the more interactab
 
 Formula: `Amount of Interactables per Type = Number of Stages Completed + SpawnCountOffset`
 
-### Newt – DeathBehavior
+### Newt - DeathBehavior
 
 Controls how Newt acts after being killed:
 
-- `Default` → Normal behavior.  
-- `Tank` → Newt Health is significantly reduced. Revives with double HP.
-- `Ghost` → Newt Health is significantly reduced. Revives as a ghost.
-- `Hostile` → Newt Health is significantly reduced. Revives and starts defending himself.
+- `Default` -> Normal behavior.  
+- `Tank` -> Newt Health is significantly reduced. Revives with double HP.
+- `Ghost` -> Newt Health is significantly reduced. Revives as a ghost.
+- `Hostile` -> Newt Health is significantly reduced. Revives and starts defending himself.
 
 ### LunarShop
 
 You can freely configure which items can be bought at the LunarShop. There are two settings to configure this:
 
 - `SequentialItems`:
-  - **True** → Items are picked sequentially from the list. As such, if the number of Lunar Shop Terminals and the number of items in the list are the same, you will always find the same items in the Bazaar.
-  - **False** → Items are picked at random from the list.
+  - **True** -> Items are picked sequentially from the list. As such, if the number of Lunar Shop Terminals and the number of items in the list are the same, you will always find the same items in the Bazaar.
+  - **False** -> Items are picked at random from the list.
 
 - `ItemList`:
   - Follows the [ItemStringPaser](https://thunderstore.io/package/Def/ItemStringParser/) format.

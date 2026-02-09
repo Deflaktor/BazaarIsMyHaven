@@ -214,7 +214,7 @@ namespace BazaarIsMyHaven
                     // give items
                     Dictionary<PickupIndex, int> itemsToGive = new Dictionary<PickupIndex, int>();
                     itemsToGive[reward] = count;
-                    Helper.GivePickups(characterBody, itemsToGive, self.transform.position, true);
+                    Helper.GivePickups(characterBody, itemsToGive, null, true);
                     // skip original method
                     return;
                 }
@@ -268,6 +268,12 @@ namespace BazaarIsMyHaven
                 }
             }
             return list.ToArray();
+        }
+
+        private Dictionary<PickupIndex, List<CraftableCatalog.RecipeEntry>> GetCraftableRecipes()
+        {
+            // TODO
+            return null;
         }
 
         private Dictionary<PickupIndex, List<CraftableCatalog.RecipeEntry>> GetAvailableRecipes()
