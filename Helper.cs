@@ -103,7 +103,7 @@ namespace BazaarIsMyHaven
             return EquipmentIndex.None;
         }
 
-        public static Dictionary<EquipmentIndex, int> GivePickups(CharacterBody characterBody, Dictionary<PickupIndex, int> itemsToGive, Vector3 itemOrbSource, bool dropReplacedEquipmentsAsPickupDroplets)
+        public static Dictionary<EquipmentIndex, int> GivePickups(CharacterBody characterBody, Dictionary<PickupIndex, int> itemsToGive, Vector3? itemOrbSource, bool dropReplacedEquipmentsAsPickupDroplets)
         {
             Dictionary<EquipmentIndex, int> droppedEquipments = new Dictionary<EquipmentIndex, int>();
             var inventory = characterBody.inventory;
@@ -126,9 +126,9 @@ namespace BazaarIsMyHaven
                 var equipmentIndex = pickupDef.equipmentIndex;
                 if (itemIndex != ItemIndex.None)
                 {
-                    if (itemTakenOrbs < 20 && itemOrbSource != null)
+                    if (itemTakenOrbs < 20 && itemOrbSource.HasValue)
                     {
-                        CreateItemTakenOrb(itemOrbSource, characterBody.gameObject, pickupIndex);
+                        CreateItemTakenOrb(itemOrbSource.Value, characterBody.gameObject, pickupIndex);
                         itemTakenOrbs++;
                     }
                     inventory.GiveItemPermanent(itemIndex, itemAmount);
@@ -154,9 +154,9 @@ namespace BazaarIsMyHaven
                         if (EquipmentState.empty.Equals(equipmentState))
                         {
                             // has no equipment in this slot -> set it
-                            if (itemTakenOrbs < 20 && itemOrbSource != null)
+                            if (itemTakenOrbs < 20 && itemOrbSource.HasValue)
                             {
-                                CreateItemTakenOrb(itemOrbSource, characterBody.gameObject, pickupIndex);
+                                CreateItemTakenOrb(itemOrbSource.Value, characterBody.gameObject, pickupIndex);
                                 itemTakenOrbs++;
                             }
                             inventory.SetEquipmentIndexForSlot(equipmentIndex, slot, set);
@@ -178,9 +178,9 @@ namespace BazaarIsMyHaven
                                     var oldEquipment = new UniquePickup(PickupCatalog.FindPickupIndex(equipmentState.equipmentIndex));
                                     PickupDropletController.CreatePickupDroplet(oldEquipment, characterBody.corePosition + Vector3.up * 1.5f, Vector3.up * 15f - characterBody.coreTransform.forward * 15f, false);
                                 }
-                                if (itemTakenOrbs < 20 && itemOrbSource != null)
+                                if (itemTakenOrbs < 20 && itemOrbSource.HasValue)
                                 {
-                                    CreateItemTakenOrb(itemOrbSource, characterBody.gameObject, pickupIndex);
+                                    CreateItemTakenOrb(itemOrbSource.Value, characterBody.gameObject, pickupIndex);
                                     itemTakenOrbs++;
                                 }
                                 inventory.SetEquipmentIndexForSlot(equipmentIndex, slot, set);

@@ -154,7 +154,7 @@ namespace BazaarIsMyHaven
                             {
                                 Main.instance.StartCoroutine(DelayRerollEffect(lunarShopTerminal, time, currentLunarShopStaticItemIndex));
                                 currentLunarShopStaticItemIndex += 1;
-                                time = time + 0.1f;
+                                time += 0.1f;
                             }
                         }
                     }

@@ -120,6 +120,7 @@ namespace BazaarIsMyHaven
         // wandering chef
         public static ConfigEntry<bool> WanderingChefSectionEnabled;
         public static ConfigEntry<bool> WanderingChefUnrestrictedCrafting;
+        public static ConfigEntry<bool> WanderingChefCraftableRecipesOnly;
         public static ConfigEntry<bool> WanderingChefBuyToInventory;
 
         public static void InitConfig(ConfigFile config)
@@ -234,11 +235,10 @@ namespace BazaarIsMyHaven
             updateConfig.Invoke(null, null);
 
             // 07 LunarRecycler
-            LunarRecyclerSectionEnabled = config.Bind("07 LunarRecycler", "SectionEnabled", true, "Enables or disables the Lunar Recycler section.");
-            LunarRecyclerAvailable = config.Bind("07 LunarRecycler", "Available", true, "If enabled, a Lunar Recycler is available in the Bazaar. Otherwise it will get removed.");
-            LunarRecyclerRerollLimit = config.Bind("07 LunarRecycler", "RerollLimit", 3, "Limit the amount of rerolls allowed per visit to the Bazaar. -1 = Unlimited.");
-            LunarRecyclerCost = config.Bind("07 LunarRecycler", "Cost", 1, "Initial lunar coin cost to reroll.");
-            LunarRecyclerCostMultiplier = config.Bind("07 LunarRecycler", "CostMultiplier", 2, "Cost multiplier applied after each reroll use.");
+            LunarRecyclerAvailable = config.Bind("06 LunarShop", "LunarRecyclerAvailable", true, "If enabled, a Lunar Recycler is available in the Bazaar. Otherwise it will get removed.");
+            LunarRecyclerRerollLimit = config.Bind("06 LunarShop", "LunarRecyclerRerollLimit", 3, "Limit the amount of rerolls allowed per visit to the Bazaar. -1 = Unlimited.");
+            LunarRecyclerCost = config.Bind("06 LunarShop", "LunarRecyclerCost", 1, "Initial lunar coin cost to reroll.");
+            LunarRecyclerCostMultiplier = config.Bind("06 LunarShop", "LunarRecyclerCostMultiplier", 2, "Cost multiplier applied after each reroll use.");
 
             // 08 CleansingPool
             CleansingPoolSectionEnabled = config.Bind("08 CleansingPool", "SectionEnabled", true, "Enables or disables the Cleansing Pool section.");
@@ -358,6 +358,7 @@ namespace BazaarIsMyHaven
             // 12 Wandering Chef
             WanderingChefSectionEnabled = config.Bind("12 WanderingChef", "SectionEnabled", true, "Enables or disables the Wandering Chef section. Enabling spawns a Wandering Chef near the Lunar Shop.");
             WanderingChefUnrestrictedCrafting = config.Bind("12 WanderingChef", "UnrestrictedCrafting", false, "Allows you to craft anything. Otherwise crafting is restricted to a single randomly selected target pickup.");
+            WanderingChefCraftableRecipesOnly = config.Bind("12 WanderingChef", "CraftableRecipesOnly", true, "Only if UnrestrictedCrafting is false: Select a recipe based on available ingredients in the bazaar and the players current inventory.");
             WanderingChefBuyToInventory = config.Bind("12 WanderingChef", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
 
             if (ModCompatibilityInLobbyConfig.enabled)
