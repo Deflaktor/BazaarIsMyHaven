@@ -15,19 +15,13 @@ namespace BazaarIsMyHaven
     {
         AsyncOperationHandle<InteractableSpawnCard> iscShrineCleanse;
         AsyncOperationHandle<GameObject> lunarShopTerminal;
-        AsyncOperationHandle<GameObject> duplicator;
-        AsyncOperationHandle<InteractableSpawnCard> iscDuplicator;
-        AsyncOperationHandle<GameObject> SingleLunarShop;
 
         Dictionary<int, SpawnCardStruct> DicLunarPools = new Dictionary<int, SpawnCardStruct>();
 
         public override void Preload()
         {
-            iscDuplicator = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Duplicator/iscDuplicator.asset");
-            duplicator = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Duplicator/Duplicator.prefab");
             iscShrineCleanse = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineCleanse/iscShrineCleanse.asset");
             lunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarShopTerminal/LunarShopTerminal.prefab");
-            SingleLunarShop = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/SingleLunarShop.prefab");
         }
 
         public override void Hook()
