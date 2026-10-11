@@ -66,7 +66,9 @@ namespace BazaarIsMyHaven
             {
                 if (self.name.StartsWith("MultiShopEquipmentTerminal"))
                 {
-                    var playerCharacterMasterController = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
+                    var body = activator ? activator.GetComponent<CharacterBody>() : null;
+                    var playerCharacterMasterController = body && body.master ? body.master.playerCharacterMasterController : null;
+                    var previousActivator = currentActivator;
                     try { 
                         currentActivator = playerCharacterMasterController;
                         orig(self, activator);
@@ -74,7 +76,7 @@ namespace BazaarIsMyHaven
                     }
                     finally
                     {
-                        currentActivator = null;
+                        currentActivator = previousActivator;
                     }
                 }
             }
