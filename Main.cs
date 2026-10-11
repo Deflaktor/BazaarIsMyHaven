@@ -109,6 +109,10 @@ namespace BazaarIsMyHaven
             ShopKeeper.Body = null;
             playerStructs_.Clear();
             orig(self);
+            if (NetworkServer.active)
+            {
+                ModConfig.ReloadConfig(Config);
+            }
             if (ModConfig.EnableMod.Value && NetworkServer.active)
             {
                 foreach (var bazaarMod in bazaarMods)
