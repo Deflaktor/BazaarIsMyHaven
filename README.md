@@ -56,7 +56,7 @@ Controls how Newt acts after being killed:
 
 ### Equipment
 
-With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too (`ShowPriceSigns`).
+With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too.
 
 ### LunarShop
 
