@@ -40,7 +40,6 @@ namespace BazaarIsMyHaven
         {
             On.RoR2.PurchaseInteraction.Awake += PurchaseInteraction_Awake;
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
-            IL.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionEnd;
             On.RoR2.PurchaseInteraction.ScaleCost += PurchaseInteraction_ScaleCost;
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
             On.RoR2.ShopTerminalBehavior.DropPickup += ShopTerminalBehavior_DropPickup;
@@ -94,67 +93,112 @@ namespace BazaarIsMyHaven
             }
         }
 
+        // Runs the game's purchase and reports whether it was accepted and paid
+        private bool TryCompletePurchase(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator, PlayerCharacterMasterController player)
+        {
+            bool purchaseSucceeded = false;
+            UnityEngine.Events.UnityAction<CostTypeDef.PayCostContext, CostTypeDef.PayCostResults> purchaseListener =
+                (context, results) =>
+                {
+                    if (context.activator == activator)
+                    {
+                        purchaseSucceeded = true;
+                    }
+                };
+
+            // keep the buyer available to DropPickup while the buy runs
+            var previousActivator = currentActivator;
+            self.onDetailedPurchaseServer.AddListener(purchaseListener);
+            try
+            {
+                currentActivator = player;
+                orig(self, activator);
+            }
+            finally
+            {
+                currentActivator = previousActivator;
+                self.onDetailedPurchaseServer.RemoveListener(purchaseListener);
+            }
+
+            return purchaseSucceeded;
+        }
+
         public void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar() && NetworkServer.active && (ModConfig.LunarShopSectionEnabled.Value || ModConfig.LunarRecyclerSectionEnabled.Value))
             {
-                if(self.name.StartsWith("LunarShopTerminal"))
+                var body = activator ? activator.GetComponent<CharacterBody>() : null;
+                var player = body && body.master ? body.master.playerCharacterMasterController : null;
+                if (!player)
                 {
-                    var playerCharacterMasterController = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
-                    var playerStruct = Main.instance.GetPlayerStruct(playerCharacterMasterController);
+                    orig(self, activator);
+                    return;
+                }
 
-                    var usesLeft = ModConfig.LunarShopBuyLimit.Value - playerStruct.LunarShopUseCount;
+                // every spawned bud is tracked with the players who bought from it
+                if (ModConfig.LunarShopSectionEnabled.Value && whichStallsHaveBeenBoughtOnce.TryGetValue(self, out var buyers))
+                {
+                    var playerStruct = Main.instance.GetPlayerStruct(player);
+                    bool firstPurchase = !buyers.Contains(player);
+                    int usesLeft = ModConfig.LunarShopBuyLimit.Value - playerStruct.LunarShopUseCount;
 
-                    if (usesLeft <= 0 && ModConfig.LunarShopBuyLimit.Value >= 0) {
-                        ChatHelper.LunarShopTerminalUsesLeft(playerCharacterMasterController, usesLeft);
-                        return;
-                    }
-                    try { 
-                        currentActivator = playerCharacterMasterController;
-                        orig(self, activator);
-                        return;
-                    }
-                    finally
+                    if (firstPurchase && ModConfig.LunarShopBuyLimit.Value >= 0 && usesLeft <= 0)
                     {
-                        currentActivator = null;
+                        ChatHelper.LunarShopTerminalUsesLeft(player, usesLeft);
+                        return;
                     }
+
+                    if (!TryCompletePurchase(orig, self, activator, player))
+                    {
+                        return;
+                    }
+
+                    // swapping equipment at an already bought bud does not use another purchase
+                    if (firstPurchase)
+                    {
+                        buyers.Add(player);
+                        playerStruct.LunarShopUseCount++;
+                        if (self.TryGetComponent(out InstancedPurchase instance))
+                        {
+                            instance.GetOrCreate(player).hasBeenPurchasedOnce = true;
+                        }
+                        if (ModConfig.LunarShopBuyLimit.Value >= 0)
+                        {
+                            ChatHelper.LunarShopTerminalUsesLeft(player, ModConfig.LunarShopBuyLimit.Value - playerStruct.LunarShopUseCount);
+                        }
+                    }
+                    return;
+                }
+
+                if (self.name.StartsWith("LunarRecycler"))
+                {
+                    if (!self.available || (ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerRerollLimit.Value >= 0 && lunarRecyclerRerolledCount >= ModConfig.LunarRecyclerRerollLimit.Value))
+                    {
+                        return;
+                    }
+
+                    if (!TryCompletePurchase(orig, self, activator, player))
+                    {
+                        return;
+                    }
+
+                    if (ModConfig.LunarRecyclerSectionEnabled.Value)
+                    {
+                        lunarRecyclerRerolledCount++;
+                        if (ModConfig.LunarRecyclerRerollLimit.Value >= 0)
+                        {
+                            int rerollsLeft = ModConfig.LunarRecyclerRerollLimit.Value - lunarRecyclerRerolledCount;
+                            ChatHelper.LunarRecyclerUsesLeft(rerollsLeft);
+                            if (rerollsLeft <= 0)
+                            {
+                                self.SetAvailable(false);
+                            }
+                        }
+                    }
+                    return;
                 }
             }
             orig(self, activator);
-        }
-
-        private void PurchaseInteraction_OnInteractionEnd(MonoMod.Cil.ILContext il)
-        {
-            HookHelper.HookEndOfMethod(il, (PurchaseInteraction self, Interactor activator) =>
-            {
-                if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
-                {
-                    var playerCharacterMasterController = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
-                    var playerStruct = Main.instance.GetPlayerStruct(playerCharacterMasterController);
-                    if (self.name.StartsWith("LunarShopTerminal"))
-                    {
-                        // this is a special check which is required because characters can swap an equip in here
-                        if (!whichStallsHaveBeenBoughtOnce.TryGetValue(self, out List<PlayerCharacterMasterController> buyers) || !buyers.Contains(playerCharacterMasterController))
-                        {
-                            playerStruct.LunarShopUseCount++;
-                            if (ModConfig.LunarShopBuyLimit.Value >= 0) {
-                                var usesLeft = ModConfig.LunarShopBuyLimit.Value - playerStruct.LunarShopUseCount;
-                                ChatHelper.LunarShopTerminalUsesLeft(playerCharacterMasterController, usesLeft);
-                            }
-                            whichStallsHaveBeenBoughtOnce[self].Add(playerCharacterMasterController);
-                        }
-                    }
-                }
-                if (ModConfig.EnableMod.Value && ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerRerollLimit.Value >= 0 && IsCurrentMapInBazaar() && NetworkServer.active)
-                {
-                    if(self.name.StartsWith("LunarRecycler"))
-                    {
-                        lunarRecyclerRerolledCount++;
-                        var usesLeft = ModConfig.LunarRecyclerRerollLimit.Value - lunarRecyclerRerolledCount;
-                        ChatHelper.LunarRecyclerUsesLeft(usesLeft);
-                    }
-                }
-            });
         }
 
         private void PurchaseInteraction_ScaleCost(On.RoR2.PurchaseInteraction.orig_ScaleCost orig, PurchaseInteraction self, float scalar)
