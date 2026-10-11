@@ -273,6 +273,7 @@ namespace BazaarIsMyHaven
                     if (allRecipe.recipe.CheckIfValidIngredient(pickupIndex))
                     {
                         list.Add(allRecipe);
+                        break;
                     }
                 }
             }
