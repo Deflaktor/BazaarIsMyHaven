@@ -183,8 +183,8 @@ namespace BazaarIsMyHaven
 
             // 06 LunarShop
             LunarShopSectionEnabled = config.Bind("06 LunarShop", "SectionEnabled", true, "Enables or disables the Lunar Shop section.");
-            LunarShopAmount = config.Bind("06 LunarShop", "Amount", 5, new ConfigDescription("Number of Lunar Shop Terminals (max 20).", new AcceptableValueRange<int>(0, 20)));
-            LunarShopCost = config.Bind("06 LunarShop", "Cost", 1, "Lunar coin cost per Lunar Shop Terminal or Lunar Bud use.");
+            LunarShopAmount = config.Bind("06 LunarShop", "Amount", 5, new ConfigDescription("Number of Lunar Buds (max 20).", new AcceptableValueRange<int>(0, 20)));
+            LunarShopCost = config.Bind("06 LunarShop", "Cost", 1, "Lunar coin cost per Lunar Bud purchase.");
             LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar. -1 = Unlimited.");
             LunarShopSequentialItems = config.Bind("06 LunarShop", "SequentialItems", false, "Picks items sequentially from the list instead of randomly.");
             var items = "Tonic | AutoCastEquipment | RandomDamageZone | LunarDagger | HalfSpeedDoubleHealth | ShieldOnly | ShieldOnly | ShieldOnly | LunarPrimaryReplacement | LunarSecondaryReplacement | LunarSpecialReplacement | LunarBadLuck | LunarBadLuck | LunarBadLuck | LunarSun | HalfAttackSpeedHalfCooldowns | HalfAttackSpeedHalfCooldowns";
@@ -194,7 +194,7 @@ namespace BazaarIsMyHaven
             LunarShopInstancedPurchases = config.Bind("06 LunarShop", "InstancedPurchases", true, "Each player can buy independently from Lunar Shop.");
             LunarShopBuyToInventory = config.Bind("06 LunarShop", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
             LunarShopFixBudScaleForClients = config.Bind("06 LunarShop", "FixBudScaleForClients", true, "Buds from this mod show at half size for clients unless this is on. Uses only vanilla messages, so clients need no mod. Turn off if a game update breaks it.");
-            LunarShopAmountDependingOnCharacter = config.Bind("06 LunarShop", "AmountDependingOnCharacter", "", "Change the amount of available shop terminals depending on the current Character. Requires ReplaceLunarBudsWithTerminals and InstancedPurchases to work. Also the value cannot be larger than Amount. Comma-separated list in the format <characterBody|survivorName>=<amount>.\nExample: Seeker=15, FalseSon=16");
+            LunarShopAmountDependingOnCharacter = config.Bind("06 LunarShop", "AmountDependingOnCharacter", "", "Change the number of Lunar Buds by Character. Needs InstancedPurchases. Cannot exceed Amount. Comma-separated <characterBody|survivorName>=<amount>.\nExample: Seeker=15, FalseSon=16");
             EventHandler updateConfig = static (sender, args) =>
             {
                 LunarShopAmountDependingOnCharacterParsed.Clear();
