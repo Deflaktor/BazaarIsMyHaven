@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 namespace BazaarIsMyHaven
@@ -44,10 +45,26 @@ namespace BazaarIsMyHaven
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
             On.RoR2.ShopTerminalBehavior.DropPickup += ShopTerminalBehavior_DropPickup;
             On.RoR2.ShopTerminalBehavior.GenerateNewPickupServer_bool += ShopTerminalBehavior_GenerateNewPickupServer_bool;
+            SceneManager.sceneUnloaded += SceneUnloaded;
         }
         public override void RunStart()
         {
+            RunEnd();
+        }
 
+        public override void RunEnd()
+        {
+            ObjectLunarShopTerminals_Spawn.Clear();
+            whichStallsHaveBeenBoughtOnce.Clear();
+            currentActivator = null;
+        }
+
+        private void SceneUnloaded(Scene scene)
+        {
+            if (scene.name == "bazaar")
+            {
+                RunEnd();
+            }
         }
         public override void SetupBazaar()
         {
