@@ -352,7 +352,7 @@ namespace BazaarIsMyHaven
 
         public void NextRecipe()
         {
-            if (allAvailableTargetPickupIndexes != null && allAvailableRecipes != null)
+            if (allAvailableTargetPickupIndexes != null && allAvailableTargetPickupIndexes.Length > 0 && allAvailableRecipes != null)
             {
                 randomTargetPickupIndex = (randomTargetPickupIndex + 1) % allAvailableTargetPickupIndexes.Length;
                 var pickupIndex = allAvailableTargetPickupIndexes[randomTargetPickupIndex];
@@ -370,6 +370,13 @@ namespace BazaarIsMyHaven
 
         private void SpawnWanderingChef()
         {
+            if (!ModConfig.WanderingChefUnrestrictedCrafting.Value &&
+                (allAvailableTargetPickupIndexes == null || allAvailableTargetPickupIndexes.Length == 0))
+            {
+                Log.LogWarning("No recipes; skipping the Wandering Chef this visit.");
+                return;
+            }
+
             var chefPos = new SpawnCardStruct(new Vector3(-70.7306f, -23.7171f, -30.4022f), new Vector3(0f, 220f, 0f));
             var cookingPlacePos = new SpawnCardStruct(new Vector3(-72.4183f, -24.4958f, -28.9289f), new Vector3(0f, 220f, 0f));
 
