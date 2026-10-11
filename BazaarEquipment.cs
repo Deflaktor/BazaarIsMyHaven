@@ -88,21 +88,24 @@ namespace BazaarIsMyHaven
             if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("MultiShopEquipmentTerminal"))
             {
                 if(ModConfig.EquipmentBuyToInventory.Value) { 
-                    var body = currentActivator.master.GetBody();
-                    if (body != null)
+                    var body = currentActivator && currentActivator.master ? currentActivator.master.GetBody() : null;
+                    if (!body || !body.inventory)
                     {
-                        var droppedEquipment = Helper.GivePickup(body, self.CurrentPickup().pickupIndex, self.transform.position, false);
-                        if(droppedEquipment != EquipmentIndex.None)
-                        {
-                            self.SetPickup(new UniquePickup(PickupCatalog.FindPickupIndex(droppedEquipment)));
-                            var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
-                            purchaseInteraction.SetAvailable(true);
-                        }
-                        else
-                        {
-                            self.SetHasBeenPurchased(newHasBeenPurchased: true);
-                            self.SetNoPickup();
-                        }
+                        orig(self);
+                        return;
+                    }
+
+                    var droppedEquipment = Helper.GivePickup(body, self.CurrentPickup().pickupIndex, self.transform.position, false);
+                    if(droppedEquipment != EquipmentIndex.None)
+                    {
+                        self.SetPickup(new UniquePickup(PickupCatalog.FindPickupIndex(droppedEquipment)));
+                        var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
+                        purchaseInteraction.SetAvailable(true);
+                    }
+                    else
+                    {
+                        self.SetHasBeenPurchased(newHasBeenPurchased: true);
+                        self.SetNoPickup();
                     }
                 }
                 else
