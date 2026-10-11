@@ -56,10 +56,12 @@ Controls how Newt acts after being killed:
 
 ### LunarShop
 
+The Lunar Shop swaps the Bazaar's Lunar Buds for `Amount` Lunar Buds (up to 20), each with its price. Clients without the mod also see them at the right size (`FixBudScaleForClients`). The Lunar Recycler rerolls them, except buds a player already bought from.
+
 You can freely configure which items can be bought at the LunarShop. There are two settings to configure this:
 
 - `SequentialItems`:
-  - **True** -> Items are picked sequentially from the list. As such, if the number of Lunar Shop Terminals and the number of items in the list are the same, you will always find the same items in the Bazaar.
+  - **True** -> Items are drawn in order from the list. So if the number of Lunar Buds matches the number of items in the list, you always find the same items in the Bazaar.
   - **False** -> Items are picked at random from the list.
 
 - `ItemList`:
@@ -353,4 +355,4 @@ WorkerUnitBody
 
 ## Known issues
 
-- Lunar Shop Terminal Price and Equipment Price labels are **not** displayed. This can't be fixed with a server-side mod.
+- Equipment Terminal price labels are **not** shown.
