@@ -253,8 +253,15 @@ namespace BazaarIsMyHaven
         }
         private void ShopTerminalBehavior_DropPickup(On.RoR2.ShopTerminalBehavior.orig_DropPickup orig, ShopTerminalBehavior self)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("LunarShopTerminal"))
+            if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("LunarShopTerminal"))
             {
+                if (!ModConfig.LunarShopSectionEnabled.Value)
+                {
+                    // vanilla buds have the same client animation bug
+                    orig(self);
+                    SendPurchasedFlagToClients(self);
+                    return;
+                }
                 if (ModConfig.LunarShopBuyToInventory.Value)
                 {
                     var body = currentActivator && currentActivator.master ? currentActivator.master.GetBody() : null;
@@ -262,6 +269,7 @@ namespace BazaarIsMyHaven
                     {
                         // nowhere to put the item, so drop it instead of losing it
                         orig(self);
+                        SendPurchasedFlagToClients(self);
                         self.SetNoPickup();
                         return;
                     }
@@ -275,12 +283,14 @@ namespace BazaarIsMyHaven
                     else
                     {
                         self.SetHasBeenPurchased(newHasBeenPurchased: true);
+                        SendPurchasedFlagToClients(self);
                         self.SetNoPickup();
                     }
                 }
                 else
                 {
                     orig(self);
+                    SendPurchasedFlagToClients(self);
                     self.SetNoPickup();
                 }
             }
@@ -302,6 +312,51 @@ namespace BazaarIsMyHaven
             else
             {
                 orig(self, newHidden);
+            }
+        }
+
+        // Clients clear a bud's pickup before its purchased flag, so it never plays its open animation.
+        // Send the purchased flag alone first. Instanced buds already send updates in this order.
+        private void SendPurchasedFlagToClients(ShopTerminalBehavior shop)
+        {
+            if (!NetworkServer.active || shop.GetComponent<InstancedPurchase>() || !shop.hasBeenPurchased)
+            {
+                return;
+            }
+            var identity = shop.GetComponent<NetworkIdentity>();
+            if (!identity || identity.observers == null)
+            {
+                return;
+            }
+
+            int channel = shop.GetNetworkChannel();
+            var writer = new NetworkWriter();
+            writer.StartMessage(MsgType.UpdateVars);
+            writer.Write(identity.netId);
+            // every component must be serialized in the order the client reads them
+            foreach (var behaviour in identity.GetBehavioursOfSameChannel(channel, false))
+            {
+                uint originalDirtyBits = behaviour.m_SyncVarDirtyBits;
+                try
+                {
+                    // dirty bit 4 is ShopTerminalBehavior.hasBeenPurchased; pickup is left out
+                    behaviour.m_SyncVarDirtyBits = behaviour == shop ? 4u : 0u;
+                    behaviour.OnSerialize(writer, false);
+                }
+                finally
+                {
+                    // leave pending changes to the normal update
+                    behaviour.m_SyncVarDirtyBits = originalDirtyBits;
+                }
+            }
+            writer.FinishMessage();
+
+            foreach (var connection in identity.observers)
+            {
+                if (connection.isReady && !Util.ConnectionIsLocal(connection) && !connection.SendWriter(writer, channel))
+                {
+                    Log.LogWarning("Could not send the bud purchased flag.");
+                }
             }
         }
 
