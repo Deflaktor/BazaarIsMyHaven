@@ -438,6 +438,12 @@ namespace BazaarIsMyHaven
                 var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
                 var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
                 DisableLunarBudPickupClearing(purchaseInteraction, shopTerminalBehavior);
+                // the scene wires the Newt's comment only to the original buds
+                purchaseInteraction.onDetailedPurchaseServer.AddListener((context, results) =>
+                {
+                    if (BazaarController.instance)
+                        BazaarController.instance.CommentOnLunarPurchase();
+                });
                 if (ModConfig.LunarShopInstancedPurchases.Value)
                 {
                     var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
