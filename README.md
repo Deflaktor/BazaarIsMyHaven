@@ -54,6 +54,10 @@ Controls how Newt acts after being killed:
 - `Ghost` -> Newt Health is significantly reduced. Revives as a ghost.
 - `Hostile` -> Newt Health is significantly reduced. Revives and starts defending himself.
 
+### Equipment
+
+With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too (`ShowPriceSigns`).
+
 ### LunarShop
 
 The Lunar Shop swaps the Bazaar's Lunar Buds for `Amount` Lunar Buds (up to 20), each with its price. Clients without the mod also see them at the right size (`FixBudScaleForClients`). The Lunar Recycler rerolls them, except buds a player already bought from.
@@ -352,7 +356,3 @@ VultureHunterBody
 WispBody
 WispSoulBody
 WorkerUnitBody
-
-## Known issues
-
-- Equipment Terminal price labels are **not** shown.
