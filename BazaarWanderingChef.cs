@@ -39,12 +39,21 @@ namespace BazaarIsMyHaven
 
         public override void RunStart()
         {
+            RunEnd();
             if (ModConfig.WanderingChefSectionEnabled.Value && !ModConfig.WanderingChefUnrestrictedCrafting.Value)
             {
                 allAvailableRecipes = GetAvailableRecipes();
                 allAvailableTargetPickupIndexes = allAvailableRecipes.Keys.ToArray();
                 randomTargetPickupIndex = RNG.Next(allAvailableTargetPickupIndexes.Length);
             }
+        }
+
+        public override void RunEnd()
+        {
+            allAvailableRecipes = null;
+            allAvailableTargetPickupIndexes = null;
+            possibleRecipes = null;
+            cauldron = null;
         }
         public override void SetupBazaar()
         {
