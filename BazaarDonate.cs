@@ -42,6 +42,11 @@ namespace BazaarIsMyHaven
             donationsDuringRun.Clear();
         }
 
+        public override void RunEnd()
+        {
+            donationsDuringRun.Clear();
+        }
+
         public override void SetupBazaar()
         {
             if (ModConfig.DonateSectionEnabled.Value)
