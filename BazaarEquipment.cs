@@ -23,6 +23,7 @@ namespace BazaarIsMyHaven
         {
             multiShopEquipmentTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MultiShopEquipmentTerminal/MultiShopEquipmentTerminal.prefab");
             //iscTripleShopEquipment = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/TripleShopEquipment/iscTripleShopEquipment.asset");
+            EquipmentPriceSigns.Preload();
         }
 
         public override void Hook()
@@ -187,7 +188,8 @@ namespace BazaarIsMyHaven
                     count = 5;
                 }
 
-                DoSpawnGameObject(DicEquipments, multiShopEquipmentTerminal, count).ForEach(gameObject => {
+                var terminals = DoSpawnGameObject(DicEquipments, multiShopEquipmentTerminal, count);
+                terminals.ForEach(gameObject => {
                     var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
                     var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
                     if(ModConfig.EquipmentInstancedPurchases.Value) {
@@ -197,6 +199,7 @@ namespace BazaarIsMyHaven
                         instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
                     }
                 });
+                EquipmentPriceSigns.Apply(terminals);
             }
         }
     }
