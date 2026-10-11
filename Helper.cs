@@ -195,6 +195,14 @@ namespace BazaarIsMyHaven
                             }
                         }
                     }
+
+                    // Keep extra equipment rewards instead of discarding them.
+                    while (equipmentIndex != EquipmentIndex.None && equipmentAmount > 0)
+                    {
+                        var extraEquipment = new UniquePickup(pickupIndex);
+                        PickupDropletController.CreatePickupDroplet(extraEquipment, characterBody.corePosition + Vector3.up * 1.5f, Vector3.up * 15f, false);
+                        equipmentAmount--;
+                    }
                 }
             }
             return droppedEquipments;
