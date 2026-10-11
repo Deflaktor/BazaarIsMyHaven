@@ -179,7 +179,7 @@ namespace BazaarIsMyHaven
                             else
                             {
                                 // we already looped once -> time to drop the old equipment
-                                droppedEquipments[equipmentState.equipmentIndex] = droppedEquipments.GetValueOrDefault(equipmentIndex) + 1;
+                                droppedEquipments[equipmentState.equipmentIndex] = droppedEquipments.GetValueOrDefault(equipmentState.equipmentIndex) + 1;
                                 if (dropReplacedEquipmentsAsPickupDroplets) { 
                                     var oldEquipment = new UniquePickup(PickupCatalog.FindPickupIndex(equipmentState.equipmentIndex));
                                     PickupDropletController.CreatePickupDroplet(oldEquipment, characterBody.corePosition + Vector3.up * 1.5f, Vector3.up * 15f - characterBody.coreTransform.forward * 15f, false);
