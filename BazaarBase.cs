@@ -36,6 +36,11 @@ namespace BazaarIsMyHaven
             {
                 SpawnCard spawnCard = card.WaitForCompletion();
                 GameObject gameObject = spawnCard.DoSpawn(keyValuePairs[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
+                if (!gameObject)
+                {
+                    Log.LogWarning($"Could not spawn {spawnCard.name} at slot {i}.");
+                    continue;
+                }
                 gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
                 result.Add(gameObject);
             }
