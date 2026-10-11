@@ -30,6 +30,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
 - **Other Tweaks**:
   - Extra decoration in the Bazaar.
   - Settings to gradually increase interactables as you complete more stages during the run.
+  - Config changes apply from the next run, without restarting the game.
 
 - **Compatiblity with other Mods**
   - [BiggerBazaar](https://thunderstore.io/package/MagnusMagnuson/BiggerBazaar/)
