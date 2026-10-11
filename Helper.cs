@@ -67,9 +67,15 @@ namespace BazaarIsMyHaven
 
         public static bool IsToolbotWithSwapSkill(CharacterMaster master)
         {
+            if (!master || !master.bodyPrefab)
+                return false;
+
             var body = master.bodyPrefab.GetComponent<CharacterBody>();
             var skillFamily = Helper.FindSkillByFamilyName("ToolbotBodySpecialFamily");
             var skillDef = SkillCatalog.GetSkillDef(SkillCatalog.FindSkillIndexByName("Swap"));
+            if (!body || !skillFamily || !skillDef || master.loadout == null)
+                return false;
+
             return Helper.HasSkillVariantEnabled(master.loadout, body.bodyIndex, skillFamily, skillDef);
         }
 
