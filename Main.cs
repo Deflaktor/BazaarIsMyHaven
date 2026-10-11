@@ -175,7 +175,7 @@ namespace BazaarIsMyHaven
         }
         private void KickFromShop_FixedUpdate(On.EntityStates.NewtMonster.KickFromShop.orig_FixedUpdate orig, EntityStates.NewtMonster.KickFromShop self)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.NewtNoKickFromShop.Value && NetworkServer.active)
+            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.NewtNoKickFromShop.Value && IsCurrentMapInBazaar() && IsShopkeeper(self.outer.gameObject) && NetworkServer.active)
             {
                 if(!ShopKeeper.DiedAtLeastOnce)
                 {
@@ -239,22 +239,28 @@ namespace BazaarIsMyHaven
 
         private void SpawnState_OnEnter(On.EntityStates.NewtMonster.SpawnState.orig_OnEnter orig, EntityStates.NewtMonster.SpawnState self)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && NetworkServer.active && NetworkServer.active)
+            // Other bodies share the Newt's spawn state, e.g. SPEX in the Computational Exchange
+            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && IsCurrentMapInBazaar() && IsShopkeeper(self.outer.gameObject) && NetworkServer.active)
             {
                 if (ModConfig.NewtGreeting.Value)
                 {
                     StartCoroutine(ShopWelcomeWord());
                 }
 
-                if (ShopKeeper.Body is null) FindShopkeeper();
+                if (!ShopKeeper.Body) FindShopkeeper();
 
-                if (ModConfig.NewtDeathBehavior.Value != ShopKeeper.DeathState.Default)
+                if (ShopKeeper.Body && ShopKeeper.Body.inventory && ModConfig.NewtDeathBehavior.Value != ShopKeeper.DeathState.Default)
                 {
-                    ShopKeeper.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ExtraLife")), 1000);
-                    ShopKeeper.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("CutHp")), 200);
+                    ShopKeeper.Body.inventory.GiveItemPermanent(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ExtraLife")), 1000);
+                    ShopKeeper.Body.inventory.GiveItemPermanent(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("CutHp")), 200);
                 }
             }
             orig(self);
+        }
+
+        private static bool IsShopkeeper(GameObject gameObject)
+        {
+            return gameObject && gameObject.name.StartsWith("ShopkeeperBody");
         }
 
         private void AddItemToShopKeeper(CharacterBody body)
