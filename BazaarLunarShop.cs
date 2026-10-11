@@ -16,6 +16,7 @@ namespace BazaarIsMyHaven
 {
     public class BazaarLunarShop : BazaarBase
     {
+        AsyncOperationHandle<GameObject> lunarShopBud;
         AsyncOperationHandle<GameObject> LunarRerollEffect;
 
         Dictionary<int, SpawnCardStruct> DicLunarShopTerminals = new Dictionary<int, SpawnCardStruct>();
@@ -28,6 +29,7 @@ namespace BazaarIsMyHaven
 
         public override void Preload()
         {
+            lunarShopBud = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarShopTerminal/LunarShopTerminal.prefab");
             LunarRerollEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarRecycler/LunarRerollEffect.prefab");
         }
 
@@ -312,6 +314,21 @@ namespace BazaarIsMyHaven
                     tableStartAngleMiddle += angleDiff / (float)(count + 1f);
                     tableEndAngleMiddle -= angleDiff / (float)(count + 1f);
                 }
+                if (count >= 3 && count < 10)
+                {
+                    // widen the arc for few buds, so 5 buds sit roughly where the originals were
+                    const float maximumExtraArc = 90f;
+                    const float maximumCorrectedArc = 180f;
+
+                    // full fix at 3 buds, gone at 10
+                    float correctionWeight = (10f - count) / 7f;
+                    float middleAngle = (tableStartAngleMiddle + tableEndAngleMiddle) / 2f;
+                    float currentArc = tableEndAngleMiddle - tableStartAngleMiddle;
+                    float correctedArc = Mathf.Min(currentArc + maximumExtraArc * correctionWeight, maximumCorrectedArc);
+
+                    tableStartAngleMiddle = middleAngle - correctedArc / 2f;
+                    tableEndAngleMiddle = middleAngle + correctedArc / 2f;
+                }
                 points = GenerateCirclePoints(tableRadiusMiddle, tableStartAngleMiddle, tableEndAngleMiddle, orientation, count);
                 points.Reverse();
             }
@@ -366,9 +383,9 @@ namespace BazaarIsMyHaven
                     // we are on the inner row
                     rotation = Quaternion.LookRotation(new Vector3(points[i].x, 0, points[i].y));
                 }
-                Quaternion rotationUpsideDown = Quaternion.Euler(180, 0, 0);
-                rotation = rotation * rotationUpsideDown;
-                var position = new Vector3(lunarTablePosition.x + points[i].x, lunarTablePosition.y + 4.0f , lunarTablePosition.z + points[i].y);
+                // turn the buds so their price holograms face outward
+                rotation = rotation * Quaternion.Euler(0, 180, 0);
+                var position = new Vector3(lunarTablePosition.x + points[i].x, lunarTablePosition.y, lunarTablePosition.z + points[i].y);
                 DicLunarShopTerminals.Add(i, new SpawnCardStruct(position, rotation.eulerAngles));
             }
         }
@@ -380,20 +397,23 @@ namespace BazaarIsMyHaven
             DicLunarShopTerminals.Clear();
             SetLunarShopTerminal();
 
-            // find original lunar buds
-            var gameObjects = new List<GameObject>();
+            // replace the original buds with the set amount
             foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
             {
                 if (obj.name.StartsWith("LunarShopTerminal"))
                 {
-                    gameObjects.Add(obj);
+                    NetworkServer.Destroy(obj);
                 }
             }
+            var gameObjects = DoSpawnGameObject(DicLunarShopTerminals, lunarShopBud, ModConfig.LunarShopAmount.Value);
+            ObjectLunarShopTerminals_Spawn.AddRange(gameObjects);
 
             for (int i = 0; i < gameObjects.Count; i++)
             {
                 GameObject gameObject = gameObjects[i];
                 gameObject.name = "LunarShopTerminal";
+                // the prefab is half scale; buds placed in the scene are not
+                gameObject.transform.localScale = Vector3.one;
                 var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
                 var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
                 if (ModConfig.LunarShopInstancedPurchases.Value)
