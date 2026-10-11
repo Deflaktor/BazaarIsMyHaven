@@ -23,8 +23,6 @@ namespace BazaarIsMyHaven
 
         AsyncOperationHandle<InteractableSpawnCard> iscShopPortal;
 
-        AsyncOperationHandle<InteractableSpawnCard> iscDeepVoidPortalBattery;
-
         AsyncOperationHandle<GameObject> TeleporterBeaconEffect;
 
         public override void Preload()
