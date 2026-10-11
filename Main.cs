@@ -291,15 +291,15 @@ namespace BazaarIsMyHaven
             switch (ModConfig.NewtDeathBehavior.Value)
             {
                 case ShopKeeper.DeathState.Ghost:
-                    ShopKeeper.Body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Ghost")), 1);
+                    ShopKeeper.Body.inventory.GiveItemPermanent(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Ghost")), 1);
                     ShopKeeper.Body.AddBuff(RoR2Content.Buffs.HiddenInvincibility);
                     break;
                 case ShopKeeper.DeathState.Tank:
                     var healthBoost = 10 * (int)Math.Pow(2, ShopKeeper.DeathCount) - 10 * (int)Math.Pow(2, ShopKeeper.DeathCount - 1);
-                    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BoostHp")), healthBoost);
+                    body.inventory.GiveItemPermanent(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("BoostHp")), healthBoost);
                     break;
                 case ShopKeeper.DeathState.Hostile:
-                    body.inventory.GiveItem(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Thorns")), 1);
+                    body.inventory.GiveItemPermanent(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("Thorns")), 1);
                     break;
                 default:
                     break;
