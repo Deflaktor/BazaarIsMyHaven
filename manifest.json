@@ -4,8 +4,8 @@
     "website_url": "https://github.com/Deflaktor/BazaarIsMyHaven",
     "description": "Adds lots of configurable features to the Bazaar: Printers, Scrappers, Cauldrons, Equipment Terminals and more. Fork of BazaarIsMyHome.",
     "dependencies": [
-        "RiskofThunder-R2API_Core-5.1.7",
-		"RiskofThunder-R2API_Language-1.0.1",
+        "RiskofThunder-R2API_Core-5.3.0",
+		"RiskofThunder-R2API_Language-1.1.0",
         "Def-ItemStringParser-2.0.0"
     ]
 }
