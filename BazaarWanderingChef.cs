@@ -177,7 +177,8 @@ namespace BazaarIsMyHaven
                             }
                             else if (pickupDef.equipmentIndex != EquipmentIndex.None)
                             {
-                                return InventoryContainsPickup(inventory, pickupDef.pickupIndex);
+                                int used = consumedIngredients.Count(pickup => pickup == pickupIndex);
+                                return used < InventoryPickupCount(inventory, pickupDef.pickupIndex);
                             }
                         }
                     }
@@ -224,27 +225,35 @@ namespace BazaarIsMyHaven
 
         private bool InventoryContainsPickup(Inventory inventory, PickupIndex pickup)
         {
+            return InventoryPickupCount(inventory, pickup) > 0;
+        }
+
+        private int InventoryPickupCount(Inventory inventory, PickupIndex pickup)
+        {
             var pickupDef = pickup.pickupDef;
+            if (!inventory || pickupDef == null)
+                return 0;
+
             if(pickupDef.itemIndex != ItemIndex.None)
             {
-                var count = inventory.GetItemCountPermanent(pickupDef.itemIndex);
-                return count > 0;
+                return inventory.GetItemCountPermanent(pickupDef.itemIndex);
             }
+            int count = 0;
             if(pickupDef.equipmentIndex != EquipmentIndex.None)
             {
-                for(var slot = 0; slot < inventory._equipmentStateSlots.Length; slot++)
+                for (uint slot = 0; slot < inventory.GetEquipmentSlotCount(); slot++)
                 {
-                    for (var set = 0; set < inventory._equipmentStateSlots[slot].Length; set++)
+                    for (uint set = 0; set < inventory.GetEquipmentSetCount(); set++)
                     {
-                        var equipmentStateSlot = inventory._equipmentStateSlots[slot][slot];
-                        if (equipmentStateSlot.equipmentDef != null && equipmentStateSlot.equipmentDef.equipmentIndex == pickupDef.equipmentIndex)
+                        var equipmentState = inventory.GetEquipment(new EquipmentLocation { slot = slot, set = set });
+                        if (equipmentState.equipmentIndex == pickupDef.equipmentIndex)
                         {
-                            return true;
+                            count++;
                         }
                     }
                 }
             }
-            return false;
+            return count;
         }
 
         public CraftableCatalog.RecipeEntry[] FindRecipesThatCanAcceptIngredients(PickupIndex[] choices)
