@@ -152,7 +152,7 @@ namespace BazaarIsMyHaven
                         if (index >= maxEquipmentCount)
                         {
                             equipLoop = true;
-                            index = 0;
+                            index %= maxEquipmentCount;
                         }
                         uint slot = (uint)(index % maxEquipmentSlots);
                         uint set = (uint)(index / maxEquipmentSlots);
