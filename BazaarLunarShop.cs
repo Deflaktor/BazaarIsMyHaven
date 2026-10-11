@@ -16,6 +16,9 @@ namespace BazaarIsMyHaven
 {
     public class BazaarLunarShop : BazaarBase
     {
+        // unique name so QoLChests can exempt the buds; it still starts with the vanilla name
+        private const string LunarShopObjectName = "LunarShopTerminal_BazaarIsMyHaven";
+
         AsyncOperationHandle<GameObject> lunarShopBud;
         AsyncOperationHandle<GameObject> LunarRerollEffect;
 
@@ -413,6 +416,12 @@ namespace BazaarIsMyHaven
 
         private void SpawnLunarShopTerminal()
         {
+            // QoLChests would hide bought buds, breaking instanced purchases and rerolls
+            if (ModCompatibilityQoLChests.enabled)
+            {
+                ModCompatibilityQoLChests.RegisterQoLChestsBlacklist(LunarShopObjectName);
+            }
+
             ObjectLunarShopTerminals_Spawn.Clear();
             currentLunarShopStaticItemIndex = 0;
             DicLunarShopTerminals.Clear();
@@ -432,7 +441,7 @@ namespace BazaarIsMyHaven
             for (int i = 0; i < gameObjects.Count; i++)
             {
                 GameObject gameObject = gameObjects[i];
-                gameObject.name = "LunarShopTerminal";
+                gameObject.name = LunarShopObjectName;
                 // the prefab is half scale; buds placed in the scene are not
                 gameObject.transform.localScale = Vector3.one;
                 var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
