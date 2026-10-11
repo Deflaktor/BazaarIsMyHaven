@@ -51,6 +51,8 @@ namespace BazaarIsMyHaven
         {
             SpawnCard spawnCard = iscShrineRestack.WaitForCompletion();
             GameObject shrinerestackOne = spawnCard.DoSpawn(new Vector3(-130f, -24f, -40f), Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
+            if (!shrinerestackOne)
+                return;
             shrinerestackOne.transform.eulerAngles = new Vector3(0.0f, 220f, 0.0f);
             if (ModConfig.ShrineOfOrderUseLimit.Value >= 0)
             {
