@@ -93,6 +93,9 @@ namespace BazaarIsMyHaven
                 if (count <= 0)
                     continue;
                 var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
+                if (pickupDef == null)
+                    continue;
+
                 var itemName = pickupDef.internalName;
                 ColorCatalog.ColorIndex colorIndex = ColorCatalog.ColorIndex.Tier1Item;
                 if (pickupDef.itemIndex != ItemIndex.None)
@@ -104,8 +107,11 @@ namespace BazaarIsMyHaven
                         itemName = Language.GetString(itemDef.nameToken);
                     if (string.IsNullOrWhiteSpace(itemName))
                         itemName = itemDef.name;
-                    if (itemDef.tier != ItemTier.NoTier)
-                        colorIndex = ItemTierCatalog.GetItemTierDef(itemDef.tier).colorIndex;
+
+                    //Guards custom tiers, since tierDef could be null
+                    var tierDef = ItemTierCatalog.GetItemTierDef(itemDef.tier);
+                    if (tierDef)
+                        colorIndex = tierDef.colorIndex;
                 }
                 else if (pickupDef.equipmentIndex != EquipmentIndex.None)
                 {
