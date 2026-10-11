@@ -61,7 +61,6 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<bool> EquipmentInstancedPurchases;
         public static ConfigEntry<int> EquipmentCost;
         public static ConfigEntry<bool> EquipmentBuyToInventory;
-        public static ConfigEntry<bool> EquipmentShowPriceSigns;
         public static ConfigEntry<bool> EquipmentReplaceLunarSeersWithEquipment;
         public static ConfigEntry<float> EquipmentReplaceWithEliteChance;
         public static ConfigEntry<string> EquipmentReplaceWithEliteList;
@@ -179,7 +178,6 @@ namespace BazaarIsMyHaven
             EquipmentInstancedPurchases = config.Bind("05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
             EquipmentCost = config.Bind("05 Equipment", "Cost", 0, "Monetary cost for equipment purchases.");
             EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground.");
-            EquipmentShowPriceSigns = config.Bind("05 Equipment", "ShowPriceSigns", true, "Shows the price above each Equipment Terminal when Cost is above 0. Uses only vanilla messages, so clients need no mod. Turn off if a game update breaks it.");
             if (EquipmentAmount.Value > 3 && !EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentAmount.Value = 3;
             if (EquipmentAmount.Value > 5 && EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentAmount.Value = 5;
 

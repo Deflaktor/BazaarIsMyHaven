@@ -43,7 +43,7 @@ namespace BazaarIsMyHaven
 
         public static void Apply(List<GameObject> terminals)
         {
-            if (!NetworkServer.active || terminals.Count == 0 || !ModConfig.EquipmentShowPriceSigns.Value || ModConfig.EquipmentCost.Value <= 0 || signsUnavailable)
+            if (!NetworkServer.active || terminals.Count == 0 || ModConfig.EquipmentCost.Value <= 0 || signsUnavailable)
             {
                 return;
             }
