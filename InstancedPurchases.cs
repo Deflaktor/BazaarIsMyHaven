@@ -257,23 +257,6 @@ namespace BazaarIsMyHaven
             ApplyState(shop, state, forceAnimation || changed);
         }
 
-        public static void UpdateShop(GameObject shop, PlayerCharacterMasterController pc)
-        {
-            if (!NetworkServer.active || !pc || !shop.TryGetComponent(out InstancedPurchase instance))
-            {
-                return;
-            }
-
-            if (pc.hasAuthority)
-            {
-                RestoreHostView(shop);
-            }
-            else
-            {
-                instance.QueueUpdate(pc);
-            }
-        }
-
         public static void UpdateAll(GameObject shop)
         {
             if (!NetworkServer.active || !shop.TryGetComponent(out InstancedPurchase instance))

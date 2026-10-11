@@ -508,8 +508,6 @@ namespace BazaarIsMyHaven
         {
             Vector3 lunarTablePosition = new Vector3(-76.6438f, -24.0468f, -41.6449f);
             float orientation = 280f;
-            Vector3 lunarTableDroneShopPosition = new Vector3(-139.8156f, -21.8568f, 2.9263f);
-            const float droneTableOrientation = 160f;
 
             const float tableRadiusInner = 3.0f;
             const float tableRadiusMiddle = 4.0f;
@@ -521,7 +519,6 @@ namespace BazaarIsMyHaven
             float tableEndAngleMiddle = 325f;
             float tableEndAngleOuter = 339f;
             
-            const float minDistance = 19f;
             const float middleCapacity = 10;
             const float maxCapacity = 20;
 
@@ -601,8 +598,6 @@ namespace BazaarIsMyHaven
                 outerSamples.Reverse();
                 points.AddRange(outerSamples);
                 points.AddRange(innerSamples);
-                //List<Vector2> centroids = Lloyd.Centroids(samples, count);
-                //points = Lloyd.MapSamplesOrderToCentroids(samples, centroids);
             }
             for (int i = 0; i < points.Count; i++) {
                 Quaternion rotation = Quaternion.LookRotation(new Vector3(-points[i].x, 0, -points[i].y));
@@ -686,10 +681,8 @@ namespace BazaarIsMyHaven
                     instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
                     instancedPurchase.original.hidden = shopTerminalBehavior.hidden;
                 }
-                // purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
 
                 whichStallsHaveBeenBoughtOnce.Add(purchaseInteraction, new List<PlayerCharacterMasterController>());
-                //Main.instance.StartCoroutine(DelayRerollEffect(shopTerminalBehavior, 0.1f, false));
             }
 
             LunarBudScaleSync.Apply(gameObjects);
