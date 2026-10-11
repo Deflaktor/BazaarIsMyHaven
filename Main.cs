@@ -169,11 +169,25 @@ namespace BazaarIsMyHaven
                     isEnableSacrifice = true;
                     RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, false);
                 }
-                foreach (var bazaarMod in bazaarMods)
+                try
                 {
-                    bazaarMod.SetupBazaar();
+                    foreach (var bazaarMod in bazaarMods)
+                    {
+                        try
+                        {
+                            bazaarMod.SetupBazaar();
+                        }
+                        catch (Exception exception)
+                        {
+                            Log.LogError($"Could not set up {bazaarMod.GetType().Name}: {exception}");
+                        }
+                    }
                 }
-                if (isEnableSacrifice) RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, true);
+                finally
+                {
+                    // Restore the run's artifact even if a section fails
+                    if (isEnableSacrifice) RunArtifactManager.instance.SetArtifactEnabledServer(artifactDef, true);
+                }
             }
         }
 
