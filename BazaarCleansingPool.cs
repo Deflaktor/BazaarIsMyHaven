@@ -61,9 +61,9 @@ namespace BazaarIsMyHaven
         {
             DicLunarPools.Clear();
             SetLunarPool();
-            DoSpawnCard(DicLunarPools, iscShrineCleanse, DicLunarPools.Count);
+            var pools = DoSpawnCard(DicLunarPools, iscShrineCleanse, DicLunarPools.Count);
 
-            if (ModConfig.CleansingPoolRewardsLunarCoins.Value)
+            if (ModConfig.CleansingPoolRewardsLunarCoins.Value && pools.Count > 0)
             {
                 GameObject gameObject = GameObject.Instantiate(lunarShopTerminal.WaitForCompletion(), DicLunarPools[0].Position, Quaternion.identity);
                 gameObject.transform.localPosition = new Vector3(DicLunarPools[0].Position.x, DicLunarPools[0].Position.y + 0.5f, DicLunarPools[0].Position.z);
