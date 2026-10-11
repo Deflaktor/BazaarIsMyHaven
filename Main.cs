@@ -121,6 +121,7 @@ namespace BazaarIsMyHaven
         {
             playerStructs_.Clear();
             ShopKeeper.Body = null;
+            InstancedPurchases.currentInteractor = null;
             foreach (var bazaarMod in bazaarMods)
             {
                 bazaarMod.RunEnd();

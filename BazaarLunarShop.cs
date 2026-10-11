@@ -427,25 +427,11 @@ namespace BazaarIsMyHaven
                 if (ModConfig.LunarShopInstancedPurchases.Value)
                 {
                     var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
+                    instancedPurchase.lunarShopIndex = i;
                     instancedPurchase.original.available = purchaseInteraction.available;
                     instancedPurchase.original.pickup = shopTerminalBehavior.pickup;
                     instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
-
-                    foreach (var pc in PlayerCharacterMasterController.instances)
-                    {
-                        if (pc != null && pc.master != null && pc.master.bodyPrefab != null)
-                        {
-                            var bodyIndex = BodyCatalog.FindBodyIndex(pc.master.bodyPrefab);
-                            var amount = ModConfig.LunarShopAmountDependingOnCharacterParsed.GetValueOrDefault(bodyIndex, -1);
-                            if (amount > 0 && i >= amount)
-                            {
-                                instancedPurchase.GetOrCreate(pc).available = false;
-                                instancedPurchase.GetOrCreate(pc).pickup = UniquePickup.none;
-                                instancedPurchase.GetOrCreate(pc).hasBeenPurchased = true;
-                                InstancedPurchases.UpdateShop(gameObject, pc);
-                            }
-                        }
-                    }
+                    instancedPurchase.original.hidden = shopTerminalBehavior.hidden;
                 }
                 // purchaseInteraction.onPurchase.AddListener((interactor) => shopTerminalBehavior.SetNoPickup());
 

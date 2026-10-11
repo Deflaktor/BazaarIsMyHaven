@@ -1,12 +1,7 @@
-﻿using Mono.Cecil.Cil;
-using MonoMod.Cil;
-using RoR2;
+﻿using RoR2;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.UIElements.Collections;
 
 namespace BazaarIsMyHaven
 {
@@ -14,10 +9,16 @@ namespace BazaarIsMyHaven
     {
         public static PlayerCharacterMasterController currentInteractor;
 
+        // SyncVar masks used by the game's serializers.
+        private const uint PickupMask = 1u;
+        private const uint HiddenMask = 2u;
+        private const uint PurchasedMask = 4u;
+        private const uint AvailableMask = 8u;
+
         public static void Hook()
         {
-            IL.RoR2.PurchaseInteraction.OnSerialize += PurchaseInteraction_OnSerialize;
-            IL.RoR2.ShopTerminalBehavior.OnSerialize += ShopTerminalBehavior_OnSerialize;
+            On.RoR2.PurchaseInteraction.OnSerialize += PurchaseInteraction_OnSerialize;
+            On.RoR2.ShopTerminalBehavior.OnSerialize += ShopTerminalBehavior_OnSerialize;
             On.RoR2.ShopTerminalBehavior.SetPickup += ShopTerminalBehavior_SetPickup;
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
             On.RoR2.ShopTerminalBehavior.SetHasBeenPurchased += ShopTerminalBehavior_SetHasBeenPurchased;
@@ -27,264 +28,424 @@ namespace BazaarIsMyHaven
             On.RoR2.ShopTerminalBehavior.CurrentPickup += ShopTerminalBehavior_CurrentPickup;
         }
 
+        private static PlayerCharacterMasterController GetPlayer(Interactor activator)
+        {
+            var body = activator ? activator.GetComponent<CharacterBody>() : null;
+            return body && body.master ? body.master.playerCharacterMasterController : null;
+        }
+
         private static Interactability PurchaseInteraction_GetInteractability(On.RoR2.PurchaseInteraction.orig_GetInteractability orig, PurchaseInteraction self, Interactor activator)
         {
-            if (!activator.hasAuthority && self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
+            if (!NetworkServer.active || !self.TryGetComponent(out InstancedPurchase instance))
             {
-                PlayerCharacterMasterController pc = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
-                var instancedPurchaseAvailable = instancedPurchase.GetOrOriginal(pc).available;
-                var availableBackup = self.available;
-                self.available = instancedPurchaseAvailable;
-                var interactability = orig(self, activator);
-                self.available = availableBackup;
-                return interactability;
+                return orig(self, activator);
             }
-            return orig(self, activator);
+
+            bool previousAvailable = self.available;
+            try
+            {
+                self.available = instance.GetOrOriginal(GetPlayer(activator)).available;
+                return orig(self, activator);
+            }
+            finally
+            {
+                self.available = previousAvailable;
+            }
         }
 
         private static void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
-            try { 
-                currentInteractor = activator.GetComponent<CharacterBody>().master.playerCharacterMasterController;
+            if (!NetworkServer.active)
+            {
                 orig(self, activator);
+                return;
+            }
 
-                if (currentInteractor.hasAuthority)
+            var previousInteractor = currentInteractor;
+            var player = GetPlayer(activator);
+            self.TryGetComponent(out InstancedPurchase instance);
+            currentInteractor = player;
+
+            try
+            {
+                if (instance)
                 {
-                    UpdateShopForServer(self.gameObject, currentInteractor);
-                }
-                else
-                {
-                    UpdateShopForClient(self.gameObject, currentInteractor);
+                    // Vanilla DropPickup reads the raw pickup field, so give it the buyer's state
+                    ApplyState(self.gameObject, instance.GetOrOriginal(player), false);
                 }
 
-            } finally {
-                currentInteractor = null;
+                orig(self, activator);
+            }
+            finally
+            {
+                currentInteractor = previousInteractor;
+                if (instance)
+                {
+                    RestoreHostView(self.gameObject, player && player.hasAuthority);
+                    if (player && !player.hasAuthority)
+                    {
+                        instance.QueueUpdate(player);
+                    }
+
+                }
             }
         }
 
         private static void ShopTerminalBehavior_SetHasBeenPurchased(On.RoR2.ShopTerminalBehavior.orig_SetHasBeenPurchased orig, ShopTerminalBehavior self, bool newHasBeenPurchased)
         {
-            if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
+            if (!NetworkServer.active || !self.TryGetComponent(out InstancedPurchase instance))
             {
-                if (currentInteractor != null)
-                {
-                    instancedPurchase.GetOrCreate(currentInteractor).hasBeenPurchased = newHasBeenPurchased;
-                    if (currentInteractor.hasAuthority)
-                    {
-                        UpdateShopForServer(self.gameObject, currentInteractor);
-                    }
-                }
-                else
-                {
-                    instancedPurchase.original.hasBeenPurchased = newHasBeenPurchased;
-                    orig(self, newHasBeenPurchased);
-                    return;
-                    // self.hasBeenPurchased = newHasBeenPurchased;
-                }
+                orig(self, newHasBeenPurchased);
+                return;
+            }
+
+            instance.GetOrCreate(currentInteractor).hasBeenPurchased = newHasBeenPurchased;
+            if (currentInteractor)
+            {
+                self.hasBeenPurchased = newHasBeenPurchased; 
             }
             else
             {
-                orig(self, newHasBeenPurchased);
+                UpdateAll(self.gameObject);
             }
         }
 
         private static void PurchaseInteraction_SetAvailable(On.RoR2.PurchaseInteraction.orig_SetAvailable orig, PurchaseInteraction self, bool newAvailable)
         {
-            if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
+            if (!NetworkServer.active || !self.TryGetComponent(out InstancedPurchase instance))
             {
-                if (currentInteractor != null) {
-                    instancedPurchase.GetOrCreate(currentInteractor).available = newAvailable;
-                    if (currentInteractor.hasAuthority)
-                    {
-                        UpdateShopForServer(self.gameObject, currentInteractor);
-                    }
-                }
-                else
-                {
-                    instancedPurchase.original.available = newAvailable;
-                    orig(self, newAvailable);
-                    return;
-                }
+                orig(self, newAvailable);
+                return;
+            }
+
+            instance.GetOrCreate(currentInteractor).available = newAvailable;
+            if (currentInteractor)
+            {
+                self.available = newAvailable;
+
             }
             else
             {
-                orig(self, newAvailable);
+                UpdateAll(self.gameObject);
             }
         }
 
 
         private static void ShopTerminalBehavior_SetPickup(On.RoR2.ShopTerminalBehavior.orig_SetPickup orig, ShopTerminalBehavior self, UniquePickup newPickup, bool newHidden)
         {
-            if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase) && NetworkServer.active)
+            if (!NetworkServer.active || !self.TryGetComponent(out InstancedPurchase instance))
             {
-                if (currentInteractor != null)
-                {
-                    // someone is interacting with the shop terminal -> set the pickup index only for the interactor
-                    instancedPurchase.GetOrCreate(currentInteractor).pickup = newPickup;
-                    instancedPurchase.GetOrCreate(currentInteractor).hidden = newHidden;
-                    if (currentInteractor.hasAuthority)
-                    {
-                        UpdateShopForServer(self.gameObject, currentInteractor);
-                    }
-                }
-                else
-                {
-                    // no one is interacting with the shop terminal -> host sets the pickup index
-                    instancedPurchase.original.pickup = newPickup;
-                    instancedPurchase.original.hidden = newHidden;
-                    orig(self, newPickup, newHidden);
-                }
+                orig(self, newPickup, newHidden);
+                return;
+            }
+
+            var state = instance.GetOrCreate(currentInteractor);
+            state.pickup = newPickup;
+            state.hidden = newHidden;
+            if (currentInteractor)
+            {
+                self.pickup = newPickup;
+                self.hidden = newHidden;
+
             }
             else
             {
-                orig(self, newPickup, newHidden);
+                UpdateAll(self.gameObject);
             }
         }
 
         private static PickupIndex ShopTerminalBehavior_CurrentPickupIndex(On.RoR2.ShopTerminalBehavior.orig_CurrentPickupIndex orig, ShopTerminalBehavior self)
         {
-            if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase) && NetworkServer.active)
-            {
-                return instancedPurchase.GetOrOriginal(currentInteractor).pickup.pickupIndex;
-            }
-            return orig(self);
+            return NetworkServer.active && self.TryGetComponent(out InstancedPurchase instance) ? instance.GetOrOriginal(currentInteractor).pickup.pickupIndex : orig(self);
         }
+
         private static UniquePickup ShopTerminalBehavior_CurrentPickup(On.RoR2.ShopTerminalBehavior.orig_CurrentPickup orig, ShopTerminalBehavior self)
         {
-            if (self.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase) && NetworkServer.active)
-            {
-                return instancedPurchase.GetOrOriginal(currentInteractor).pickup;
-            }
-            return orig(self);
+            return NetworkServer.active && self.TryGetComponent(out InstancedPurchase instance) ? instance.GetOrOriginal(currentInteractor).pickup : orig(self);
         }
 
-        private static void ShopTerminalBehavior_OnSerialize(ILContext il)
+        private static bool ShopTerminalBehavior_OnSerialize(On.RoR2.ShopTerminalBehavior.orig_OnSerialize orig, ShopTerminalBehavior self, NetworkWriter writer, bool initialState)
         {
-            ILCursor c = new ILCursor(il);
-            while (c.TryGotoNext(x => x.MatchLdfld<ShopTerminalBehavior>("pickup")))
-            {
-                c.Remove();
-                c.EmitDelegate((ShopTerminalBehavior shopTerminalBehavior) =>
-                {
-                    if(shopTerminalBehavior.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
-                    {
-                        return instancedPurchase.GetOrOriginal(instancedPurchase.pcClient).pickup;
-                    }
-                    // vanilla
-                    return shopTerminalBehavior.pickup;
-                });
-            }
-            c.Goto(0);
-            while (c.TryGotoNext(x => x.MatchLdfld<ShopTerminalBehavior>("hasBeenPurchased")))
-            {
-                c.Remove();
-                c.EmitDelegate((ShopTerminalBehavior shopTerminalBehavior) =>
-                {
-                    if (shopTerminalBehavior.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
-                    {
-                        return instancedPurchase.GetOrOriginal(instancedPurchase.pcClient).hasBeenPurchased;
-                    }
-                    // vanilla
-                    return shopTerminalBehavior.hasBeenPurchased;
-                });
-            }
-        }
 
-        private static void PurchaseInteraction_OnSerialize(MonoMod.Cil.ILContext il)
-        {
-            ILCursor c = new ILCursor(il);
-            while(c.TryGotoNext(x => x.MatchLdfld<PurchaseInteraction>("available")))
+            if (!self.TryGetComponent(out InstancedPurchase instance))
             {
-                c.Remove();
-                c.EmitDelegate((PurchaseInteraction purchaseInteraction) =>
-                {
-                    if (purchaseInteraction.gameObject.TryGetComponent(out InstancedPurchase instancedPurchase))
-                    {
-                        return instancedPurchase.GetOrOriginal(instancedPurchase.pcClient).available;
-                    }
-                    // vanilla
-                    return purchaseInteraction.available;
-                });
+                return orig(self, writer, initialState);
+            }
+
+            var previousPickup = self.pickup;
+            bool previousHidden = self.hidden;
+            bool previousPurchased = self.hasBeenPurchased;
+            var state = instance.GetOrOriginal(instance.pcClient);
+            
+            // Personalized fields use targeted messages, not the broadcast; other fields like prices sync normally
+            if (!initialState && !instance.pcClient)
+            {
+                self.m_SyncVarDirtyBits &= ~(PickupMask | HiddenMask | PurchasedMask);
+            }
+
+            try
+            {
+                self.pickup = state.pickup;
+                self.hidden = state.hidden;
+                self.hasBeenPurchased = state.hasBeenPurchased;
+                return orig(self, writer, initialState);
+            }
+            finally
+            {
+                self.pickup = previousPickup;
+                self.hidden = previousHidden;
+                self.hasBeenPurchased = previousPurchased;
             }
         }
 
-
-        public static void UpdateShop(GameObject gameObject, PlayerCharacterMasterController pc)
+        private static bool PurchaseInteraction_OnSerialize(On.RoR2.PurchaseInteraction.orig_OnSerialize orig, PurchaseInteraction self, NetworkWriter writer, bool initialState)
         {
+            if (!self.TryGetComponent(out InstancedPurchase instance))
+            {
+                return orig(self, writer, initialState);
+            }
+
+            bool previousAvailable = self.available;
+            if (!initialState && !instance.pcClient)
+            {
+                self.m_SyncVarDirtyBits &= ~AvailableMask;
+            }
+
+            try
+            {
+                self.available = instance.GetOrOriginal(instance.pcClient).available;
+                return orig(self, writer, initialState);
+
+            }
+            finally
+            {
+                self.available = previousAvailable;
+            }
+        }
+
+        private static void ApplyState(GameObject shop, InstancedPurchaseStruct state, bool refreshAnimation)
+        {
+            var purchase = shop.GetComponent<PurchaseInteraction>();
+            var terminal = shop.GetComponent<ShopTerminalBehavior>();
+            purchase.available = state.available;
+            terminal.pickup = state.pickup;
+            terminal.hidden = state.hidden;
+            terminal.hasBeenPurchased = state.hasBeenPurchased;
+
+            if (refreshAnimation && NetworkClient.active)
+            {
+                terminal.UpdatePickupDisplayAndAnimations();
+            }
+        }
+
+        private static void RestoreHostView(GameObject shop, bool forceAnimation = false)
+        {
+            var instance = shop.GetComponent<InstancedPurchase>();
+            PlayerCharacterMasterController host = null;
+            foreach (var pc in PlayerCharacterMasterController.instances)
+            {
+                if (pc && pc.hasAuthority)
+                {
+                    host = pc;
+                    break;
+                }
+            }
+
+            var state = instance.GetOrOriginal(host);
+            var terminal = shop.GetComponent<ShopTerminalBehavior>();
+            bool changed = !terminal.pickup.Equals(state.pickup) || terminal.hidden != state.hidden || terminal.hasBeenPurchased != state.hasBeenPurchased;
+            ApplyState(shop, state, forceAnimation || changed);
+        }
+
+        public static void UpdateShop(GameObject shop, PlayerCharacterMasterController pc)
+        {
+            if (!NetworkServer.active || !pc || !shop.TryGetComponent(out InstancedPurchase instance))
+            {
+                return;
+            }
+
             if (pc.hasAuthority)
             {
-                UpdateShopForServer(gameObject, pc);
+                RestoreHostView(shop);
             }
             else
             {
-                UpdateShopForClient(gameObject, pc);
+                instance.QueueUpdate(pc);
             }
         }
 
-        private static void UpdateShopForServer(GameObject shop, PlayerCharacterMasterController pc)
+        public static void UpdateAll(GameObject shop)
         {
-            if (shop.TryGetComponent(out InstancedPurchase instancedPurchase)) {
-                if (shop.TryGetComponent(out PurchaseInteraction purchaseInteraction))
-                {
-                    purchaseInteraction.available = instancedPurchase.GetOrOriginal(pc).available;
-                }
-                if (shop.TryGetComponent(out ShopTerminalBehavior shopTerminalBehavior))
-                {
-                    shopTerminalBehavior.hasBeenPurchased = instancedPurchase.GetOrOriginal(pc).hasBeenPurchased;
-                    shopTerminalBehavior.pickup = instancedPurchase.GetOrOriginal(pc).pickup;
-                    shopTerminalBehavior.UpdatePickupDisplayAndAnimations();
-                }
-            }
-        }
-
-        private static void UpdateShopForClient(GameObject shop, PlayerCharacterMasterController pc)
-        {
-            if (shop.TryGetComponent(out InstancedPurchase instancedPurchase))
+            if (!NetworkServer.active || !shop.TryGetComponent(out InstancedPurchase instance))
             {
-                // set which properties we want to sync
-                var syncVarDirtyBitsBackups = new Dictionary<NetworkBehaviour, uint>();
-                if (shop.TryGetComponent(out ShopTerminalBehavior shopTerminalBehavior))
+                return;
+            }
+
+            RestoreHostView(shop);
+            foreach (var pc in PlayerCharacterMasterController.instances)
+            {
+                if(pc && !pc.hasAuthority)
                 {
-                    syncVarDirtyBitsBackups[shopTerminalBehavior] = shopTerminalBehavior.m_SyncVarDirtyBits;
-                    shopTerminalBehavior.m_SyncVarDirtyBits |= 1u; // pickup
-                    shopTerminalBehavior.m_SyncVarDirtyBits |= 4u; // hasBeenPurchased
+                    instance.QueueUpdate(pc);
                 }
-                if (shop.TryGetComponent(out PurchaseInteraction purchaseInteraction))
+            }
+        }
+
+        private static byte[] CreateUpdateMessage(NetworkIdentity identity, int channel, uint shopMask, uint purchaseMask)
+        {
+            var writer = new NetworkWriter();
+            writer.StartMessage(MsgType.UpdateVars);
+            writer.Write(identity.netId);
+
+            foreach (var behavior in identity.GetBehavioursOfSameChannel(channel, false))
+            {
+                uint previousDirtyBits = behavior.m_SyncVarDirtyBits;
+                try
                 {
-                    syncVarDirtyBitsBackups[purchaseInteraction] = purchaseInteraction.m_SyncVarDirtyBits;
-                    purchaseInteraction.m_SyncVarDirtyBits |= 8u; // available
+                    // Serialize only the requested fields; other components write nothing
+                    behavior.m_SyncVarDirtyBits = behavior is ShopTerminalBehavior ? shopMask : behavior is PurchaseInteraction ? purchaseMask : 0u;
+                    behavior.OnSerialize(writer, false);
                 }
-
-                NetworkWriter updateWriter = new NetworkWriter();
-                instancedPurchase.pcClient = pc;
-
-                var shopNetworkIdentity = shop.GetComponent<NetworkIdentity>();
-
-                for (int j = 0; j < NetworkServer.numChannels; j++)
+                finally
                 {
-                    updateWriter.StartMessage(MsgType.UpdateVars);
-                    updateWriter.Write(shopNetworkIdentity.netId);
-                    bool flag = false;
-                    NetworkBehaviour[] behavioursOfSameChannel = shopNetworkIdentity.GetBehavioursOfSameChannel(j, initialState: false);
-                    for (int k = 0; k < behavioursOfSameChannel.Length; k++)
+                    behavior.m_SyncVarDirtyBits = previousDirtyBits;
+                }
+            }
+
+            writer.FinishMessage();
+            return writer.ToArray();
+        }
+
+        // Rebuilds a shop's model on one client (e.g. after fixing its scale) without changing stock or purchase state
+        internal static byte[] CreatePickupDisplayRefresh(NetworkIdentity identity, NetworkConnection connection, int channel)
+        {
+            var terminal = identity.GetComponent<ShopTerminalBehavior>();
+            var instance = identity.GetComponent<InstancedPurchase>();
+            PlayerCharacterMasterController player = null;
+            InstancedPurchaseStruct state = null;
+
+            if (instance)
+            {
+                foreach (var pc in PlayerCharacterMasterController.instances)
+                {
+                    if (pc && pc.networkUser && pc.networkUser.connectionToClient == connection)
                     {
-                        NetworkBehaviour networkBehaviour = behavioursOfSameChannel[k];
-                        if (networkBehaviour.OnSerialize(updateWriter, initialState: false))
-                        {
-                            // restore m_SyncVarDirtyBits
-                            if(syncVarDirtyBitsBackups.TryGetValue(networkBehaviour, out uint syncVarDirtyBitsBackup)) {
-                                networkBehaviour.m_SyncVarDirtyBits = syncVarDirtyBitsBackup;
-                            }
-                            flag = true;
-                        }
-                    }
-                    if (flag)
-                    {
-                        updateWriter.FinishMessage();
-                        pc.networkUser.connectionToClient.SendWriter(updateWriter, j);
+                        player = pc;
+                        break;
                     }
                 }
-                instancedPurchase.pcClient = null;
+
+                // A late join may see shops before the player is ready. Retry instead of
+                // sending the host's stock or another player's personalized offer.
+                if (!player)
+                {
+                    return null;
+                }
+
+                state = instance.GetOrOriginal(player);
+            }
+
+            var pickup = state != null ? state.pickup : terminal.pickup;
+            if (pickup.Equals(UniquePickup.none))
+            {
+                return Array.Empty<byte>();
+            }
+
+            bool originalHidden = state != null ? state.hidden : terminal.hidden;
+            var previousRecipient = instance ? instance.pcClient : null;
+            try
+            {
+                if (instance)
+                {
+                    instance.pcClient = player;
+                    state.hidden = !originalHidden;
+                }
+                else
+                {
+                    terminal.hidden = !originalHidden;
+                }
+
+                // Hidden alone does not refresh the display. Send the temp value first;
+                // this change only applies while serializing this client's messages.
+                var toggleHiddenMessage = CreateUpdateMessage(identity, channel, HiddenMask, 0u);
+
+                if (state != null)
+                {
+                    state.hidden = originalHidden;
+                }
+                else
+                {
+                    terminal.hidden = originalHidden;
+                }
+
+                // Vanilla reads pickup before hidden: rebuild with the temp hidden value,
+                // then put the real value back in the same message. The final pickup update
+                // rebuilds the intended display without changing its item or purchase state.
+                var restoreHiddenMessage = CreateUpdateMessage(identity, channel, PickupMask | HiddenMask, 0u);
+                var restoreModelMessage = CreateUpdateMessage(identity, channel, PickupMask, 0u);
+                var writer = new NetworkWriter();
+                writer.Write(toggleHiddenMessage, toggleHiddenMessage.Length);
+                writer.Write(restoreHiddenMessage, restoreHiddenMessage.Length);
+                writer.Write(restoreModelMessage, restoreModelMessage.Length);
+
+                return writer.ToArray();
+            }
+            finally
+            {
+                if (instance)
+                {
+                    state.hidden = originalHidden;
+                    instance.pcClient = previousRecipient;
+                }
+                else
+                {
+                    terminal.hidden = originalHidden;
+                }
+            }
+        }
+
+        internal static bool SendUpdateToClient(InstancedPurchase instance, PlayerCharacterMasterController pc)
+        {
+            var identity = instance.GetComponent<NetworkIdentity>();
+            var connection = pc.networkUser ? pc.networkUser.connectionToClient : null;
+
+            if (connection == null || !connection.isReady || !identity || identity.observers == null || !identity.observers.Contains(connection) || Util.ConnectionIsLocal(connection))
+            {
+                return false;
+            }
+
+            var previousRecipient = instance.pcClient;
+            try
+            {
+                instance.pcClient = pc;
+                var terminal = instance.GetComponent<ShopTerminalBehavior>();
+                int channel = terminal.GetNetworkChannel();
+
+                //The first message sets the flag without triggering the item animation
+                // the second updates stock/availability with that flag already set
+                var purchaseMessage = CreateUpdateMessage(identity, channel, PurchasedMask, 0u);
+                var stockMessage = CreateUpdateMessage(identity, channel, PickupMask | HiddenMask, AvailableMask);
+                var messages = new byte[purchaseMessage.Length + stockMessage.Length];
+
+                Buffer.BlockCopy(purchaseMessage, 0, messages, 0, purchaseMessage.Length);
+                Buffer.BlockCopy(stockMessage, 0, messages, purchaseMessage.Length, stockMessage.Length);
+
+                if (connection.SendBytes(messages, messages.Length, channel))
+                {
+                    return true;
+                }
+
+                Log.LogWarning($"Could not update instanced shop for {connection.connectionId}; retrying");
+                return false;
+            }
+            catch (Exception exception)
+            {
+                Log.LogError($"Instanced shop sync failed: {exception}");
+                return false;
+            }
+            finally
+            {
+                instance.pcClient = previousRecipient;
             }
         }
     }
