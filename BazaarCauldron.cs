@@ -77,14 +77,41 @@ namespace BazaarIsMyHaven
             {
                 if (self.name.StartsWith("LunarCauldron, RedToWhite Variant"))
                 {
+                    //Ensure order, payment, then items. Mostly a precaution.
                     if (IsMultiplayer() && ModCompatibilityShareSuite.enabled && ModCompatibilityShareSuite.IsShareSuite_PrinterCauldronFixEnabled())
                     {
-                        Inventory inventory = activator.GetComponent<CharacterBody>().inventory;
+                        var body = activator ? activator.GetComponent<CharacterBody>() : null;
+                        Inventory inventory = body ? body.inventory : null;
                         ShopTerminalBehavior shop = self.GetComponent<ShopTerminalBehavior>();
-                        inventory.GiveItemPermanent(PickupCatalog.GetPickupDef(shop.CurrentPickup().pickupIndex).itemIndex, 2);
+                        var pickupDef = shop ? PickupCatalog.GetPickupDef(shop.CurrentPickup().pickupIndex) : null;
+                        if (inventory && pickupDef != null && pickupDef.itemIndex != ItemIndex.None)
+                        {
+                            // Pay back only after the game accepts and pays for this buy.
+                            bool compensated = false;
+                            UnityEngine.Events.UnityAction<CostTypeDef.PayCostContext, CostTypeDef.PayCostResults> listener =
+                                (context, results) =>
+                                {
+                                    if (!compensated && context.activator == activator && inventory)
+                                    {
+                                        compensated = true;
+                                        inventory.GiveItemPermanent(pickupDef.itemIndex, 2);
+                                    }
+                                };
+                            self.onDetailedPurchaseServer.AddListener(listener);
+                            try
+                            {
+                                orig(self, activator);
+                            }
+                            finally
+                            {
+                                self.onDetailedPurchaseServer.RemoveListener(listener);
+                            }
+                            return;
+                        }
                     }
                 }
             }
+
             orig(self, activator);
         }
 
