@@ -156,6 +156,8 @@ namespace BazaarIsMyHaven
                             break;
                     }
                     GameObject printer = spawnCard.DoSpawn(DicPrinters[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
+                    if (!printer)
+                        continue;
                     if (nonDefaultName != null)
                         printer.name = nonDefaultName;
                     printer.transform.eulerAngles = DicPrinters[i].Rotation;
