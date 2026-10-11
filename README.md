@@ -60,7 +60,7 @@ With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients
 
 ### LunarShop
 
-The Lunar Shop swaps the Bazaar's Lunar Buds for `Amount` Lunar Buds (up to 20), each with its price. Clients without the mod also see them at the right size (`FixBudScaleForClients`). The Lunar Recycler rerolls them, except buds a player already bought from.
+The Lunar Shop swaps the Bazaar's Lunar Buds for `Amount` Lunar Buds (up to 20), each with its price. Clients without the mod also see them at the right size. The Lunar Recycler rerolls them, except buds a player already bought from.
 
 You can freely configure which items can be bought at the LunarShop. There are two settings to configure this:
 
