@@ -122,17 +122,20 @@ namespace BazaarIsMyHaven
                 if (self.name.StartsWith("LunarCauldronGreen"))
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickup.pickupIndex = list[RNG.Next(0, list.Count)];
+                    if (list.Count > 0)
+                        newPickup.pickupIndex = list[RNG.Next(0, list.Count)];
                 }
                 if (self.name.StartsWith("LunarCauldronRed"))
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickup.pickupIndex = list[RNG.Next(0, list.Count)];
+                    if (list.Count > 0)
+                        newPickup.pickupIndex = list[RNG.Next(0, list.Count)];
                 }
                 if (self.name.StartsWith("LunarCauldronWhite"))
                 {
                     CauldronHacked_SetPickupIndex(self, out List<PickupIndex> list);
-                    newPickup.pickupIndex = list[RNG.Next(0, list.Count)];
+                    if (list.Count > 0)
+                        newPickup.pickupIndex = list[RNG.Next(0, list.Count)];
                 }
             }
             orig(self, newPickup, newHidden);
@@ -150,6 +153,11 @@ namespace BazaarIsMyHaven
                 for (int i = 0; i < count; i++)
                 {
                     AsyncOperationHandle<GameObject> randomCauldron = GetRandomLunarCauldron();
+                    if (!randomCauldron.IsValid())
+                    {
+                        Log.LogWarning("No cauldron types with a valid weight; skipping cauldrons.");
+                        break;
+                    }
                     GameObject gameObject = randomCauldron.WaitForCompletion();
                     gameObject = UnityEngine.Object.Instantiate<GameObject>(gameObject, DicCauldrons[i].Position, Quaternion.identity);
                     gameObject.transform.eulerAngles = DicCauldrons[i].Rotation;
@@ -206,10 +214,21 @@ namespace BazaarIsMyHaven
             float w_g = ModConfig.CauldronWhiteToGreenWeight.Value;
             float g_r = ModConfig.CauldronGreenToRedWeight.Value;
             float r_w = ModConfig.CauldronRedToWhiteWeight.Value;
+
+            // Negative weights count as off.
+            if (w_g < 0) w_g = 0;
+            if (g_r < 0) g_r = 0;
+            if (r_w < 0) r_w = 0;
+
             float total = w_g + g_r + r_w;
+
+            // No cauldron type is on when all weights are zero.
+            if (total == 0)
+                return default;
+
             double d = RNG.NextDouble() * total;
-            if (d <= w_g) return LunarCauldronsCode[0];
-            else if (d <= w_g + g_r) return LunarCauldronsCode[1];
+            if (d < w_g) return LunarCauldronsCode[0];
+            else if (d < w_g + g_r) return LunarCauldronsCode[1];
             else { return LunarCauldronsCode[2]; }
         }
     }
