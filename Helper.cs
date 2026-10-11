@@ -160,9 +160,8 @@ namespace BazaarIsMyHaven
                             equipLoop = true;
                             index %= maxEquipmentCount;
                         }
-                        uint slot = (uint)(index % maxEquipmentSlots);
-                        uint set = (uint)(index / maxEquipmentSlots);
-                        var equipmentState = inventory.GetEquipment(slot, set);
+                        var location = new EquipmentLocation { slot = (uint)(index % maxEquipmentSlots), set = (uint)(index / maxEquipmentSlots) };
+                        var equipmentState = inventory.GetEquipment(location);
                         if (EquipmentState.empty.Equals(equipmentState))
                         {
                             // has no equipment in this slot -> set it
@@ -171,7 +170,7 @@ namespace BazaarIsMyHaven
                                 CreateItemTakenOrb(itemOrbSource.Value, characterBody.gameObject, pickupIndex);
                                 itemTakenOrbs++;
                             }
-                            inventory.SetEquipmentIndexForSlot(equipmentIndex, slot, set);
+                            inventory.SetEquipmentIndex(equipmentIndex, location);
                             equipmentAmount--;
                             equipmentsGiven++;
                         }
@@ -195,7 +194,7 @@ namespace BazaarIsMyHaven
                                     CreateItemTakenOrb(itemOrbSource.Value, characterBody.gameObject, pickupIndex);
                                     itemTakenOrbs++;
                                 }
-                                inventory.SetEquipmentIndexForSlot(equipmentIndex, slot, set);
+                                inventory.SetEquipmentIndex(equipmentIndex, location);
                                 equipmentAmount--;
                                 equipmentsGiven++;
                             }
