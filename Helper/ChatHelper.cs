@@ -26,13 +26,16 @@ namespace BazaarIsMyHaven
         
         private static string GetPlayerColor(PlayerCharacterMasterController pc)
         {
-            var userName = pc.GetDisplayName();
+            //Sanity check
+            if (!pc)
+                return "f27b0c";
+
             var survivorDef = SurvivorCatalog.FindSurvivorDefFromBody(pc.master?.bodyPrefab);
-            if (survivorDef != null && survivorDef.primaryColor != null) {
+            if (survivorDef != null) {
                 return ColorUtility.ToHtmlStringRGB(survivorDef.primaryColor);
             }
             var body = pc.master?.GetBody();
-            if (body != null && body.bodyColor != null)
+            if (body != null)
             {
                 return ColorUtility.ToHtmlStringRGB(body.bodyColor);
             }
@@ -41,9 +44,10 @@ namespace BazaarIsMyHaven
 
         private static string GetColoredPlayerName(PlayerCharacterMasterController playerCharacterMasterController)
         {
+            //GetBody() can be null, so body.GetUserName() may throw; read the name directly.
             var playerColor = GetPlayerColor(playerCharacterMasterController);
-            var body = playerCharacterMasterController.master.GetBody();
-            return $"<color=#{playerColor}>{body.GetUserName()}</color>";
+            var playerName = playerCharacterMasterController ? playerCharacterMasterController.GetDisplayName() : "Player";
+            return $"<color=#{playerColor}>{playerName}</color>";
         }
 
         public static void LunarShopTerminalUsesLeft(PlayerCharacterMasterController playerCharacterMasterController, int usesLeft)
