@@ -58,32 +58,51 @@ namespace BazaarIsMyHaven
                 {
                     var nameWithoutDuplicatorPrefix = self.name.Substring("Duplicator".Length);
                     var endsWithItemTier = Enum.TryParse(nameWithoutDuplicatorPrefix, out ItemTier itemTier);
+                    if (nameWithoutDuplicatorPrefix == "Void") // ItemTier.Void has no entry
+                    {
+                        itemTier = ItemTier.NoTier;
+                        endsWithItemTier = true;
+                    }
+
                     if (endsWithItemTier)
                     {
                         WeightedSelection<List<PickupIndex>> weightedSelection = new WeightedSelection<List<PickupIndex>>();
+
+                        //Local helper to add choices without empty ones.
+                        void AddDropList(List<PickupIndex> drops)
+                        {
+                            if (drops.Count > 0)
+                                weightedSelection.AddChoice(drops, 25f);
+                        }
+
                         switch (itemTier)
                         {
                             case ItemTier.VoidTier1:
-                                weightedSelection.AddChoice(Run.instance.availableVoidTier1DropList, 25f);
+                                AddDropList(Run.instance.availableVoidTier1DropList);
                                 break;
                             case ItemTier.VoidTier2:
-                                weightedSelection.AddChoice(Run.instance.availableVoidTier2DropList, 25f);
+                                AddDropList(Run.instance.availableVoidTier2DropList);
                                 break;
                             case ItemTier.VoidTier3:
-                                weightedSelection.AddChoice(Run.instance.availableVoidTier3DropList, 25f);
+                                AddDropList(Run.instance.availableVoidTier3DropList);
                                 break;
                             case ItemTier.VoidBoss:
-                                weightedSelection.AddChoice(Run.instance.availableVoidBossDropList, 25f);
+                                AddDropList(Run.instance.availableVoidBossDropList);
                                 break;
                             case ItemTier.NoTier:
-                                weightedSelection.AddChoice(Run.instance.availableVoidTier1DropList, 25f);
-                                weightedSelection.AddChoice(Run.instance.availableVoidTier2DropList, 25f);
-                                weightedSelection.AddChoice(Run.instance.availableVoidTier3DropList, 25f);
-                                weightedSelection.AddChoice(Run.instance.availableVoidBossDropList, 25f);
+                                AddDropList(Run.instance.availableVoidTier1DropList);
+                                AddDropList(Run.instance.availableVoidTier2DropList);
+                                AddDropList(Run.instance.availableVoidTier3DropList);
+                                AddDropList(Run.instance.availableVoidBossDropList);
                                 break;
                         }
-                        List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
-                        newPickup.pickupIndex = list[UnityEngine.Random.Range(0, list.Count)];
+
+                        //Handle no eligible pool
+                        if (weightedSelection.Count > 0)
+                        {
+                            List<PickupIndex> list = weightedSelection.Evaluate(UnityEngine.Random.value);
+                            newPickup.pickupIndex = list[UnityEngine.Random.Range(0, list.Count)];
+                        }
                     }
                 }
             }
