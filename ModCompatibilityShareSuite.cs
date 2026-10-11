@@ -16,6 +16,8 @@ namespace BazaarIsMyHaven
     {
         private static bool? _enabled;
         private static BaseUnityPlugin _plugin;
+        private static ConfigEntry<bool> printerCauldronFix;
+        private static bool fieldChecked;
 
         public static bool enabled
         {
@@ -50,7 +52,22 @@ namespace BazaarIsMyHaven
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public static bool IsShareSuite_PrinterCauldronFixEnabled()
         {
-            return plugin.GetFieldValue<ConfigEntry<bool>>("PrinterCauldronFixEnabled").Value;
+            // Read the setting once so a renamed field cannot break cauldron buys
+            if (!fieldChecked)
+            {
+                fieldChecked = true;
+                try
+                {
+                    if (plugin != null)
+                        printerCauldronFix = plugin.GetFieldValue<ConfigEntry<bool>>("PrinterCauldronFixEnabled");
+                }
+                catch (Exception exception)
+                {
+                    Log.LogWarning($"Could not read ShareSuite's cauldron setting - {exception.Message}");
+                }
+            }
+
+            return printerCauldronFix != null && printerCauldronFix.Value;
         }
 
     }
