@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using RoR2;
+using RoR2.Networking;
 using ShareSuite.Networking;
 using System;
 using System.Collections;
@@ -23,7 +24,6 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> LunarRerollEffect;
 
         Dictionary<int, SpawnCardStruct> DicLunarShopTerminals = new Dictionary<int, SpawnCardStruct>();
-        int currentLunarShopStaticItemIndex = 0;
         int generateNewPickupIndex = 0;
         int lunarRecyclerRerolledCount = 0;
         List<GameObject> ObjectLunarShopTerminals_Spawn = new List<GameObject>();
@@ -51,12 +51,9 @@ namespace BazaarIsMyHaven
         }
         public override void SetupBazaar()
         {
-            if (ModConfig.LunarRecyclerSectionEnabled.Value)
-            {
-                lunarRecyclerRerolledCount = 0;
-            }
+            lunarRecyclerRerolledCount = 0;
             if (ModConfig.LunarShopSectionEnabled.Value) {
-                currentLunarShopStaticItemIndex = 0;
+                generateNewPickupIndex = 0;
                 whichStallsHaveBeenBoughtOnce.Clear();
                 SpawnLunarShopTerminal();
             }
@@ -195,6 +192,17 @@ namespace BazaarIsMyHaven
                             }
                         }
                     }
+
+                    // the scene wires the recycler to the original buds only
+                    if (ModConfig.LunarShopSectionEnabled.Value)
+                    {
+                        float delay = 0f;
+                        foreach (var shop in ObjectLunarShopTerminals_Spawn)
+                        {
+                            Main.instance.StartCoroutine(DelayRerollEffect(shop, delay));
+                            delay += 0.1f;
+                        }
+                    }
                     return;
                 }
             }
@@ -269,25 +277,9 @@ namespace BazaarIsMyHaven
         {
             if (ModConfig.EnableMod.Value && ModConfig.LunarShopSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("LunarShopTerminal"))
             {
-                if (!ModConfig.LunarShopSequentialItems.Value)
-                    generateNewPickupIndex = -1;
-
-                Dictionary<PickupIndex, int> resolvedItems = new Dictionary<PickupIndex, int>();
-                ItemStringParser.ItemStringParser.ParseItemString(ModConfig.LunarShopItemList.Value, resolvedItems, Log.GetSource(), false, generateNewPickupIndex);
-                bool set = false;
-                foreach (var (pickupIndex, amount) in resolvedItems)
+                if (TryGenerateLunarShopPickup(out var pickup))
                 {
-                    if (amount > 0)
-                    {
-                        self.SetPickup(new UniquePickup(pickupIndex), newHidden);
-                        set = true;
-                        generateNewPickupIndex += 1;
-                        break;
-                    }
-                }
-                if (!set)
-                {
-                    Log.LogError($"Could not get a proper pickup index from EquipmentReplaceWithEliteList: {ModConfig.EquipmentReplaceWithEliteList.Value}");
+                    self.SetPickup(pickup, newHidden);
                 }
             }
             else
@@ -296,13 +288,127 @@ namespace BazaarIsMyHaven
             }
         }
 
-        IEnumerator DelayRerollEffect(GameObject lunarShopTerminal, float time, int itemIndex)
+        private bool TryGenerateLunarShopPickup(out UniquePickup pickup)
         {
-            yield return new WaitForSeconds(time);
+            int itemIndex = ModConfig.LunarShopSequentialItems.Value ? generateNewPickupIndex : -1;
 
-            generateNewPickupIndex = itemIndex;
-            lunarShopTerminal.GetComponent<ShopTerminalBehavior>().GenerateNewPickupServer();
-            SpawnEffect(LunarRerollEffect, lunarShopTerminal.transform.position - Vector3.up * 2.5f, new Color32(255, 255, 255, 255), 2f);
+            var resolvedItems = new Dictionary<PickupIndex, int>();
+            ItemStringParser.ItemStringParser.ParseItemString(ModConfig.LunarShopItemList.Value, resolvedItems, Log.GetSource(), false, itemIndex);
+            foreach (var (pickupIndex, amount) in resolvedItems)
+            {
+                if (amount > 0 && PickupCatalog.GetPickupDef(pickupIndex) != null)
+                {
+                    pickup = new UniquePickup(pickupIndex);
+                    generateNewPickupIndex++;
+                    return true;
+                }
+            }
+
+            pickup = UniquePickup.none;
+            Log.LogError($"Could not get a pickup index from LunarShopItemList: {ModConfig.LunarShopItemList.Value}");
+            return false;
+        }
+
+        private IEnumerator DelayRerollEffect(GameObject shop, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+
+            if (!NetworkServer.active || !shop)
+            {
+                yield break;
+            }
+            var terminal = shop.GetComponent<ShopTerminalBehavior>();
+            var purchase = shop.GetComponent<PurchaseInteraction>();
+            if (!terminal || !purchase)
+            {
+                yield break;
+            }
+
+            if (shop.TryGetComponent(out InstancedPurchase instance))
+            {
+                // check after the delay; a player may have bought this bud meanwhile
+                bool anyEligiblePlayer = PlayerCharacterMasterController.instances.Any(pc => pc && instance.GetOrOriginal(pc).CanReroll);
+                if (!anyEligiblePlayer || !TryGenerateLunarShopPickup(out var pickup))
+                {
+                    yield break;
+                }
+
+                // roll once per bud; every player who has not bought it gets the same new offer
+                if (instance.original.CanReroll)
+                {
+                    instance.original.pickup = pickup;
+                    instance.original.hidden = false;
+                }
+                foreach (var state in instance.purchases.Values)
+                {
+                    if (state.CanReroll)
+                    {
+                        state.pickup = pickup;
+                        state.hidden = false;
+                    }
+                }
+
+                // sends each client its own state, used buds too
+                InstancedPurchases.UpdateAll(shop);
+            }
+            else
+            {
+                // keep equipment swapped into a bought bud
+                if (whichStallsHaveBeenBoughtOnce.TryGetValue(purchase, out var buyers) && buyers.Count > 0)
+                {
+                    yield break;
+                }
+                if (!purchase.available || terminal.hasBeenPurchased || terminal.pickup.Equals(UniquePickup.none) || !TryGenerateLunarShopPickup(out var pickup))
+                {
+                    yield break;
+                }
+                terminal.SetPickup(pickup, false);
+            }
+
+            SpawnRerollEffect(shop, instance);
+        }
+
+        private void SpawnRerollEffect(GameObject shop, InstancedPurchase instance)
+        {
+            if (EffectManager.DisableAllEffectSpawning)
+            {
+                return;
+            }
+
+            var prefab = LunarRerollEffect.WaitForCompletion();
+            var effectData = new EffectData
+            {
+                origin = shop.transform.position + Vector3.up * 2.5f,
+                rotation = Quaternion.identity,
+                scale = 2f,
+                color = new Color32(255, 255, 255, 255)
+            };
+
+            if (!instance)
+            {
+                EffectManager.SpawnEffect(prefab, effectData, transmit: true);
+                return;
+            }
+
+            // only players whose offer changed see the effect; the vanilla message works for unmodded clients
+            var message = new EffectManager.EffectMessage
+            {
+                effectIndex = EffectCatalog.FindEffectIndexFromPrefab(prefab),
+                effectData = effectData
+            };
+            var recipients = new HashSet<NetworkConnection>();
+            foreach (var player in PlayerCharacterMasterController.instances)
+            {
+                if (!player || !instance.GetOrOriginal(player).CanReroll)
+                {
+                    continue;
+                }
+                var connection = player.networkUser ? player.networkUser.connectionToClient : null;
+                if (connection != null && connection.isReady && recipients.Add(connection))
+                {
+                    connection.SendByChannel(UmsgType.Effect, message, QosChannelIndex.effects.intVal);
+                }
+            }
         }
 
         public static List<Vector2> GenerateCirclePoints(float radius, float startAngle, float endAngle, float orientation, int numberOfPoints)
@@ -469,7 +575,6 @@ namespace BazaarIsMyHaven
             }
 
             ObjectLunarShopTerminals_Spawn.Clear();
-            currentLunarShopStaticItemIndex = 0;
             DicLunarShopTerminals.Clear();
             SetLunarShopTerminal();
 
