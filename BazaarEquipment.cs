@@ -14,7 +14,6 @@ namespace BazaarIsMyHaven
     public class BazaarEquipment : BazaarBase
     {
         AsyncOperationHandle<GameObject> multiShopEquipmentTerminal;
-        //AsyncOperationHandle<InteractableSpawnCard> iscTripleShopEquipment;
 
         Dictionary<int, SpawnCardStruct> DicEquipments = new Dictionary<int, SpawnCardStruct>();
         PlayerCharacterMasterController currentActivator = null;
@@ -22,7 +21,6 @@ namespace BazaarIsMyHaven
         public override void Preload()
         {
             multiShopEquipmentTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MultiShopEquipmentTerminal/MultiShopEquipmentTerminal.prefab");
-            //iscTripleShopEquipment = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/TripleShopEquipment/iscTripleShopEquipment.asset");
             EquipmentPriceSigns.Preload();
         }
 
