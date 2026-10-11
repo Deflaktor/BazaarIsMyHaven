@@ -184,9 +184,6 @@ namespace BazaarIsMyHaven
             DicCauldrons.Add(random[4], new SpawnCardStruct(new Vector3(-101.2425f, -24.8612f, -9.1464f), new Vector3(0.0f, 160.0f, 0.0f)));
             DicCauldrons.Add(random[5], new SpawnCardStruct(new Vector3(-98.5219f, -25.6548f, -12.3659f), new Vector3(0.0f, 155.0f, 0.0f)));
             DicCauldrons.Add(random[6], new SpawnCardStruct(new Vector3(-94.6071f, -25.8717f, -13.6159f), new Vector3(0.0f, 135.0f, 0.0f)));
-            //DicCauldrons.Add(random[6], new SpawnCardStruct(new Vector3(-91.1582f, -25.0957f, -10.9174f), new Vector3(0.0f, 80.0f, 0.0f)));
-            //DicCauldrons.Add(random[7], new SpawnCardStruct(new Vector3(-89.8054f, -24.0894f, -7.2084f), new Vector3(0.0f, 80.0f, 0.0f)));
-            //DicCauldrons.Add(random[8], new SpawnCardStruct(new Vector3(-85.7223f, -23.6673f, -4.8544f), new Vector3(0.0f, 85.0f, 0.0f)));
         }
 
         private void CauldronHacked_SetPickupIndex(ShopTerminalBehavior self, out List<PickupIndex> listLunarItem)

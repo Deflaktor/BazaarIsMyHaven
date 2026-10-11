@@ -140,10 +140,7 @@ namespace BazaarIsMyHaven
                                 {
                                     foreach (var pickupIndex in ingredient.pickups)
                                     {
-                                        // but only show it if its available or the holder has it in his inventory
-                                        //if(Run.instance.IsPickupAvailable(pickupIndex) || InventoryContainsPickup(characterBody.inventory, pickupIndex)) { 
                                         possibleIngredients.Add(pickupIndex);
-                                        //}
                                     }
                                 }
                             }

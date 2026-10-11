@@ -240,7 +240,6 @@ namespace BazaarIsMyHaven
             orig(self, body);
             if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
-                //var attack = self.name;
                 var victim = body.name;
                 if (victim.Contains("ShopkeeperBody"))
                 {
@@ -252,10 +251,6 @@ namespace BazaarIsMyHaven
                         {
                             ChatHelper.ShowNewtDeath();
                         }
-                        //string card = "Spawncards/InteractableSpawncard/iscScavLunarbackpack";
-                        //DoSpawnCard(card, new Vector3(-122.7888f, -22.3505f, -45.7878f));
-                        //DoSpawnCard(card, new Vector3(-125.9958f, -22.4272f, -42.6213f));
-                        //Vector3 vector3 = body.footPosition;
                     }
                     else
                     {
@@ -341,7 +336,6 @@ namespace BazaarIsMyHaven
         [ConCommand(commandName = "spawn_card", flags = ConVarFlags.ExecuteOnServer, helpText = "生成实物")]
         private static void Command_SpawnCard(ConCommandArgs args)
         {
-            //Inventory inventory = args.sender?.master.inventory;
             string name = args.GetArgString(0);
             NetworkUser player = PlayerCharacterMasterController.instances[0].networkUser;
             ChatHelper.Send($"name = {name}, DisplayName = {player.masterController.GetDisplayName()}");
@@ -358,7 +352,6 @@ namespace BazaarIsMyHaven
         [ConCommand(commandName = "spawn_object", flags = ConVarFlags.ExecuteOnServer, helpText = "生成实体")]
         private static void Command_GameObject(ConCommandArgs args)
         {
-            //Inventory inventory = args.sender?.master.inventory;
             string name = args.GetArgString(0);
             NetworkUser player = PlayerCharacterMasterController.instances[0].networkUser;
             ChatHelper.Send($"name = {name}, DisplayName = {player.masterController.GetDisplayName()}");

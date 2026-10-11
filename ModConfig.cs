@@ -15,7 +15,6 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> SpawnCountOffset;
         public static ConfigEntry<bool> AlwaysSpawnShopPortal;
         public static ConfigEntry<bool> DecorateBazaar;
-        //public static ConfigEntry<string> HitWords;
 
         // newt
         public static ConfigEntry<bool> NewtSectionEnabled;
@@ -264,7 +263,6 @@ namespace BazaarIsMyHaven
             DonateRewardListCharacterWeight = config.Bind("11 Donate", "RewardListCharacterWeight", 0.30f, "Weight for choosing the reward list of the respective character.");
             DonateRewardListCharacterDefault = config.Bind("11 Donate", "RewardListCharacterDefault", "3xScrapGreen", $"Item reward pool if the donating character does not have a reward list specified. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation}");
             string[] survivorNames = SurvivorCatalog.allSurvivorDefs.Select(survivor => survivor.cachedName).ToArray();
-            // string[] bodyNames = BodyCatalog.allBodyPrefabs.Select(prefab => prefab.name).ToArray();
             DonateRewardListAvailableCharacters = config.Bind("11 Donate", "RewardListAvailableCharacters", string.Join(", ", survivorNames), "Available special reward lists for certain characters. Applies only if the donator is a character of the respective type. Comma-separated list of characters (see README.md)");
             
             DonateRewardListCharacters.Clear();

@@ -13,7 +13,6 @@ namespace BazaarIsMyHaven
 {
     public class BazaarDonate : BazaarBase
     {
-        //AsyncOperationHandle<InteractableSpawnCard> iscShrineHealing;
         AsyncOperationHandle<GameObject> BlueprintStation;
         AsyncOperationHandle<GameObject> LevelUpEffect;
         AsyncOperationHandle<GameObject> MoneyPackPickupEffect;
@@ -24,7 +23,6 @@ namespace BazaarIsMyHaven
 
         public override void Preload()
         {
-            // iscShrineHealing = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/ShrineHealing/iscShrineHealing.asset");
             BlueprintStation = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/BlueprintStation.prefab");
             LevelUpEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/LevelUpEffect.prefab");
             MoneyPackPickupEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/BonusGoldPackOnKill/MoneyPackPickupEffect.prefab");
