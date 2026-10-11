@@ -106,21 +106,27 @@ namespace BazaarIsMyHaven
         public static Dictionary<EquipmentIndex, int> GivePickups(CharacterBody characterBody, Dictionary<PickupIndex, int> itemsToGive, Vector3? itemOrbSource, bool dropReplacedEquipmentsAsPickupDroplets)
         {
             Dictionary<EquipmentIndex, int> droppedEquipments = new Dictionary<EquipmentIndex, int>();
+            if (!characterBody || itemsToGive == null)
+                return droppedEquipments;
+
             var inventory = characterBody.inventory;
-            if (inventory == null)
-                return null;
+            if (!inventory)
+                return droppedEquipments;
             var master = characterBody.master;
-            if (master == null)
-                return null;
+            if (!master)
+                return droppedEquipments;
             var itemTakenOrbs = 0;
             uint equipmentsGiven = 0;
             int equipSkip = 0;
             bool equipLoop = false;
             foreach (var (pickupIndex, itemAmount) in itemsToGive)
             {
-                if (itemAmount <= 0 || pickupIndex == PickupIndex.none)
+                if (itemAmount <= 0)
                     continue;
                 var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
+                if (pickupDef == null)
+                    continue;
+
                 // handle items
                 var itemIndex = pickupDef.itemIndex;
                 var equipmentIndex = pickupDef.equipmentIndex;
