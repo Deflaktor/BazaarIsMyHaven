@@ -90,6 +90,7 @@ namespace BazaarIsMyHaven
             InstancedPurchases.Hook();
 
             On.RoR2.Run.Start += Run_Start;
+            Run.onRunDestroyGlobal += Run_Destroy;
             On.RoR2.BazaarController.SetUpSeerStations += BazaarController_SetUpSeerStations;
             RoR2.SceneDirector.onPrePopulateSceneServer += SceneDirector_onPrePopulateSceneServer;
             On.RoR2.TeleporterInteraction.Start += TeleporterInteraction_Start;
@@ -105,6 +106,7 @@ namespace BazaarIsMyHaven
 
             ShopKeeper.DiedAtLeastOnce = false;
             ShopKeeper.Body = null;
+            playerStructs_.Clear();
             orig(self);
             if (ModConfig.EnableMod.Value && NetworkServer.active)
             {
@@ -112,6 +114,16 @@ namespace BazaarIsMyHaven
                 {
                     bazaarMod.RunStart();
                 }
+            }
+        }
+
+        private void Run_Destroy(Run run)
+        {
+            playerStructs_.Clear();
+            ShopKeeper.Body = null;
+            foreach (var bazaarMod in bazaarMods)
+            {
+                bazaarMod.RunEnd();
             }
         }
 
