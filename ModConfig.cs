@@ -74,6 +74,7 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<string> LunarShopItemList;
         public static ConfigEntry<bool> LunarShopInstancedPurchases;
         public static ConfigEntry<bool> LunarShopBuyToInventory;
+        public static ConfigEntry<bool> LunarShopFixBudScaleForClients;
         public static ConfigEntry<string> LunarShopAmountDependingOnCharacter;
         public static Dictionary<BodyIndex, int> LunarShopAmountDependingOnCharacterParsed = new Dictionary<BodyIndex, int>();
 
@@ -192,6 +193,7 @@ namespace BazaarIsMyHaven
             LunarShopItemList = config.Bind("06 LunarShop", "ItemList", "dtLunarChest", $"List of items available in Lunar Shop. {itemKeyWordsExplanation} Example: {items}");
             LunarShopInstancedPurchases = config.Bind("06 LunarShop", "InstancedPurchases", true, "Each player can buy independently from Lunar Shop.");
             LunarShopBuyToInventory = config.Bind("06 LunarShop", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
+            LunarShopFixBudScaleForClients = config.Bind("06 LunarShop", "FixBudScaleForClients", true, "Buds from this mod show at half size for clients unless this is on. Uses only vanilla messages, so clients need no mod. Turn off if a game update breaks it.");
             LunarShopAmountDependingOnCharacter = config.Bind("06 LunarShop", "AmountDependingOnCharacter", "", "Change the amount of available shop terminals depending on the current Character. Requires ReplaceLunarBudsWithTerminals and InstancedPurchases to work. Also the value cannot be larger than Amount. Comma-separated list in the format <characterBody|survivorName>=<amount>.\nExample: Seeker=15, FalseSon=16");
             EventHandler updateConfig = static (sender, args) =>
             {
