@@ -390,6 +390,27 @@ namespace BazaarIsMyHaven
             }
         }
 
+        // Buds clear their pickup after DropPickup. Our hook does that too, unless an equipment swap leaves the new equipment in the bud.
+        private void DisableLunarBudPickupClearing(PurchaseInteraction purchaseInteraction, ShopTerminalBehavior shopTerminalBehavior)
+        {
+            // buds still add their SetNoPickup listener on this old event
+#pragma warning disable CS0618
+            var purchaseEvent = purchaseInteraction.onPurchase;
+#pragma warning restore CS0618
+            if (purchaseEvent == null)
+            {
+                Log.LogWarning("The bud's purchase event is missing");
+                return;
+            }
+            for (int index = 0; index < purchaseEvent.GetPersistentEventCount(); index++)
+            {
+                if (purchaseEvent.GetPersistentTarget(index) == shopTerminalBehavior && purchaseEvent.GetPersistentMethodName(index) == nameof(shopTerminalBehavior.SetNoPickup))
+                {
+                    purchaseEvent.SetPersistentListenerState(index, UnityEngine.Events.UnityEventCallState.Off);
+                }
+            }
+        }
+
         private void SpawnLunarShopTerminal()
         {
             ObjectLunarShopTerminals_Spawn.Clear();
@@ -416,6 +437,7 @@ namespace BazaarIsMyHaven
                 gameObject.transform.localScale = Vector3.one;
                 var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
                 var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
+                DisableLunarBudPickupClearing(purchaseInteraction, shopTerminalBehavior);
                 if (ModConfig.LunarShopInstancedPurchases.Value)
                 {
                     var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
