@@ -218,11 +218,9 @@ namespace BazaarIsMyHaven
             {
                 if (self.name.StartsWith("LunarRecycler"))
                 {
-                    if(ModConfig.LunarRecyclerRerollLimit.Value >= 0) { 
-                        newAvailable = lunarRecyclerRerolledCount < ModConfig.LunarRecyclerRerollLimit.Value;
-                    } else
-                    {
-                        newAvailable = true;
+                    if(ModConfig.LunarRecyclerRerollLimit.Value >= 0) {
+                        // keep the game's cooldown, only block availability past the limit
+                        newAvailable = newAvailable && lunarRecyclerRerolledCount < ModConfig.LunarRecyclerRerollLimit.Value;
                     }
                 }
             }
