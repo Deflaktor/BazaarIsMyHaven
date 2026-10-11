@@ -22,9 +22,10 @@ namespace BazaarIsMyHaven
         };
 
         public abstract void Preload();
-        public abstract void Hook();
-        public abstract void RunStart();
         public abstract void SetupBazaar();
+        public virtual void Hook() { }
+        public virtual void RunStart() { }
+        public virtual void RunEnd() { }
         protected List<GameObject> DoSpawnCard(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<InteractableSpawnCard> card, int max)
         {
             int count = 0;
