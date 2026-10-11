@@ -235,10 +235,11 @@ namespace BazaarIsMyHaven
             updateConfig.Invoke(null, null);
 
             // 07 LunarRecycler
-            LunarRecyclerAvailable = config.Bind("06 LunarShop", "LunarRecyclerAvailable", true, "If enabled, a Lunar Recycler is available in the Bazaar. Otherwise it will get removed.");
-            LunarRecyclerRerollLimit = config.Bind("06 LunarShop", "LunarRecyclerRerollLimit", 3, "Limit the amount of rerolls allowed per visit to the Bazaar. -1 = Unlimited.");
-            LunarRecyclerCost = config.Bind("06 LunarShop", "LunarRecyclerCost", 1, "Initial lunar coin cost to reroll.");
-            LunarRecyclerCostMultiplier = config.Bind("06 LunarShop", "LunarRecyclerCostMultiplier", 2, "Cost multiplier applied after each reroll use.");
+            LunarRecyclerSectionEnabled = config.Bind("07 LunarRecycler", "SectionEnabled", true, "Enables or disables the Lunar Recycler section.");
+            LunarRecyclerAvailable = config.Bind("07 LunarRecycler", "Available", true, "If enabled, a Lunar Recycler is available in the Bazaar. Otherwise it will get removed.");
+            LunarRecyclerRerollLimit = config.Bind("07 LunarRecycler", "RerollLimit", 3, "Limit the amount of rerolls allowed per visit to the Bazaar. -1 = Unlimited.");
+            LunarRecyclerCost = config.Bind("07 LunarRecycler", "Cost", 1, "Initial lunar coin cost to reroll.");
+            LunarRecyclerCostMultiplier = config.Bind("07 LunarRecycler", "CostMultiplier", 2, "Cost multiplier applied after each reroll use.");
 
             // 08 CleansingPool
             CleansingPoolSectionEnabled = config.Bind("08 CleansingPool", "SectionEnabled", true, "Enables or disables the Cleansing Pool section.");
