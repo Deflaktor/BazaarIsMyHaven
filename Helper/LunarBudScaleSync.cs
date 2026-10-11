@@ -31,7 +31,7 @@ namespace BazaarIsMyHaven
 
         public static void Apply(List<GameObject> budObjects)
         {
-            if (!NetworkServer.active || budObjects.Count == 0 || !ModConfig.LunarShopFixBudScaleForClients.Value || helperUnavailable)
+            if (!NetworkServer.active || budObjects.Count == 0 || helperUnavailable)
             {
                 return;
             }
