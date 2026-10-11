@@ -43,10 +43,6 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<float> CauldronWhiteToGreenWeight;
         public static ConfigEntry<float> CauldronGreenToRedWeight;
         public static ConfigEntry<float> CauldronRedToWhiteWeight;
-        public static ConfigEntry<float> CauldronRedToYellowWeight;
-        public static ConfigEntry<float> CauldronGreenToYellowWeight;
-        public static ConfigEntry<float> CauldronGreenToPurpleWeight;
-        public static ConfigEntry<float> CauldronRedToPurpleWeight;
         public static ConfigEntry<int> CauldronWhiteToGreenCost;
         public static ConfigEntry<int> CauldronGreenToRedCost;
         public static ConfigEntry<int> CauldronRedToWhiteCost;
@@ -161,8 +157,6 @@ namespace BazaarIsMyHaven
             CauldronRedToWhiteWeight = config.Bind("03 Cauldron", "RedToWhiteWeight", 0f, "Weight for Red->White cauldrons.");
             CauldronRedToWhiteCost = config.Bind("03 Cauldron", "RedToWhiteCost", 1, "Number of Red items required for White conversion.");
             // TODO
-            //CauldronGreenToYellowWeight = config.Bind("03 Cauldron", "CauldronGreenToYellowWeight", 0.33f, "Spawn weight for Yellow cauldrons (uses Green items as cost)."); CauldronGreenToYellowWeight.Value = Math.Abs(CauldronGreenToYellowWeight.Value);
-            //CauldronGreenToPurpleWeight = config.Bind("03 Cauldron", "CauldronGreenToPurpleWeight", 0.33f, "Spawn weight for Purple cauldrons (uses Green items as cost)."); CauldronGreenToPurpleWeight.Value = Math.Abs(CauldronGreenToPurpleWeight.Value);
 
             // 04 Scrapper
             ScrapperSectionEnabled = config.Bind("04 Scrapper", "SectionEnabled", true, "Enables or disables the Scrapper section.");

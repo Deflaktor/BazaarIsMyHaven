@@ -289,12 +289,6 @@ namespace BazaarIsMyHaven
             return list.ToArray();
         }
 
-        private Dictionary<PickupIndex, List<CraftableCatalog.RecipeEntry>> GetCraftableRecipes()
-        {
-            // TODO
-            return null;
-        }
-
         private Dictionary<PickupIndex, List<CraftableCatalog.RecipeEntry>> GetAvailableRecipes()
         {
             Dictionary<PickupIndex, List<CraftableCatalog.RecipeEntry>> selection = new Dictionary<PickupIndex, List<CraftableCatalog.RecipeEntry>>();
