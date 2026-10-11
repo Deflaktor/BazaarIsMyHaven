@@ -16,7 +16,6 @@ namespace BazaarIsMyHaven
 {
     public class BazaarLunarShop : BazaarBase
     {
-        AsyncOperationHandle<GameObject> lunarShopTerminal;
         AsyncOperationHandle<GameObject> LunarRerollEffect;
 
         Dictionary<int, SpawnCardStruct> DicLunarShopTerminals = new Dictionary<int, SpawnCardStruct>();
@@ -29,11 +28,6 @@ namespace BazaarIsMyHaven
 
         public override void Preload()
         {
-            // lunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarShopTerminal/LunarShopTerminal.prefab");
-            // lunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/FreeChestTerminal/FreeChestTerminal.prefab");
-            // lunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MultiShopTerminal/ShopTerminal.prefab");
-            lunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/FreeChestTerminalShippingDrone/FreeChestTerminalShippingDrone.prefab");
-            // lunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/bazaar/SeerStation.prefab");
             LunarRerollEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarRecycler/LunarRerollEffect.prefab");
         }
 
@@ -143,19 +137,6 @@ namespace BazaarIsMyHaven
                                 ChatHelper.LunarShopTerminalUsesLeft(playerCharacterMasterController, usesLeft);
                             }
                             whichStallsHaveBeenBoughtOnce[self].Add(playerCharacterMasterController);
-                        }
-                    }
-                    if (self.name.StartsWith("LunarRecycler"))
-                    {
-                        if (ModConfig.LunarShopReplaceLunarBudsWithTerminals.Value)
-                        {
-                            float time = 0f;
-                            foreach (GameObject lunarShopTerminal in ObjectLunarShopTerminals_Spawn)
-                            {
-                                Main.instance.StartCoroutine(DelayRerollEffect(lunarShopTerminal, time, currentLunarShopStaticItemIndex));
-                                currentLunarShopStaticItemIndex += 1;
-                                time += 0.1f;
-                            }
                         }
                     }
                 }
@@ -407,15 +388,6 @@ namespace BazaarIsMyHaven
                 {
                     gameObjects.Add(obj);
                 }
-            }
-
-            if (ModConfig.LunarShopReplaceLunarBudsWithTerminals.Value)
-            {
-                // Remove original Lunar Buds
-                gameObjects.ForEach(NetworkServer.Destroy);
-                // Spawn Shop Terminals
-                gameObjects = DoSpawnGameObject(DicLunarShopTerminals, lunarShopTerminal, ModConfig.LunarShopAmount.Value);
-                ObjectLunarShopTerminals_Spawn.AddRange(gameObjects);
             }
 
             for (int i = 0; i < gameObjects.Count; i++)
