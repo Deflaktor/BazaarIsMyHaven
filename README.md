@@ -18,6 +18,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
   - Shrine of Order
   - Donation Altar
   - Wandering Chef
+  - Drone stations from the Alloyed Collective
 
 - **Newt Behavior Options**:
   - Stop him from throwing you out.
@@ -97,6 +98,12 @@ Examples:
 `RewardList1 = 5xdtITDefaultWave`: The reward will be 5 random items of the droptable of void potentials from the Simulacrum mode.
 
 `RewardList1 = 5xdtChest1 | 2xdtChest2`: The reward will be either 5 random items of the small chest droptable or 2 random items of the large chest droptable.
+
+### Drones
+
+If the Alloyed Collective is enabled for the run, the Drones section spawns a Drone Combiner Station, a Drone Upgrade Station, a Drone Scrapper and a Triple Drone Shop. Each one has its own setting.
+
+Drones normally stay behind when you enter the Bazaar, but these stations only work with drones that are there. So this section brings the players' drones along. They wait at one spot without moving or attacking. Drones that show up elsewhere, such as bought or upgraded ones, are moved there after 2 seconds. On the next stage, drones behave as usual again.
 
 ## RewardListAvailableCharacters - Valid Keywords
 
