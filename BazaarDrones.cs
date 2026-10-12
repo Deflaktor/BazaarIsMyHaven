@@ -1,6 +1,8 @@
+using BepInEx.Configuration;
 using RoR2;
 using RoR2.CharacterAI;
 using RoR2.Items;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
@@ -14,6 +16,16 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> DroneUpgradeStation;
         AsyncOperationHandle<GameObject> DroneScrapper;
         AsyncOperationHandle<GameObject> TripleDroneShop;
+
+        private class Station
+        {
+            public DirectorCard card;
+            public AsyncOperationHandle<GameObject> prefab;
+            public SpawnCardStruct slot;
+            public bool needsDrones;
+            public bool spawned;
+        }
+        private readonly List<Station> stations = new List<Station>();
 
         public override void Preload()
         {
@@ -29,31 +41,57 @@ namespace BazaarIsMyHaven
             On.RoR2.Items.MinionLeashBodyBehavior.FixedUpdate += MinionLeashBodyBehavior_FixedUpdate;
         }
 
-        public override void SetupBazaar()
+        public override void AddDirectorCards(List<DirectorCard> cards)
         {
+            stations.Clear();
             // clients only have the stations if the run has the Alloyed Collective
             if (!ModConfig.DronesSectionEnabled.Value || !DLC3Content.DLC3 || !Run.instance.IsExpansionEnabled(DLC3Content.DLC3))
             {
                 return;
             }
 
-            DroneSpot.Create();
+            AddStation(cards, "Drone Combiner Station", ModConfig.DronesSpawnDroneCombinerStation, ModConfig.DronesDroneCombinerStationDirectorCost, ModConfig.DronesDroneCombinerStationDirectorWeight,
+                DroneCombinerStation, new SpawnCardStruct(new Vector3(-89.4022f, -23.4619f, -5.0529f), new Vector3(0f, 150f, 350f)), needsDrones: true);
+            AddStation(cards, "Drone Upgrade Station", ModConfig.DronesSpawnDroneUpgradeStation, ModConfig.DronesDroneUpgradeStationDirectorCost, ModConfig.DronesDroneUpgradeStationDirectorWeight,
+                DroneUpgradeStation, new SpawnCardStruct(new Vector3(-85.1751f, -22.264f, -3.539f), new Vector3(0f, 150f, 270f)), needsDrones: true);
+            AddStation(cards, "Drone Scrapper", ModConfig.DronesSpawnDroneScrapper, ModConfig.DronesDroneScrapperDirectorCost, ModConfig.DronesDroneScrapperDirectorWeight,
+                DroneScrapper, new SpawnCardStruct(new Vector3(-91.9756f, -26.0923f, -48.0897f), new Vector3(0f, 315f, 0f)), needsDrones: true);
+            AddStation(cards, "Triple Drone Shop", ModConfig.DronesSpawnTripleDroneShop, ModConfig.DronesTripleDroneShopDirectorCost, ModConfig.DronesTripleDroneShopDirectorWeight,
+                TripleDroneShop, new SpawnCardStruct(new Vector3(-64.3101f, -23.0074f, -19.7406f), new Vector3(0f, 300f, 6f)), needsDrones: false);
+        }
 
-            if (ModConfig.DronesSpawnDroneCombinerStation.Value)
+        private void AddStation(List<DirectorCard> cards, string name, ConfigEntry<bool> enabled, ConfigEntry<int> cost, ConfigEntry<float> weight,
+            AsyncOperationHandle<GameObject> prefab, SpawnCardStruct slot, bool needsDrones)
+        {
+            if (!enabled.Value)
             {
-                SpawnStation(DroneCombinerStation, new Vector3(-89.4022f, -23.4619f, -5.0529f), new Vector3(0f, 150f, 350f));
+                return;
             }
-            if (ModConfig.DronesSpawnDroneUpgradeStation.Value)
+            var station = new Station { card = new DirectorCard(name, cost, weight, () => 1), prefab = prefab, slot = slot, needsDrones = needsDrones };
+            stations.Add(station);
+            cards.Add(station.card);
+        }
+
+        public override void SetupBazaar()
+        {
+            SpawnLatePicks();
+        }
+
+        public override void SpawnLatePicks()
+        {
+            foreach (var station in stations)
             {
-                SpawnStation(DroneUpgradeStation, new Vector3(-85.1751f, -22.264f, -3.539f), new Vector3(0f, 150f, 270f));
-            }
-            if (ModConfig.DronesSpawnDroneScrapper.Value)
-            {
-                SpawnStation(DroneScrapper, new Vector3(-91.9756f, -26.0923f, -48.0897f), new Vector3(0f, 315f, 0f));
-            }
-            if (ModConfig.DronesSpawnTripleDroneShop.Value)
-            {
-                SpawnStation(TripleDroneShop, new Vector3(-64.3101f, -23.0074f, -19.7406f), new Vector3(0f, 300f, 6f));
+                if (station.card.Count == 0 || station.spawned)
+                {
+                    continue;
+                }
+                SpawnAt(station.prefab.WaitForCompletion(), station.slot);
+                station.spawned = true;
+                // only these stations use the players' drones
+                if (station.needsDrones && !DroneSpot.instance)
+                {
+                    DroneSpot.Create();
+                }
             }
         }
 
@@ -89,13 +127,6 @@ namespace BazaarIsMyHaven
                 return;
             }
             orig(self);
-        }
-
-        private void SpawnStation(AsyncOperationHandle<GameObject> prefab, Vector3 position, Vector3 rotation)
-        {
-            // clients only get the rotation the station is spawned with
-            GameObject gameObject = Object.Instantiate(prefab.WaitForCompletion(), position, Quaternion.Euler(rotation));
-            NetworkServer.Spawn(gameObject);
         }
     }
 }
