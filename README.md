@@ -64,11 +64,11 @@ Controls how Newt acts after being killed:
 
 ### Equipment
 
-With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too.
+With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too. `CostType` sets what the price is paid in, such as money (the default), Lunar Coins or items of a tier.
 
 ### LunarShop
 
-The Lunar Shop swaps the Bazaar's Lunar Buds for up to `MaxAmount` Lunar Buds (at most 20), each with its price. Clients without the mod also see them at the right size. The Lunar Recycler rerolls them, except buds a player already bought from.
+The Lunar Shop swaps the Bazaar's Lunar Buds for up to `MaxAmount` Lunar Buds (at most 20), each with its price. `CostType` sets what the price is paid in, such as Lunar Coins (the default), money or items of a tier. Clients without the mod also see them at the right size. The Lunar Recycler rerolls them, except buds a player already bought from.
 
 You can freely configure which items can be bought at the LunarShop. There are two settings to configure this:
 
