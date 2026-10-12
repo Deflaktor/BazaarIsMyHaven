@@ -64,6 +64,8 @@ namespace BazaarIsMyHaven
         // equipment
         public static ConfigEntry<bool> EquipmentSectionEnabled;
         public static ConfigEntry<int> EquipmentAmount;
+        public static ConfigEntry<int> EquipmentDirectorCost;
+        public static ConfigEntry<float> EquipmentDirectorWeight;
         public static ConfigEntry<bool> EquipmentInstancedPurchases;
         public static ConfigEntry<int> EquipmentCost;
         public static ConfigEntry<bool> EquipmentBuyToInventory;
@@ -195,7 +197,9 @@ namespace BazaarIsMyHaven
 
             // 05 Equipment
             EquipmentSectionEnabled = config.Bind("05 Equipment", "SectionEnabled", true, "Enables or disables the Equipment section.");
-            EquipmentAmount = config.Bind("05 Equipment", "Amount", 3, new ConfigDescription("Number of Equipment Terminals (max 3 normally, 5 if replacing Lunar Seers).", new AcceptableValueRange<int>(0, 5)));
+            EquipmentAmount = config.Bind("05 Equipment", "Amount", 3, new ConfigDescription("Maximum number of Equipment Terminals the director can spawn (max 3 normally, 5 if replacing Lunar Seers).", new AcceptableValueRange<int>(0, 5)));
+            EquipmentDirectorCost = config.Bind("05 Equipment", "DirectorCost", 2, "Director credits an Equipment Terminal costs.");
+            EquipmentDirectorWeight = config.Bind("05 Equipment", "DirectorWeight", 1f, "How likely the director picks an Equipment Terminal, compared to the DirectorWeight of the other interactables.");
             EquipmentReplaceLunarSeersWithEquipment = config.Bind("05 Equipment", "ReplaceLunarSeersWithEquipment", false, "Replaces Lunar Seers with Equipment Terminals (increases equipment max to 5). Makes the Lunar Seer section irrelevant.");
             EquipmentReplaceWithEliteChance = config.Bind("05 Equipment", "ReplaceWithEliteChance", 0.15f, "Chance for replacing the equipment with an elite equipment.");
             EquipmentReplaceWithEliteList = config.Bind("05 Equipment", "ReplaceWithEliteList", "EliteEarthEquipment | EliteFireEquipment | EliteIceEquipment | EliteLunarEquipment | EliteLightningEquipment", "With which elite equipments to replace. List in the format equipment1 | equipment2. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md). Follows ItemStringParser format.");
