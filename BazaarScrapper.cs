@@ -15,6 +15,8 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<InteractableSpawnCard> iscScrapper;
 
         Dictionary<int, SpawnCardStruct> DicScrapers = new Dictionary<int, SpawnCardStruct>();
+        DirectorCard card;
+        bool spawned;
         public override void Preload()
         {
             iscScrapper = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Scrapper/iscScrapper.asset");
@@ -29,21 +31,31 @@ namespace BazaarIsMyHaven
 
         }
 
-        public override void SetupBazaar()
+        public override void AddDirectorCards(List<DirectorCard> cards)
         {
-            if(ModConfig.ScrapperSectionEnabled.Value)
+            card = null;
+            if (ModConfig.ScrapperSectionEnabled.Value)
             {
-                SpawnScrapper();
+                // one pick spawns all the scrappers
+                card = new DirectorCard("Scrappers", ModConfig.ScrapperDirectorCost, ModConfig.ScrapperDirectorWeight, () => ModConfig.ScrapperAmount.Value > 0 ? 1 : 0);
+                cards.Add(card);
             }
         }
-        private void SpawnScrapper()
+
+        public override void SetupBazaar()
         {
-            if (ModConfig.ScrapperAmount.Value > 0)
-            {
-                DicScrapers.Clear();
-                SetScraper();
-                DoSpawnCard(DicScrapers, iscScrapper, ModConfig.ScrapperAmount.Value);
-            }
+            spawned = false;
+            SpawnLatePicks();
+        }
+
+        public override void SpawnLatePicks()
+        {
+            if (card == null || card.Count == 0 || spawned)
+                return;
+            DicScrapers.Clear();
+            SetScraper();
+            SpawnInSlots(DicScrapers, iscScrapper.WaitForCompletion().prefab, 0, ModConfig.ScrapperAmount.Value);
+            spawned = true;
         }
 
         private void SetScraper()
