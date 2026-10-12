@@ -135,7 +135,6 @@ namespace BazaarIsMyHaven
             AlwaysSpawnShopPortal = config.Bind("00 General", "AlwaysSpawnShopPortal", false, "Spawn a portal to the Bazaar after each teleporter event.");
             SpawnCountByStage = config.Bind("00 General", "SpawnCountByStage", true, "The amount of spawned interactables are based on stage completion count, capped by the amount.\nFormula: Total = stage count + offset");
             SpawnCountOffset = config.Bind("00 General", "SpawnCountOffset", 0, "Offset value added to stage-based interactable spawns.");
-            DecorateBazaar = config.Bind("00 General", "DecorateBazaar", true, "Adds Bazaar decorations such as chests and an extra portal behind Newt.");
 
             // 01 Newt
             NewtSectionEnabled = config.Bind("01 Newt", "SectionEnabled", true, "Enables or disables the Newt section.");
