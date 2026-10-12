@@ -1,4 +1,6 @@
 using RoR2;
+using RoR2.CharacterAI;
+using RoR2.Items;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
@@ -21,6 +23,12 @@ namespace BazaarIsMyHaven
             TripleDroneShop = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/TripleDroneShop/TripleDroneShop.prefab");
         }
 
+        public override void Hook()
+        {
+            On.RoR2.CharacterAI.BaseAI.ManagedFixedUpdate += BaseAI_ManagedFixedUpdate;
+            On.RoR2.Items.MinionLeashBodyBehavior.FixedUpdate += MinionLeashBodyBehavior_FixedUpdate;
+        }
+
         public override void SetupBazaar()
         {
             // clients only have the stations if the run has the Alloyed Collective
@@ -28,6 +36,8 @@ namespace BazaarIsMyHaven
             {
                 return;
             }
+
+            DroneSpot.Create();
 
             if (ModConfig.DronesSpawnDroneCombinerStation.Value)
             {
@@ -45,6 +55,40 @@ namespace BazaarIsMyHaven
             {
                 SpawnStation(TripleDroneShop, new Vector3(-64.3101f, -23.0074f, -19.7406f), new Vector3(0f, 300f, 6f));
             }
+        }
+
+        private void BaseAI_ManagedFixedUpdate(On.RoR2.CharacterAI.BaseAI.orig_ManagedFixedUpdate orig, BaseAI self, float deltaTime)
+        {
+            if (!DroneSpot.instance || !DroneSpot.IsPlayerDrone(self.master))
+            {
+                orig(self, deltaTime);
+                return;
+            }
+
+            // without inputs, a drone hovers where it is
+            var inputBank = self.bodyInputBank;
+            if (inputBank)
+            {
+                inputBank.skill1.PushState(false);
+                inputBank.skill2.PushState(false);
+                inputBank.skill3.PushState(false);
+                inputBank.skill4.PushState(false);
+                inputBank.jump.PushState(false);
+                inputBank.sprint.PushState(false);
+                inputBank.rawSprintInput.PushState(false);
+                inputBank.activateEquipment.PushState(false);
+                inputBank.moveVector = Vector3.zero;
+            }
+        }
+
+        private void MinionLeashBodyBehavior_FixedUpdate(On.RoR2.Items.MinionLeashBodyBehavior.orig_FixedUpdate orig, MinionLeashBodyBehavior self)
+        {
+            // the leash would teleport waiting drones to their player
+            if (DroneSpot.instance && self.body && DroneSpot.IsPlayerDrone(self.body.master))
+            {
+                return;
+            }
+            orig(self);
         }
 
         private void SpawnStation(AsyncOperationHandle<GameObject> prefab, Vector3 position, Vector3 rotation)
