@@ -43,6 +43,7 @@ namespace BazaarIsMyHaven
             MoneyPackPickupEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/BonusGoldPackOnKill/MoneyPackPickupEffect.prefab");
             TeamWarCryActivation = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/TeamWarCry/TeamWarCryActivation.prefab");
             ShrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab");
+            DonationRoulette.Preload();
         }
 
         public override void Hook()
@@ -71,18 +72,17 @@ namespace BazaarIsMyHaven
 
         public void BlueprintTerminal_Rebuild(On.RoR2.BlueprintTerminal.orig_Rebuild orig, BlueprintTerminal self)
         {
+            // hides the host's display like the clients'
+            orig(self);
             if (ModConfig.EnableMod.Value & ModConfig.DonateSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("BlueprintStation"))
             {
+                // Rebuild sets the prefab's price
                 PurchaseInteraction purchaseInteraction = self.GetComponent<PurchaseInteraction>();
                 if (purchaseInteraction != null)
                 {
                     purchaseInteraction.cost = ModConfig.DonateCost.Value;
                     purchaseInteraction.Networkcost = ModConfig.DonateCost.Value;
                 }
-            }
-            else
-            {
-                orig(self);
             }
         }
 
@@ -105,17 +105,22 @@ namespace BazaarIsMyHaven
                         return;
 
                     var playerStruct = Main.instance.GetPlayerStruct(pc);
-                    if (CanGetReward(pc))
+                    var roulette = self.GetComponent<DonationRoulette>();
+                    if (roulette && CanGetReward(pc))
                     {
-                        if (!TryGetReward(characterBody.bodyIndex, donationsDuringRun.GetValueOrDefault(pc), out var resolvedItems, out int tier))
+                        // the reward is the roll the player saw, so nothing shown means no coins charged
+                        var roll = roulette.TakeShownRoll(pc);
+                        if (roll == null)
                             return;
 
-                        Helper.GivePickups(characterBody, resolvedItems, self.transform.position + Vector3.up * 6.0f, true);
+                        Helper.GivePickups(characterBody, roll.items, self.transform.position + Vector3.up * 6.0f, true);
                         playerStruct.RewardCount += 1;
                         donationsDuringRun[pc] = donationsDuringRun.GetValueOrDefault(pc) + 1;
                         networkUser.DeductLunarCoins((uint)self.Networkcost);
-                        ShowRewardEffects(self, networkUser, characterBody, resolvedItems, tier);
+                        ShowRewardEffects(self, networkUser, characterBody, roll.items, roll.tier);
                         SpawnEffect(ShrineUseEffect, self.transform.position, new Color32(64, 127, 255, 255), 5f);
+                        // replace the taken roll, or empty the buds if the limit is reached
+                        roulette.ShowNextRoll(pc);
                     }
                     return;
                 }
@@ -127,6 +132,21 @@ namespace BazaarIsMyHaven
         {
             return Main.instance.GetPlayerStruct(pc).RewardCount < ModConfig.DonateRewardLimitPerVisit.Value
                 && donationsDuringRun.GetValueOrDefault(pc) < ModConfig.DonateRewardLimitPerRun.Value;
+        }
+
+        private DonationRoulette.Roll RollReward(PlayerCharacterMasterController pc)
+        {
+            var master = pc.master;
+            if (!master || !CanGetReward(pc))
+                return null;
+
+            // dead players have no body, so use the one they spawn as
+            var body = master.GetBody();
+            var bodyIndex = body ? body.bodyIndex : master.bodyPrefab ? BodyCatalog.FindBodyIndex(master.bodyPrefab) : BodyIndex.None;
+            if (!TryGetReward(bodyIndex, donationsDuringRun.GetValueOrDefault(pc), out var resolvedItems, out int tier))
+                return null;
+
+            return new DonationRoulette.Roll(resolvedItems, tier);
         }
 
         private bool TryGetReward(BodyIndex bodyIndex, int donations, out Dictionary<PickupIndex, int> resolvedItems, out int tier)
@@ -144,7 +164,7 @@ namespace BazaarIsMyHaven
             combined.RemoveAll(item => item.weight <= 0);
             if (combined.Count == 0)
             {
-                rewardLog.LogWarning("No donation lists with a valid weight; no coins charged.");
+                rewardLog.LogWarning("No donation lists with a valid weight; the Donation Altar shows no reward.");
                 return false;
             }
 
@@ -196,7 +216,7 @@ namespace BazaarIsMyHaven
 
             if (resolvedItems.Count == 0)
             {
-                rewardLog.LogWarning("The chosen donation list has no valid rewards; no coins charged.");
+                rewardLog.LogWarning("A donation list has no valid rewards; the Donation Altar shows none while it is chosen.");
                 return false;
             }
             return true;
@@ -236,6 +256,7 @@ namespace BazaarIsMyHaven
             gameObject.GetComponent<PurchaseInteraction>().contextToken = "NEWT_STATUE_CONTEXT";
             gameObject.GetComponent<PurchaseInteraction>().NetworkcontextToken = "NEWT_STATUE_CONTEXT";
 
+            DonationRoulette.Apply(gameObject, RollReward);
             NetworkServer.Spawn(gameObject);
         }
     }
