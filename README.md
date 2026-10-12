@@ -80,7 +80,11 @@ You can freely configure which items can be bought at the LunarShop. There are t
 
 ### Donation Altar
 
-The Donate setting spawns a donation box near the Newt. After donating 10 times, the Newt will give you a reward. There are 3 item lists which are selected at random:
+The Donate setting spawns a Donation Altar near the Newt. Donating Lunar Coins gives you a reward.
+
+The altar is a roulette: every `RouletteInterval` seconds (0.3 by default) it rolls a new reward. Each player sees their own reward on up to five Lunar Buds above the altar, one bud per item, and gets the reward shown when they donate. Like the Adaptive Chest, the host accounts for each player's ping. Clients need no mod for this.
+
+There are 3 item lists which are selected at random:
 
 - `RewardList1`: By default contains either 5 small chest items or 2 large chest items.
 - `RewardList2`: By default contains either 1 legendary item or 1 boss item.
