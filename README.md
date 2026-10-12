@@ -29,7 +29,6 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
   - Spawn a Bazaar portal after *every* teleporter event.
 
 - **Other Tweaks**:
-  - Extra decoration in the Bazaar.
   - A director that decides which interactables appear, with more credits the further you are into the run.
   - Config changes apply from the next run, without restarting the game.
 
