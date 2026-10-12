@@ -1,8 +1,6 @@
 using RoR2;
-using RoR2.Networking;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
@@ -11,36 +9,12 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace BazaarIsMyHaven
 {
     // Clients build the Donation Altar's display from their prefab, which only holds Transcendence, so the altar hides it.
-    // Each player sees their own roll on half-scale Lunar Buds above the altar instead, sent as instanced bud states.
-    // Like the Adaptive Chest, a donation gets the roll the player saw: the host remembers when it showed each roll
-    // and looks back by the player's round trip time.
-    public class DonationRoulette : MonoBehaviour
+    // Each player sees rewards they could get on half-scale Lunar Buds above the altar instead, sent as instanced bud states.
+    // The shown rewards are only examples; a donation rolls its own reward.
+    public class DonationRewardDisplay : MonoBehaviour
     {
-        public class Roll
-        {
-            public readonly Dictionary<PickupIndex, int> items;
-            public readonly int tier;
-            public bool taken;
-
-            public Roll(Dictionary<PickupIndex, int> items, int tier)
-            {
-                this.items = items;
-                this.tier = tier;
-            }
-        }
-
-        private struct ShownRoll
-        {
-            public float time;
-            public Roll roll;
-        }
-
-        private const string BudObjectName = "DonationRouletteBud";
-        // the Adaptive Chest's allowance for the delay between seeing a roll and pressing the button
-        private const float RewindTime = 0.05f;
-        // longer than any round trip time a player could donate with
-        private const float HistoryDuration = 5f;
-        private const float MinimumInterval = 0.1f;
+        private const string BudObjectName = "DonationRewardBud";
+        private const float CycleInterval = 2f;
         // PurchaseInteraction's cost SyncVar
         private const uint CostDirtyBit = 16u;
         private const float CostResendInterval = 1f;
@@ -59,10 +33,9 @@ namespace BazaarIsMyHaven
         private static AsyncOperationHandle<GameObject> budPrefab;
 
         private readonly List<InstancedPurchase> buds = new List<InstancedPurchase>();
-        private readonly Dictionary<PlayerCharacterMasterController, List<ShownRoll>> shownRolls = new Dictionary<PlayerCharacterMasterController, List<ShownRoll>>();
-        private Func<PlayerCharacterMasterController, Roll> rollReward;
+        private Func<PlayerCharacterMasterController, Dictionary<PickupIndex, int>> rollReward;
         private PurchaseInteraction purchaseInteraction;
-        private float nextRollTime;
+        private float nextCycleTime;
         private float nextCostResendTime;
 
         public static void Preload()
@@ -71,16 +44,16 @@ namespace BazaarIsMyHaven
         }
 
         // Call before spawning the altar. rollReward returns null for players who cannot get a reward.
-        public static void Apply(GameObject altar, Func<PlayerCharacterMasterController, Roll> rollReward)
+        public static void Apply(GameObject altar, Func<PlayerCharacterMasterController, Dictionary<PickupIndex, int>> rollReward)
         {
             var terminal = altar.GetComponent<BlueprintTerminal>();
             // clients only hide their display when it is purchased; spawning with the flag set means they never build it
             terminal.hasBeenPurchased = true;
 
-            var roulette = altar.AddComponent<DonationRoulette>();
-            roulette.rollReward = rollReward;
-            roulette.purchaseInteraction = altar.GetComponent<PurchaseInteraction>();
-            roulette.SpawnBuds(terminal.displayBaseTransform.position);
+            var display = altar.AddComponent<DonationRewardDisplay>();
+            display.rollReward = rollReward;
+            display.purchaseInteraction = altar.GetComponent<PurchaseInteraction>();
+            display.SpawnBuds(terminal.displayBaseTransform.position);
         }
 
         private void SpawnBuds(Vector3 displayPosition)
@@ -123,46 +96,30 @@ namespace BazaarIsMyHaven
                 purchaseInteraction.SetDirtyBit(CostDirtyBit);
             }
 
-            if (now < nextRollTime)
+            if (now < nextCycleTime)
             {
                 return;
             }
-            nextRollTime = now + Mathf.Max(MinimumInterval, ModConfig.DonateRouletteInterval.Value);
+            nextCycleTime = now + CycleInterval;
 
             foreach (var pc in PlayerCharacterMasterController.instances)
             {
                 if (pc)
                 {
-                    ShowNextRoll(pc);
+                    ShowNextReward(pc);
                 }
-            }
-            foreach (var pc in shownRolls.Keys.Where(pc => !pc).ToList())
-            {
-                shownRolls.Remove(pc);
             }
         }
 
-        public void ShowNextRoll(PlayerCharacterMasterController pc)
+        public void ShowNextReward(PlayerCharacterMasterController pc)
         {
-            float now = Time.unscaledTime;
-            var roll = rollReward(pc);
-            if (!shownRolls.TryGetValue(pc, out var history))
-            {
-                history = new List<ShownRoll>();
-                shownRolls.Add(pc, history);
-            }
-            history.Add(new ShownRoll { time = now, roll = roll });
-            // keep the roll that was showing when the remembered time starts
-            while (history.Count > 1 && history[1].time <= now - HistoryDuration)
-            {
-                history.RemoveAt(0);
-            }
+            var reward = rollReward(pc);
 
             // one bud per copy, so the amount shows too
             var pickups = new List<PickupIndex>();
-            if (roll != null)
+            if (reward != null)
             {
-                foreach (var item in roll.items)
+                foreach (var item in reward)
                 {
                     for (int i = 0; i < item.Value && pickups.Count < buds.Count; i++)
                     {
@@ -185,32 +142,6 @@ namespace BazaarIsMyHaven
                     InstancedPurchases.UpdatePlayer(buds[i].gameObject, pc);
                 }
             }
-        }
-
-        // The roll the player saw when donating, or null if nothing was shown. Each roll can be taken once.
-        public Roll TakeShownRoll(PlayerCharacterMasterController pc)
-        {
-            if (!pc || !shownRolls.TryGetValue(pc, out var history) || history.Count == 0)
-            {
-                return null;
-            }
-
-            // the host sees its rolls at once; a client sees them half a round trip later, and its donation takes the other half
-            float lookBack = RewindTime;
-            if (!pc.hasAuthority && pc.networkUser)
-            {
-                lookBack += RttManager.GetConnectionRTT(pc.networkUser.connectionToClient);
-            }
-            float time = Time.unscaledTime - lookBack;
-
-            int index = Math.Max(history.FindLastIndex(shown => shown.time <= time), 0);
-            var roll = history[index].roll;
-            if (roll == null || roll.taken)
-            {
-                return null;
-            }
-            roll.taken = true;
-            return roll;
         }
     }
 }
