@@ -170,7 +170,7 @@ namespace BazaarIsMyHaven
             // 02 Printer
             PrinterSectionEnabled = config.Bind("02 Printer", "SectionEnabled", true, "Enables or disables the Printer section.");
             PrinterMaxAmount = config.Bind("02 Printer", "MaxAmount", 9, new ConfigDescription("Maximum number of printers the director can spawn (max 9).", new AcceptableValueRange<int>(0, 9)));
-            PrinterDirectorWeight = config.Bind("02 Printer", "DirectorWeight", 4f, "How likely the director picks a printer, compared to the DirectorWeight of the other interactables. Which tier it prints is rolled by the tier weights below.");
+            PrinterDirectorWeight = config.Bind("02 Printer", "DirectorWeight", 2f, "How likely the director picks a printer, compared to the DirectorWeight of the other interactables. Which tier it prints is rolled by the tier weights below.");
             PrinterDirectorCostWhite = config.Bind("02 Printer", "DirectorCostWhite", 5, "Director credits a printer for white (Tier 1) items costs.");
             PrinterDirectorCostGreen = config.Bind("02 Printer", "DirectorCostGreen", 10, "Director credits a printer for green (Tier 2) items costs.");
             PrinterDirectorCostRed = config.Bind("02 Printer", "DirectorCostRed", 15, "Director credits a printer for red (Tier 3) or Void items costs.");
