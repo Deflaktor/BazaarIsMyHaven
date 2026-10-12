@@ -76,6 +76,8 @@ namespace BazaarIsMyHaven
         // lunarShop
         public static ConfigEntry<bool> LunarShopSectionEnabled;
         public static ConfigEntry<int> LunarShopAmount;
+        public static ConfigEntry<int> LunarShopDirectorCost;
+        public static ConfigEntry<float> LunarShopDirectorWeight;
         public static ConfigEntry<int> LunarShopCost;
         public static ConfigEntry<int> LunarShopBuyLimit;
         public static ConfigEntry<bool> LunarShopSequentialItems;
@@ -209,7 +211,9 @@ namespace BazaarIsMyHaven
 
             // 06 LunarShop
             LunarShopSectionEnabled = config.Bind("06 LunarShop", "SectionEnabled", true, "Enables or disables the Lunar Shop section.");
-            LunarShopAmount = config.Bind("06 LunarShop", "Amount", 5, new ConfigDescription("Number of Lunar Buds (max 20).", new AcceptableValueRange<int>(0, 20)));
+            LunarShopAmount = config.Bind("06 LunarShop", "Amount", 5, new ConfigDescription("Maximum number of Lunar Buds the director can spawn (max 20).", new AcceptableValueRange<int>(0, 20)));
+            LunarShopDirectorCost = config.Bind("06 LunarShop", "DirectorCost", 0, "Director credits a Lunar Bud costs. With 0, all buds up to Amount always spawn.");
+            LunarShopDirectorWeight = config.Bind("06 LunarShop", "DirectorWeight", 1f, "How likely the director picks a Lunar Bud, compared to the DirectorWeight of the other interactables.");
             LunarShopCost = config.Bind("06 LunarShop", "Cost", 1, "Lunar coin cost per Lunar Bud purchase.");
             LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar. -1 = Unlimited.");
             LunarShopSequentialItems = config.Bind("06 LunarShop", "SequentialItems", false, "Picks items sequentially from the list instead of randomly.");
@@ -217,7 +221,7 @@ namespace BazaarIsMyHaven
             LunarShopItemList = config.Bind("06 LunarShop", "ItemList", "dtLunarChest", $"List of items available in Lunar Shop. {itemKeyWordsExplanation} Example: {items}");
             LunarShopInstancedPurchases = config.Bind("06 LunarShop", "InstancedPurchases", true, "Each player can buy independently from Lunar Shop.");
             LunarShopBuyToInventory = config.Bind("06 LunarShop", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
-            LunarShopAmountDependingOnCharacter = config.Bind("06 LunarShop", "AmountDependingOnCharacter", "", "Change the number of Lunar Buds by Character. Needs InstancedPurchases. Cannot exceed Amount. Comma-separated <characterBody|survivorName>=<amount>.\nExample: Seeker=15, FalseSon=16");
+            LunarShopAmountDependingOnCharacter = config.Bind("06 LunarShop", "AmountDependingOnCharacter", "", "Change the number of Lunar Buds by Character. Needs InstancedPurchases. Cannot exceed the number of spawned buds. Comma-separated <characterBody|survivorName>=<amount>.\nExample: Seeker=15, FalseSon=16");
 
             // 07 LunarRecycler
             LunarRecyclerSectionEnabled = config.Bind("07 LunarRecycler", "SectionEnabled", true, "Enables or disables the Lunar Recycler section.");

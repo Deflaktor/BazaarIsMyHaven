@@ -28,6 +28,7 @@ namespace BazaarIsMyHaven
         int generateNewPickupIndex = 0;
         int lunarRecyclerRerolledCount = 0;
         List<GameObject> ObjectLunarShopTerminals_Spawn = new List<GameObject>();
+        DirectorCard card;
         PlayerCharacterMasterController currentActivator = null;
         Dictionary<PurchaseInteraction, List<PlayerCharacterMasterController>> whichStallsHaveBeenBoughtOnce = new Dictionary<PurchaseInteraction, List<PlayerCharacterMasterController>>();
 
@@ -67,10 +68,21 @@ namespace BazaarIsMyHaven
                 RunEnd();
             }
         }
+        public override void AddDirectorCards(List<DirectorCard> cards)
+        {
+            card = null;
+            if (ModConfig.LunarShopSectionEnabled.Value)
+            {
+                // the table layout depends on the number of buds, so none can be added later
+                card = new DirectorCard("Lunar Bud", ModConfig.LunarShopDirectorCost, ModConfig.LunarShopDirectorWeight, () => ModConfig.LunarShopAmount.Value, allowLatePicks: false);
+                cards.Add(card);
+            }
+        }
+
         public override void SetupBazaar()
         {
             lunarRecyclerRerolledCount = 0;
-            if (ModConfig.LunarShopSectionEnabled.Value) {
+            if (card != null) {
                 generateNewPickupIndex = 0;
                 whichStallsHaveBeenBoughtOnce.Clear();
                 SpawnLunarShopTerminal();
@@ -524,11 +536,7 @@ namespace BazaarIsMyHaven
 
             List<Vector2> points = new List<Vector2>();
 
-            int count = 0;
-            if (ModConfig.SpawnCountByStage.Value)
-                count = SetCountbyGameStage(ModConfig.LunarShopAmount.Value, ModConfig.SpawnCountOffset.Value);
-            else
-                count = ModConfig.LunarShopAmount.Value;
+            int count = card.Count;
 
             if (count <= middleCapacity)
             {
@@ -654,7 +662,7 @@ namespace BazaarIsMyHaven
                     NetworkServer.Destroy(obj);
                 }
             }
-            var gameObjects = DoSpawnGameObject(DicLunarShopTerminals, lunarShopBud, ModConfig.LunarShopAmount.Value);
+            var gameObjects = SpawnInSlots(DicLunarShopTerminals, lunarShopBud.WaitForCompletion(), 0, DicLunarShopTerminals.Count);
             ObjectLunarShopTerminals_Spawn.AddRange(gameObjects);
 
             for (int i = 0; i < gameObjects.Count; i++)
