@@ -17,6 +17,8 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> lunarShopTerminal;
 
         Dictionary<int, SpawnCardStruct> DicLunarPools = new Dictionary<int, SpawnCardStruct>();
+        DirectorCard card;
+        bool spawned;
 
         public override void Preload()
         {
@@ -33,11 +35,28 @@ namespace BazaarIsMyHaven
         {
 
         }
+        public override void AddDirectorCards(List<DirectorCard> cards)
+        {
+            card = null;
+            if (ModConfig.CleansingPoolSectionEnabled.Value)
+            {
+                card = new DirectorCard("Cleansing Pool", ModConfig.CleansingPoolDirectorCost, ModConfig.CleansingPoolDirectorWeight, () => 1);
+                cards.Add(card);
+            }
+        }
+
         public override void SetupBazaar()
         {
-            if (ModConfig.CleansingPoolSectionEnabled.Value) { 
-                SpawnShrineCleanse();
-            }
+            spawned = false;
+            SpawnLatePicks();
+        }
+
+        public override void SpawnLatePicks()
+        {
+            if (card == null || card.Count == 0 || spawned)
+                return;
+            SpawnShrineCleanse();
+            spawned = true;
         }
 
         private void ShopTerminalBehavior_SetPickup(On.RoR2.ShopTerminalBehavior.orig_SetPickup orig, ShopTerminalBehavior self, UniquePickup newPickup, bool newHidden)
@@ -61,9 +80,9 @@ namespace BazaarIsMyHaven
         {
             DicLunarPools.Clear();
             SetLunarPool();
-            var pools = DoSpawnCard(DicLunarPools, iscShrineCleanse, DicLunarPools.Count);
+            SpawnAt(iscShrineCleanse.WaitForCompletion().prefab, DicLunarPools[0]);
 
-            if (ModConfig.CleansingPoolRewardsLunarCoins.Value && pools.Count > 0)
+            if (ModConfig.CleansingPoolRewardsLunarCoins.Value)
             {
                 GameObject gameObject = GameObject.Instantiate(lunarShopTerminal.WaitForCompletion(), DicLunarPools[0].Position, Quaternion.identity);
                 gameObject.transform.localPosition = new Vector3(DicLunarPools[0].Position.x, DicLunarPools[0].Position.y + 0.5f, DicLunarPools[0].Position.z);

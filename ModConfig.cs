@@ -97,6 +97,8 @@ namespace BazaarIsMyHaven
         // cleansing pool
         public static ConfigEntry<bool> CleansingPoolSectionEnabled;
         public static ConfigEntry<bool> CleansingPoolRewardsLunarCoins;
+        public static ConfigEntry<int> CleansingPoolDirectorCost;
+        public static ConfigEntry<float> CleansingPoolDirectorWeight;
 
         // lunarSeer
         public static ConfigEntry<bool> LunarSeerSectionEnabled;
@@ -233,6 +235,8 @@ namespace BazaarIsMyHaven
             // 08 CleansingPool
             CleansingPoolSectionEnabled = config.Bind("08 CleansingPool", "SectionEnabled", true, "Enables or disables the Cleansing Pool section.");
             CleansingPoolRewardsLunarCoins = config.Bind("08 CleansingPool", "RewardsLunarCoin", true, "Cleansing Pools reward a Lunar Coin instead of a Pearl.");
+            CleansingPoolDirectorCost = config.Bind("08 CleansingPool", "DirectorCost", 5, "Director credits the Cleansing Pool costs.");
+            CleansingPoolDirectorWeight = config.Bind("08 CleansingPool", "DirectorWeight", 1f, "How likely the director picks the Cleansing Pool, compared to the DirectorWeight of the other interactables.");
 
             // 09 LunarSeer
             LunarSeerSectionEnabled = config.Bind("09 LunarSeer", "SectionEnabled", true, "Enables or disables the Lunar Seer Station section.");
