@@ -16,6 +16,8 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> multiShopEquipmentTerminal;
 
         Dictionary<int, SpawnCardStruct> DicEquipments = new Dictionary<int, SpawnCardStruct>();
+        DirectorCard card;
+        int spawned;
         PlayerCharacterMasterController currentActivator = null;
 
         public override void Preload()
@@ -36,11 +38,30 @@ namespace BazaarIsMyHaven
 
         }
 
+        public override void AddDirectorCards(List<DirectorCard> cards)
+        {
+            card = null;
+            if (ModConfig.EquipmentSectionEnabled.Value)
+            {
+                card = new DirectorCard("Equipment Terminal", ModConfig.EquipmentDirectorCost, ModConfig.EquipmentDirectorWeight, GetMaxTerminals);
+                cards.Add(card);
+            }
+        }
+
         public override void SetupBazaar()
         {
-            if(ModConfig.EquipmentSectionEnabled.Value) {
-                SpawnEquipment();
+            if (card != null)
+            {
+                DicEquipments.Clear();
+                SetEquipment();
+                spawned = 0;
+                SpawnLatePicks();
             }
+        }
+
+        private static int GetMaxTerminals()
+        {
+            return Math.Min(ModConfig.EquipmentAmount.Value, ModConfig.EquipmentReplaceLunarSeersWithEquipment.Value ? 5 : 3);
         }
 
         public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
@@ -170,35 +191,24 @@ namespace BazaarIsMyHaven
             DicEquipments.Add(random[2], new SpawnCardStruct(new Vector3(-134.82f, -23.36f, 1.85f), new Vector3(0.0f, 105.0f, 0.0f)));
         }
 
-        private void SpawnEquipment()
+        public override void SpawnLatePicks()
         {
-            if (ModConfig.EquipmentAmount.Value > 0)
-            {
-                DicEquipments.Clear();
-                SetEquipment();
+            if (card == null || card.Count <= spawned)
+                return;
 
-                var count = ModConfig.EquipmentAmount.Value;
-                if (!ModConfig.EquipmentReplaceLunarSeersWithEquipment.Value && count > 3)
-                {
-                    count = 3;
+            var terminals = SpawnInSlots(DicEquipments, multiShopEquipmentTerminal.WaitForCompletion(), spawned, card.Count - spawned);
+            spawned = card.Count;
+            terminals.ForEach(gameObject => {
+                var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
+                var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
+                if(ModConfig.EquipmentInstancedPurchases.Value) {
+                    var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
+                    instancedPurchase.original.available = purchaseInteraction.available;
+                    instancedPurchase.original.pickup = shopTerminalBehavior.pickup;
+                    instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
                 }
-                if (ModConfig.EquipmentReplaceLunarSeersWithEquipment.Value && count > 5) {
-                    count = 5;
-                }
-
-                var terminals = DoSpawnGameObject(DicEquipments, multiShopEquipmentTerminal, count);
-                terminals.ForEach(gameObject => {
-                    var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
-                    var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
-                    if(ModConfig.EquipmentInstancedPurchases.Value) {
-                        var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
-                        instancedPurchase.original.available = purchaseInteraction.available;
-                        instancedPurchase.original.pickup = shopTerminalBehavior.pickup;
-                        instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
-                    }
-                });
-                EquipmentPriceSigns.Apply(terminals);
-            }
+            });
+            EquipmentPriceSigns.Apply(terminals);
         }
     }
 }
