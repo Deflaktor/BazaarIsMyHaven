@@ -65,6 +65,7 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<float> EquipmentDirectorWeight;
         public static ConfigEntry<bool> EquipmentInstancedPurchases;
         public static ConfigEntry<int> EquipmentCost;
+        public static ConfigEntry<CostTypeIndex> EquipmentCostType;
         public static ConfigEntry<bool> EquipmentBuyToInventory;
         public static ConfigEntry<bool> EquipmentReplaceLunarSeersWithEquipment;
         public static ConfigEntry<float> EquipmentReplaceWithEliteChance;
@@ -76,6 +77,7 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> LunarShopDirectorCost;
         public static ConfigEntry<float> LunarShopDirectorWeight;
         public static ConfigEntry<int> LunarShopCost;
+        public static ConfigEntry<CostTypeIndex> LunarShopCostType;
         public static ConfigEntry<int> LunarShopBuyLimit;
         public static ConfigEntry<bool> LunarShopSequentialItems;
         public static ConfigEntry<string> LunarShopItemList;
@@ -212,7 +214,8 @@ namespace BazaarIsMyHaven
             EquipmentReplaceWithEliteChance = config.Bind("05 Equipment", "ReplaceWithEliteChance", 0.15f, "Chance for replacing the equipment with an elite equipment.");
             EquipmentReplaceWithEliteList = config.Bind("05 Equipment", "ReplaceWithEliteList", "EliteEarthEquipment | EliteFireEquipment | EliteIceEquipment | EliteLunarEquipment | EliteLightningEquipment", "With which elite equipments to replace. List in the format equipment1 | equipment2. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md). Follows ItemStringParser format.");
             EquipmentInstancedPurchases = config.Bind("05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
-            EquipmentCost = config.Bind("05 Equipment", "Cost", 0, "Monetary cost for equipment purchases.");
+            EquipmentCost = config.Bind("05 Equipment", "Cost", 0, "Cost of an equipment purchase, paid in CostType.");
+            EquipmentCostType = config.Bind("05 Equipment", "CostType", CostTypeIndex.Money, "What equipment purchases cost, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price sign shows it too. Money is not scaled with difficulty.");
             EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground.");
 
             // 06 LunarShop
@@ -220,7 +223,8 @@ namespace BazaarIsMyHaven
             LunarShopMaxAmount = config.Bind("06 LunarShop", "MaxAmount", 5, new ConfigDescription("Maximum number of Lunar Buds the director can spawn (max 20).", new AcceptableValueRange<int>(0, 20)));
             LunarShopDirectorCost = config.Bind("06 LunarShop", "DirectorCost", 0, "Director credits a Lunar Bud costs. With 0, all buds up to MaxAmount always spawn.");
             LunarShopDirectorWeight = config.Bind("06 LunarShop", "DirectorWeight", 1f, "How likely the director picks a Lunar Bud, compared to the DirectorWeight of the other interactables.");
-            LunarShopCost = config.Bind("06 LunarShop", "Cost", 1, "Lunar coin cost per Lunar Bud purchase.");
+            LunarShopCost = config.Bind("06 LunarShop", "Cost", 1, "Cost of a Lunar Bud purchase, paid in CostType.");
+            LunarShopCostType = config.Bind("06 LunarShop", "CostType", CostTypeIndex.LunarCoin, "What Lunar Bud purchases cost, e.g. LunarCoin, Money, WhiteItem or PercentHealth. The price tag shows it too. Money is not scaled with difficulty.");
             LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar. -1 = Unlimited.");
             LunarShopSequentialItems = config.Bind("06 LunarShop", "SequentialItems", false, "Picks items sequentially from the list instead of randomly.");
             var items = "Tonic | AutoCastEquipment | RandomDamageZone | LunarDagger | HalfSpeedDoubleHealth | ShieldOnly | ShieldOnly | ShieldOnly | LunarPrimaryReplacement | LunarSecondaryReplacement | LunarSpecialReplacement | LunarBadLuck | LunarBadLuck | LunarBadLuck | LunarSun | HalfAttackSpeedHalfCooldowns | HalfAttackSpeedHalfCooldowns";
@@ -331,6 +335,9 @@ namespace BazaarIsMyHaven
         {
             if (EquipmentMaxAmount.Value > 3 && !EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentMaxAmount.Value = 3;
             if (EquipmentMaxAmount.Value > 5 && EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentMaxAmount.Value = 5;
+            // Count is not a cost type
+            if (EquipmentCostType.Value >= CostTypeIndex.Count) EquipmentCostType.Value = CostTypeIndex.Money;
+            if (LunarShopCostType.Value >= CostTypeIndex.Count) LunarShopCostType.Value = CostTypeIndex.LunarCoin;
             RefreshLunarShopCharacterAmounts();
             RefreshDonationRewardLists(config);
         }

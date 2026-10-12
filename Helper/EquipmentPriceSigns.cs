@@ -100,7 +100,7 @@ namespace BazaarIsMyHaven
 
                 seer.name = "EquipmentPriceSign";
                 purchaseInteraction.Networkcost = ModConfig.EquipmentCost.Value;
-                purchaseInteraction.NetworkcostType = CostTypeIndex.Money;
+                purchaseInteraction.NetworkcostType = ModConfig.EquipmentCostType.Value;
 
                 // readable from the terminal's front, like the Seer's own sign in front of its table
                 var pivot = projector.hologramPivot;

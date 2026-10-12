@@ -94,9 +94,10 @@ namespace BazaarIsMyHaven
             orig(self);
             if (ModConfig.EnableMod.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
-                if (ModConfig.LunarShopSectionEnabled.Value && ModConfig.LunarShopCost.Value >= 0) 
+                if (ModConfig.LunarShopSectionEnabled.Value && self.name.StartsWith("LunarShopTerminal"))
                 {
-                    if (self.name.StartsWith("LunarShopTerminal"))
+                    self.NetworkcostType = ModConfig.LunarShopCostType.Value;
+                    if (ModConfig.LunarShopCost.Value >= 0)
                     {
                         self.cost = ModConfig.LunarShopCost.Value;
                         self.Networkcost = ModConfig.LunarShopCost.Value;
