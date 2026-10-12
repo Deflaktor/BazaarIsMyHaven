@@ -55,6 +55,9 @@
     <None Update="newtdialog.language">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="newtwelcome.language">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="manifest.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

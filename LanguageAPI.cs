@@ -31,6 +31,19 @@ namespace BazaarIsMyHaven
             "NEWT_ANGRY_WELCOME_WORD_4",
             "NEWT_ANGRY_WELCOME_WORD_5",
         };
+        // new lines in the style of the game's own; clients don't have them
+        public static string[] NEWT_WELCOME = Tokens("NEWT_WELCOME_", 5);
+        public static string[] NEWT_ANGRY_WELCOME = Tokens("NEWT_ANGRY_WELCOME_", 5);
+        // the game's own lines, which every client can translate
+        public static string[] NEWT_UPGRADE = Tokens("NEWT_UPGRADE_", 3);
+        public static string[] NEWT_LUNAR_PURCHASE = Tokens("NEWT_LUNAR_PURCHASE_", 8);
+        public static string[] NEWT_ANNOY = Tokens("NEWT_ANNOY_", 6);
+
+        private static string[] Tokens(string prefix, int count)
+        {
+            return Enumerable.Range(1, count).Select(number => prefix + number).ToArray();
+        }
+
         public static string[] NEWT_ATTACKED_WORD = new string[]
         {
             "NEWT_ATTACKED_WORD_1",

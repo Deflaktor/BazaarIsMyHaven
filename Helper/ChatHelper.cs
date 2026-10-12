@@ -138,36 +138,66 @@ namespace BazaarIsMyHaven
             return string.Join(", ", itemNames);
         }
 
-        public static void ThanksTipNormal(NetworkUser networkUser, PlayerCharacterMasterController pc, Dictionary<PickupIndex, int> pickupIndexes)
+        public static void DonationThanks(CharacterBody donor, Dictionary<PickupIndex, int> pickupIndexes, int tier)
         {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_DONATE_LIST1, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
-        }
-
-        public static void ThanksTipElite(NetworkUser networkUser, PlayerCharacterMasterController pc, Dictionary<PickupIndex, int> pickupIndexes)
-        {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_DONATE_LIST2, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
-        }
-
-        public static void ThanksTipPeculiar(NetworkUser networkUser, PlayerCharacterMasterController pc, Dictionary<PickupIndex, int> pickupIndexes)
-        {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_DONATE_LIST3, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
-        }
-
-        public static void ThanksTipCharacter(NetworkUser networkUser, PlayerCharacterMasterController pc, Dictionary<PickupIndex, int> pickupIndexes)
-        {
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_DONATE_LIST_CHARACTER, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
-        }
-        
-        public static void WelcomeWord()
-        {
-            int length = LanguageAPI.NEWT_WELCOME_WORD.Length;
-            int r = Random.Next(length);
-            if (r < length)
+            switch (ModConfig.NewtDialogue.Value)
             {
-                if (!ShopKeeper.DiedAtLeastOnce) Send(Language.GetStringFormatted(LanguageAPI.NEWT_WELCOME_WORD[r], NewtName));
-                else Send(Language.GetStringFormatted(LanguageAPI.NEWT_ANGRY_WELCOME_WORD[r], NewtName, GetDeathState()));
+                case ShopKeeper.Dialogue.BazaarIsMyHome:
+                    string token = tier switch
+                    {
+                        1 => LanguageAPI.NEWT_DONATE_LIST1,
+                        2 => LanguageAPI.NEWT_DONATE_LIST2,
+                        3 => LanguageAPI.NEWT_DONATE_LIST3,
+                        _ => LanguageAPI.NEWT_DONATE_LIST_CHARACTER,
+                    };
+                    var pc = donor.master ? donor.master.playerCharacterMasterController : null;
+                    Send(Language.GetStringFormatted(token, NewtName, GetDeathState(), GetColoredPlayerName(pc), GetItemNames(pickupIndexes)));
+                    break;
+                case ShopKeeper.Dialogue.Default:
+                    NewtSays(RandomToken(LanguageAPI.NEWT_UPGRADE));
+                    AnnouncePickups(donor, pickupIndexes);
+                    break;
+                default:
+                    AnnouncePickups(donor, pickupIndexes);
+                    break;
             }
         }
+
+        // The game's own pickup message, shown in each player's language
+        private static void AnnouncePickups(CharacterBody body, Dictionary<PickupIndex, int> pickupIndexes)
+        {
+            foreach (var (pickupIndex, count) in pickupIndexes)
+            {
+                var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
+                if (count <= 0 || pickupDef == null)
+                    continue;
+                Chat.SendBroadcastChat(new Chat.PlayerPickupChatMessage
+                {
+                    subjectAsCharacterBody = body,
+                    baseToken = "PLAYER_PICKUP",
+                    pickupToken = pickupDef.nameToken,
+                    pickupColor = pickupDef.baseColor,
+                    pickupQuantity = (uint)count
+                });
+            }
+        }
+
+        public static void WelcomeWord()
+        {
+            switch (ModConfig.NewtDialogue.Value)
+            {
+                case ShopKeeper.Dialogue.BazaarIsMyHome:
+                    int r = Random.Next(LanguageAPI.NEWT_WELCOME_WORD.Length);
+                    if (!ShopKeeper.DiedAtLeastOnce) Send(Language.GetStringFormatted(LanguageAPI.NEWT_WELCOME_WORD[r], NewtName));
+                    else Send(Language.GetStringFormatted(LanguageAPI.NEWT_ANGRY_WELCOME_WORD[r], NewtName, GetDeathState()));
+                    break;
+                case ShopKeeper.Dialogue.Default:
+                    // clients don't have these lines, so they get the host's text
+                    NewtSays(Language.GetString(RandomToken(ShopKeeper.DiedAtLeastOnce ? LanguageAPI.NEWT_ANGRY_WELCOME : LanguageAPI.NEWT_WELCOME)));
+                    break;
+            }
+        }
+
         public static void ShowNewtDeath()
         {
             Send(Language.GetStringFormatted(LanguageAPI.NEWT_DEATH_INFO, NewtName, GetDeathState()));
@@ -175,10 +205,43 @@ namespace BazaarIsMyHaven
 
         public static void HitWord()
         {
-            int length = LanguageAPI.NEWT_ATTACKED_WORD.Length;
-            int r = Random.Next(length);
-            Send(Language.GetStringFormatted(LanguageAPI.NEWT_ATTACKED_WORD[r], NewtName, GetDeathState()));
+            switch (ModConfig.NewtDialogue.Value)
+            {
+                case ShopKeeper.Dialogue.BazaarIsMyHome:
+                    Send(Language.GetStringFormatted(RandomToken(LanguageAPI.NEWT_ATTACKED_WORD), NewtName, GetDeathState()));
+                    break;
+                case ShopKeeper.Dialogue.Default:
+                    NewtSays(RandomToken(LanguageAPI.NEWT_ANNOY));
+                    break;
+            }
         }
+
+        // as often as the game's own comment, which shows an empty chat line
+        public static void LunarPurchase()
+        {
+            if (ModConfig.NewtDialogue.Value == ShopKeeper.Dialogue.Default && Random.NextDouble() < 0.2)
+            {
+                NewtSays(RandomToken(LanguageAPI.NEWT_LUNAR_PURCHASE));
+            }
+        }
+
+        private static string RandomToken(string[] tokens)
+        {
+            return tokens[Random.Next(tokens.Length)];
+        }
+
+        // Each client shows Newt's name and the line in its own language. A line it has no token for shows as sent.
+        private static void NewtSays(string token)
+        {
+            if (!ShopKeeper.Body)
+                return;
+            Chat.SendBroadcastChat(new Chat.BodyChatMessage
+            {
+                bodyObject = ShopKeeper.Body.gameObject,
+                token = token
+            });
+        }
+
         public static void Send(string message)
         {
             Chat.SendBroadcastChat(new Chat.SimpleChatMessage
