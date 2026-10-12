@@ -46,11 +46,11 @@ Like the game's own scene director, a director decides which interactables appea
 
 Formula: `Credits = DirectorExtraCredits + DirectorCreditsPerStage x Number of Stages Completed`
 
-It spends them at random on the interactables of the enabled sections, until it can't afford anything more. Each interactable has a `DirectorCost` and a `DirectorWeight`. The weight sets how likely the director picks it compared to the others, and `Amount` limits how many of a kind can spawn. By default, a printer costs 5 to 15 credits depending on its tier, and Lunar Buds cost nothing, so they always spawn up to their `Amount`.
+It spends them at random on the interactables of the enabled sections, until it can't afford anything more. Each interactable has a `DirectorCost` and a `DirectorWeight`. The weight sets how likely the director picks it compared to the others, and `MaxAmount` limits how many of a kind can spawn. By default, a printer costs 5 to 15 credits depending on its tier, and Lunar Buds cost nothing, so they always spawn up to their `MaxAmount`.
 
 Two interactables work differently:
 
-- **Scrappers**: the director picks them only once, and then all `Amount` Scrappers spawn.
+- **Scrappers**: the director picks them only once, and then all `MaxAmount` Scrappers spawn.
 - **Wandering Chef**: with `CraftableRecipesOnly`, he only offers a recipe that a player can cook from their inventory and what the Bazaar offers. If there is none, he leaves again and the director spends his credits on something else.
 
 ### Newt - DeathBehavior
@@ -68,7 +68,7 @@ With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients
 
 ### LunarShop
 
-The Lunar Shop swaps the Bazaar's Lunar Buds for `Amount` Lunar Buds (up to 20), each with its price. Clients without the mod also see them at the right size. The Lunar Recycler rerolls them, except buds a player already bought from.
+The Lunar Shop swaps the Bazaar's Lunar Buds for up to `MaxAmount` Lunar Buds (at most 20), each with its price. Clients without the mod also see them at the right size. The Lunar Recycler rerolls them, except buds a player already bought from.
 
 You can freely configure which items can be bought at the LunarShop. There are two settings to configure this:
 
@@ -80,7 +80,7 @@ You can freely configure which items can be bought at the LunarShop. There are t
   - Follows the [ItemStringPaser](https://thunderstore.io/package/Def/ItemStringParser/) format.
   - A list of items to appear. Must be internal items names. Can use tier or droptables as well, see *Item Keywords* below.
   - Examples:
-    - `Tier1 | Tier2 | Tier3 | Lunar | Boss`: If `SequentialItems` is set to `True` and `Amount` to 5, then you will find exactly 1 white item, 1 green item, 1 red item, 1 lunar item and 1 boss item in the shop.
+    - `Tier1 | Tier2 | Tier3 | Lunar | Boss`: If `SequentialItems` is set to `True` and `MaxAmount` to 5, then you will find exactly 1 white item, 1 green item, 1 red item, 1 lunar item and 1 boss item in the shop.
     - `dtLunarChest`: This is the vanilla behavior of the game.
     - `FreeChest | VoidTier1 | dtChest2`: 1 Shipping Request Form, one random item of Void Tier 1 and one random item of the droptable of a large chest.
   - The Repeat and Multiplier operators do not play a role here.
