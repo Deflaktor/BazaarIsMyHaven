@@ -58,6 +58,8 @@ namespace BazaarIsMyHaven
         // scrapper
         public static ConfigEntry<bool> ScrapperSectionEnabled;
         public static ConfigEntry<int> ScrapperAmount;
+        public static ConfigEntry<int> ScrapperDirectorCost;
+        public static ConfigEntry<float> ScrapperDirectorWeight;
 
         // equipment
         public static ConfigEntry<bool> EquipmentSectionEnabled;
@@ -187,7 +189,9 @@ namespace BazaarIsMyHaven
 
             // 04 Scrapper
             ScrapperSectionEnabled = config.Bind("04 Scrapper", "SectionEnabled", true, "Enables or disables the Scrapper section.");
-            ScrapperAmount = config.Bind("04 Scrapper", "Amount", 4, new ConfigDescription("Number of Scrappers spawned (max 4).", new AcceptableValueRange<int>(0, 4)));
+            ScrapperAmount = config.Bind("04 Scrapper", "Amount", 4, new ConfigDescription("Number of Scrappers spawned when the director picks them (max 4).", new AcceptableValueRange<int>(0, 4)));
+            ScrapperDirectorCost = config.Bind("04 Scrapper", "DirectorCost", 5, "Director credits the Scrappers cost. The director picks them only once, and then all of them spawn.");
+            ScrapperDirectorWeight = config.Bind("04 Scrapper", "DirectorWeight", 1f, "How likely the director picks the Scrappers, compared to the DirectorWeight of the other interactables.");
 
             // 05 Equipment
             EquipmentSectionEnabled = config.Bind("05 Equipment", "SectionEnabled", true, "Enables or disables the Equipment section.");
