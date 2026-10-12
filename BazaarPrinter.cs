@@ -1,6 +1,7 @@
 ﻿using RoR2;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -18,6 +19,8 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<InteractableSpawnCard>[] PrintersCode;
 
         Dictionary<int, SpawnCardStruct> DicPrinters = new Dictionary<int, SpawnCardStruct>();
+        PrinterCard card;
+        int spawned;
         public override void Preload()
         {
             iscDuplicator = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/Base/Duplicator/iscDuplicator.asset");
@@ -42,11 +45,39 @@ namespace BazaarIsMyHaven
         {
 
         }
+        public override void AddDirectorCards(List<DirectorCard> cards)
+        {
+            card = null;
+            if (ModConfig.PrinterSectionEnabled.Value)
+            {
+                if (GetTierChoices().Count == 0)
+                {
+                    Log.LogWarning("No printer tiers with a valid weight; skipping printers.");
+                    return;
+                }
+                card = new PrinterCard();
+                cards.Add(card);
+            }
+        }
+
         public override void SetupBazaar()
         {
-            if(ModConfig.PrinterSectionEnabled.Value)
+            if (card != null)
             {
-                SpawnPrinters();
+                DicPrinters.Clear();
+                SetPrinter();
+                spawned = 0;
+                SpawnLatePicks();
+            }
+        }
+
+        public override void SpawnLatePicks()
+        {
+            if (card == null)
+                return;
+            for (; spawned < card.tiers.Count; spawned++)
+            {
+                SpawnPrinter(card.tiers[spawned], DicPrinters[spawned]);
             }
         }
 
@@ -109,59 +140,81 @@ namespace BazaarIsMyHaven
             orig(self, newPickup, newHidden);
         }
 
-        private void SpawnPrinters()
+        private void SpawnPrinter(ItemTier tier, SpawnCardStruct slot)
         {
-            if (ModConfig.PrinterAmount.Value > 0)
+            SpawnCard spawnCard = null;
+            string nonDefaultName = null;
+            switch (tier)
             {
-                DicPrinters.Clear();
-                SetPrinter();
-                int count = 0;
-                if (ModConfig.SpawnCountByStage.Value)
-                    count = SetCountbyGameStage(ModConfig.PrinterAmount.Value, ModConfig.SpawnCountOffset.Value);
-                else
-                    count = ModConfig.PrinterAmount.Value;
-                for (int i = 0; i < count; i++)
+                case ItemTier.Tier1:
+                    spawnCard = iscDuplicator.WaitForCompletion();
+                    break;
+                case ItemTier.Tier2:
+                    spawnCard = iscDuplicatorLarge.WaitForCompletion();
+                    break;
+                case ItemTier.Tier3:
+                    spawnCard = iscDuplicatorMilitary.WaitForCompletion();
+                    break;
+                case ItemTier.Boss:
+                    spawnCard = iscDuplicatorWild.WaitForCompletion();
+                    break;
+                case ItemTier.VoidTier1:
+                case ItemTier.VoidTier2:
+                case ItemTier.VoidTier3:
+                case ItemTier.VoidBoss:
+                    spawnCard = iscDuplicatorMilitary.WaitForCompletion();
+                    nonDefaultName = "Duplicator" + tier.ToString();
+                    break;
+                case ItemTier.NoTier:
+                    spawnCard = iscDuplicatorMilitary.WaitForCompletion();
+                    nonDefaultName = "DuplicatorVoid";
+                    break;
+            }
+            GameObject printer = SpawnAt(spawnCard.prefab, slot);
+            if (nonDefaultName != null)
+                printer.name = nonDefaultName;
+        }
+
+        // Void printers use the red printer, so they cost the same
+        private static int GetTierCost(ItemTier tier)
+        {
+            switch (tier)
+            {
+                case ItemTier.Tier1:
+                    return Math.Max(0, ModConfig.PrinterDirectorCostWhite.Value);
+                case ItemTier.Tier2:
+                    return Math.Max(0, ModConfig.PrinterDirectorCostGreen.Value);
+                case ItemTier.Boss:
+                    return Math.Max(0, ModConfig.PrinterDirectorCostBoss.Value);
+                default:
+                    return Math.Max(0, ModConfig.PrinterDirectorCostRed.Value);
+            }
+        }
+
+        // The tier is rolled among the ones the director can afford, since printers cost by their kind
+        private class PrinterCard : DirectorCard
+        {
+            public readonly List<ItemTier> tiers = new List<ItemTier>();
+
+            public PrinterCard() : base("Printer", null, ModConfig.PrinterDirectorWeight, () => ModConfig.PrinterAmount.Value) { }
+
+            protected override int CheapestCost()
+            {
+                var choices = GetTierChoices();
+                return choices.Count == 0 ? int.MaxValue : choices.Min(choice => GetTierCost(choice.tier));
+            }
+
+            protected override int PickCost(int credits)
+            {
+                WeightedSelection<ItemTier> weightedSelection = new WeightedSelection<ItemTier>();
+                foreach (var choice in GetTierChoices())
                 {
-                    if (!TryGetRandomPrinterTier(out var tier))
-                    {
-                        Log.LogWarning("No printer tiers with a valid weight; skipping printers.");
-                        break;
-                    }
-                    SpawnCard spawnCard = null;
-                    string nonDefaultName = null;
-                    switch (tier)
-                    {
-                        case ItemTier.Tier1:
-                            spawnCard = iscDuplicator.WaitForCompletion();
-                            break;
-                        case ItemTier.Tier2:
-                            spawnCard = iscDuplicatorLarge.WaitForCompletion();
-                            break;
-                        case ItemTier.Tier3:
-                            spawnCard = iscDuplicatorMilitary.WaitForCompletion();
-                            break;
-                        case ItemTier.Boss:
-                            spawnCard = iscDuplicatorWild.WaitForCompletion();
-                            break;
-                        case ItemTier.VoidTier1:
-                        case ItemTier.VoidTier2:
-                        case ItemTier.VoidTier3:
-                        case ItemTier.VoidBoss:
-                            spawnCard = iscDuplicatorMilitary.WaitForCompletion();
-                            nonDefaultName = "Duplicator" + tier.ToString();
-                            break;
-                        case ItemTier.NoTier:
-                            spawnCard = iscDuplicatorMilitary.WaitForCompletion();
-                            nonDefaultName = "DuplicatorVoid";
-                            break;
-                    }
-                    GameObject printer = spawnCard.DoSpawn(DicPrinters[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
-                    if (!printer)
-                        continue;
-                    if (nonDefaultName != null)
-                        printer.name = nonDefaultName;
-                    printer.transform.eulerAngles = DicPrinters[i].Rotation;
+                    if (GetTierCost(choice.tier) <= credits)
+                        weightedSelection.AddChoice(choice.tier, choice.weight);
                 }
+                ItemTier tier = weightedSelection.Evaluate(UnityEngine.Random.value);
+                tiers.Add(tier);
+                return GetTierCost(tier);
             }
         }
 
@@ -186,15 +239,15 @@ namespace BazaarIsMyHaven
             DicPrinters.Add(random[8], new SpawnCardStruct(new Vector3(-146f, -25.3f, -16.0f), new Vector3(0.0f, 100.0f, 0.0f)));
         }
 
-        private bool TryGetRandomPrinterTier(out ItemTier tier)
+        private static List<(ItemTier tier, float weight)> GetTierChoices()
         {
-            WeightedSelection<ItemTier> weightedSelection = new WeightedSelection<ItemTier>();
+            var choices = new List<(ItemTier tier, float weight)>();
 
             //Same localized helper to handle weights and counts and avoid empty choices.
             void AddTier(ItemTier choice, float weight, int availableCount)
             {
                 if (availableCount > 0 && weight > 0)
-                    weightedSelection.AddChoice(choice, weight);
+                    choices.Add((choice, weight));
             }
 
             AddTier(ItemTier.Tier1, ModConfig.PrinterTier1Weight.Value, Run.instance.availableTier1DropList.Count);
@@ -208,13 +261,7 @@ namespace BazaarIsMyHaven
             int voidCount = Run.instance.availableVoidTier1DropList.Count + Run.instance.availableVoidTier2DropList.Count +
                 Run.instance.availableVoidTier3DropList.Count + Run.instance.availableVoidBossDropList.Count;
             AddTier(ItemTier.NoTier, ModConfig.PrinterTierVoidAnyWeight.Value, voidCount);
-
-            tier = ItemTier.NoTier;
-            if (weightedSelection.Count == 0)
-                return false;
-
-            tier = weightedSelection.Evaluate(UnityEngine.Random.value);
-            return true;
+            return choices;
         }
     }
 }
