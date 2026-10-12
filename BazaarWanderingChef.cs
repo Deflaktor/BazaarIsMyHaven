@@ -21,6 +21,8 @@ namespace BazaarIsMyHaven
 
         List<CraftableCatalog.RecipeEntry> possibleRecipes = null;
         ShopTerminalBehavior cauldron = null;
+        GameObject chef = null;
+        DirectorCard card;
 
         public override void Preload()
         {
@@ -55,12 +57,54 @@ namespace BazaarIsMyHaven
             possibleRecipes = null;
             cauldron = null;
         }
+        public override void AddDirectorCards(List<DirectorCard> cards)
+        {
+            card = null;
+            if (ModConfig.WanderingChefSectionEnabled.Value)
+            {
+                if (!ModConfig.WanderingChefUnrestrictedCrafting.Value &&
+                    (allAvailableTargetPickupIndexes == null || allAvailableTargetPickupIndexes.Length == 0))
+                {
+                    Log.LogWarning("No recipes; skipping the Wandering Chef this visit.");
+                    return;
+                }
+                // with CraftableRecipesOnly, the director's final pass may still send him away
+                card = new DirectorCard("Wandering CHEF", ModConfig.WanderingChefDirectorCost, ModConfig.WanderingChefDirectorWeight, () => 1, allowLatePicks: false);
+                cards.Add(card);
+            }
+        }
+
         public override void SetupBazaar()
         {
-            if (ModConfig.WanderingChefSectionEnabled.Value)
+            chef = null;
+            cauldron = null;
+            if (card != null && card.Count > 0)
             {
                 SpawnWanderingChef();
             }
+        }
+
+        // Shops roll their items in their own Start, so the Bazaar's stock is only known now
+        public override int CheckAfterSetup()
+        {
+            if (!chef || ModConfig.WanderingChefUnrestrictedCrafting.Value || !ModConfig.WanderingChefCraftableRecipesOnly.Value)
+            {
+                return 0;
+            }
+            if (TryChooseCraftableRecipe())
+            {
+                return 0;
+            }
+
+            Log.LogInfo("No craftable recipe for the Wandering Chef; the director spends his credits on something else.");
+            NetworkServer.Destroy(chef);
+            if (cauldron)
+            {
+                NetworkServer.Destroy(cauldron.gameObject);
+            }
+            chef = null;
+            cauldron = null;
+            return card.Spent;
         }
         private void ShopTerminalBehavior_SetPickup(On.RoR2.ShopTerminalBehavior.orig_SetPickup orig, ShopTerminalBehavior self, UniquePickup newPickup, bool newHidden)
         {
@@ -368,50 +412,130 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private void SpawnWanderingChef()
+        // Continues the recipe rotation with the next target that a player can cook from the Bazaar's stock and their inventory
+        private bool TryChooseCraftableRecipe()
         {
-            if (!ModConfig.WanderingChefUnrestrictedCrafting.Value &&
-                (allAvailableTargetPickupIndexes == null || allAvailableTargetPickupIndexes.Length == 0))
+            if (allAvailableTargetPickupIndexes == null || allAvailableTargetPickupIndexes.Length == 0 || allAvailableRecipes == null)
             {
-                Log.LogWarning("No recipes; skipping the Wandering Chef this visit.");
-                return;
+                return false;
             }
 
+            var players = GetPlayerIngredients();
+            for (int step = 1; step <= allAvailableTargetPickupIndexes.Length; step++)
+            {
+                int index = (randomTargetPickupIndex + step) % allAvailableTargetPickupIndexes.Length;
+                var craftableRecipes = allAvailableRecipes[allAvailableTargetPickupIndexes[index]].Where(recipe => IsCraftable(recipe, players)).ToList();
+                if (craftableRecipes.Count > 0)
+                {
+                    randomTargetPickupIndex = index;
+                    possibleRecipes = craftableRecipes;
+                    if (cauldron)
+                    {
+                        cauldron.GenerateNewPickupServer();
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Needing two of the same ingredient is not checked
+        private bool IsCraftable(CraftableCatalog.RecipeEntry recipe, List<(Inventory inventory, HashSet<PickupIndex> bazaarStock)> players)
+        {
+            return players.Any(player => recipe.possibleIngredients.All(slot => slot.pickups != null &&
+                slot.pickups.Any(pickup => player.bazaarStock.Contains(pickup) || InventoryContainsPickup(player.inventory, pickup))));
+        }
+
+        // What each player can get in the Bazaar: the shops' items they can still buy, and scrap if a Scrapper is there
+        private List<(Inventory inventory, HashSet<PickupIndex> bazaarStock)> GetPlayerIngredients()
+        {
+            var terminals = UnityEngine.Object.FindObjectsOfType<ShopTerminalBehavior>();
+            bool hasScrapper = UnityEngine.Object.FindObjectOfType<ScrapperController>();
+            var players = new List<(Inventory inventory, HashSet<PickupIndex> bazaarStock)>();
+            foreach (var pc in PlayerCharacterMasterController.instances)
+            {
+                var inventory = pc && pc.master ? pc.master.inventory : null;
+                if (!inventory)
+                {
+                    continue;
+                }
+
+                var bazaarStock = new HashSet<PickupIndex>();
+                foreach (var terminal in terminals)
+                {
+                    var pickup = terminal != cauldron ? GetBuyablePickup(terminal, pc) : PickupIndex.none;
+                    if (pickup != PickupIndex.none)
+                    {
+                        bazaarStock.Add(pickup);
+                    }
+                }
+                if (hasScrapper)
+                {
+                    AddScrap(bazaarStock, inventory, ItemTier.Tier1, RoR2Content.Items.ScrapWhite);
+                    AddScrap(bazaarStock, inventory, ItemTier.Tier2, RoR2Content.Items.ScrapGreen);
+                    AddScrap(bazaarStock, inventory, ItemTier.Tier3, RoR2Content.Items.ScrapRed);
+                    AddScrap(bazaarStock, inventory, ItemTier.Boss, RoR2Content.Items.ScrapYellow);
+                }
+                players.Add((inventory, bazaarStock));
+            }
+            return players;
+        }
+
+        // Instanced shops have their own stock for each player; display-only shops are never available
+        private static PickupIndex GetBuyablePickup(ShopTerminalBehavior terminal, PlayerCharacterMasterController pc)
+        {
+            if (terminal.TryGetComponent(out InstancedPurchase instance))
+            {
+                var state = instance.GetOrOriginal(pc);
+                return state.available && !state.hasBeenPurchased ? state.pickup.pickupIndex : PickupIndex.none;
+            }
+            var purchaseInteraction = terminal.GetComponent<PurchaseInteraction>();
+            return purchaseInteraction && purchaseInteraction.available && !terminal.hasBeenPurchased ? terminal.pickup.pickupIndex : PickupIndex.none;
+        }
+
+        // A Scrapper turns an item into the scrap of its tier
+        private static void AddScrap(HashSet<PickupIndex> bazaarStock, Inventory inventory, ItemTier tier, ItemDef scrap)
+        {
+            if (scrap && inventory.GetTotalItemCountOfTier(tier) > 0)
+            {
+                bazaarStock.Add(PickupCatalog.FindPickupIndex(scrap.itemIndex));
+            }
+        }
+
+        private void SpawnWanderingChef()
+        {
             var chefPos = new SpawnCardStruct(new Vector3(-70.7306f, -23.7171f, -30.4022f), new Vector3(0f, 220f, 0f));
             var cookingPlacePos = new SpawnCardStruct(new Vector3(-72.4183f, -24.4958f, -28.9289f), new Vector3(0f, 220f, 0f));
 
-            int count = 0;
-            if (ModConfig.SpawnCountByStage.Value)
+            if (!ModConfig.WanderingChefUnrestrictedCrafting.Value)
             {
-                count = SetCountbyGameStage(1, ModConfig.SpawnCountOffset.Value);
-            }
-            else
-            {
-                count = 1;
-            }
-            if (count > 0)
-            {
-                if(!ModConfig.WanderingChefUnrestrictedCrafting.Value)
+                if (ModConfig.WanderingChefCraftableRecipesOnly.Value)
+                {
+                    // chosen in CheckAfterSetup; until then the wok shows nothing
+                    possibleRecipes = null;
+                }
+                else
                 {
                     NextRecipe();
                 }
-
-                // Wandering Chef
-                GameObject gameObject = GameObject.Instantiate(mealPrep.WaitForCompletion(), chefPos.Position, Quaternion.identity);
-                gameObject.transform.eulerAngles = chefPos.Rotation;
-                gameObject.name = "WanderingChef";
-                NetworkServer.Spawn(gameObject);
-
-                // Cooking Cauldron
-                gameObject = GameObject.Instantiate(ChefWok_WhitesAndGreens.WaitForCompletion(), cookingPlacePos.Position, Quaternion.identity);
-                gameObject.transform.eulerAngles = cookingPlacePos.Rotation;
-                gameObject.name = "CookingCauldron";
-                var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
-                purchaseInteraction.NetworkcostType = CostTypeIndex.None;
-                purchaseInteraction.Networkavailable = false;
-                cauldron = gameObject.GetComponent<ShopTerminalBehavior>();
-                NetworkServer.Spawn(gameObject);
             }
+
+            // Wandering Chef
+            GameObject gameObject = GameObject.Instantiate(mealPrep.WaitForCompletion(), chefPos.Position, Quaternion.identity);
+            gameObject.transform.eulerAngles = chefPos.Rotation;
+            gameObject.name = "WanderingChef";
+            NetworkServer.Spawn(gameObject);
+            chef = gameObject;
+
+            // Cooking Cauldron
+            gameObject = GameObject.Instantiate(ChefWok_WhitesAndGreens.WaitForCompletion(), cookingPlacePos.Position, Quaternion.identity);
+            gameObject.transform.eulerAngles = cookingPlacePos.Rotation;
+            gameObject.name = "CookingCauldron";
+            var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
+            purchaseInteraction.NetworkcostType = CostTypeIndex.None;
+            purchaseInteraction.Networkavailable = false;
+            cauldron = gameObject.GetComponent<ShopTerminalBehavior>();
+            NetworkServer.Spawn(gameObject);
         }
     }
 }

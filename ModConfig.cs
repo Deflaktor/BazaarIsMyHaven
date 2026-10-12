@@ -137,6 +137,8 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<bool> WanderingChefUnrestrictedCrafting;
         public static ConfigEntry<bool> WanderingChefCraftableRecipesOnly;
         public static ConfigEntry<bool> WanderingChefBuyToInventory;
+        public static ConfigEntry<int> WanderingChefDirectorCost;
+        public static ConfigEntry<float> WanderingChefDirectorWeight;
 
         // drones
         public static ConfigEntry<bool> DronesSectionEnabled;
@@ -285,10 +287,12 @@ namespace BazaarIsMyHaven
             
 
             // 12 Wandering Chef
-            WanderingChefSectionEnabled = config.Bind("12 WanderingChef", "SectionEnabled", true, "Enables or disables the Wandering Chef section. Enabling spawns a Wandering Chef near the Lunar Shop.");
+            WanderingChefSectionEnabled = config.Bind("12 WanderingChef", "SectionEnabled", true, "Enables or disables the Wandering Chef section. Enabling lets the director spawn a Wandering Chef near the Lunar Shop.");
             WanderingChefUnrestrictedCrafting = config.Bind("12 WanderingChef", "UnrestrictedCrafting", false, "Allows you to craft anything. Otherwise crafting is restricted to a single randomly selected target pickup.");
-            WanderingChefCraftableRecipesOnly = config.Bind("12 WanderingChef", "CraftableRecipesOnly", true, "Only if UnrestrictedCrafting is false: Select a recipe based on available ingredients in the bazaar and the players current inventory.");
+            WanderingChefCraftableRecipesOnly = config.Bind("12 WanderingChef", "CraftableRecipesOnly", true, "Only if UnrestrictedCrafting is false: The Wandering Chef only offers a recipe that a player can cook from their inventory and what the Bazaar offers (items in printers, Lunar Buds, Equipment Terminals and cauldrons, and scrap if there are Scrappers). If there is none, he leaves and the director spends his credits on something else.");
             WanderingChefBuyToInventory = config.Bind("12 WanderingChef", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
+            WanderingChefDirectorCost = config.Bind("12 WanderingChef", "DirectorCost", 10, "Director credits the Wandering Chef costs.");
+            WanderingChefDirectorWeight = config.Bind("12 WanderingChef", "DirectorWeight", 1f, "How likely the director picks the Wandering Chef, compared to the DirectorWeight of the other interactables.");
 
             // 13 Drones
             DronesSectionEnabled = config.Bind("13 Drones", "SectionEnabled", true, "Enables or disables the Drones section. Only works if the Alloyed Collective is enabled for the run. Enabling lets the director spawn the drone stations below. If one that uses drones spawns, the players' drones come along into the Bazaar and wait at one spot.");
