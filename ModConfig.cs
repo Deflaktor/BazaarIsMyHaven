@@ -117,6 +117,13 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<bool> WanderingChefCraftableRecipesOnly;
         public static ConfigEntry<bool> WanderingChefBuyToInventory;
 
+        // drones
+        public static ConfigEntry<bool> DronesSectionEnabled;
+        public static ConfigEntry<bool> DronesSpawnDroneCombinerStation;
+        public static ConfigEntry<bool> DronesSpawnDroneUpgradeStation;
+        public static ConfigEntry<bool> DronesSpawnDroneScrapper;
+        public static ConfigEntry<bool> DronesSpawnTripleDroneShop;
+
         private const string itemTiersString = "Tier1 | Tier2 | Tier3 | Lunar | Boss | VoidTier1 | VoidTier2 | VoidTier3 | VoidBoss | FoodTier";
         private const string itemKeyWordsExplanation = $"Can use:\n - internal item names(see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)\nFollows ItemStringParser format.";
         private static bool reloading;
@@ -233,6 +240,13 @@ namespace BazaarIsMyHaven
             WanderingChefUnrestrictedCrafting = config.Bind("12 WanderingChef", "UnrestrictedCrafting", false, "Allows you to craft anything. Otherwise crafting is restricted to a single randomly selected target pickup.");
             WanderingChefCraftableRecipesOnly = config.Bind("12 WanderingChef", "CraftableRecipesOnly", true, "Only if UnrestrictedCrafting is false: Select a recipe based on available ingredients in the bazaar and the players current inventory.");
             WanderingChefBuyToInventory = config.Bind("12 WanderingChef", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
+
+            // 13 Drones
+            DronesSectionEnabled = config.Bind("13 Drones", "SectionEnabled", true, "Enables or disables the Drones section. Only works if the Alloyed Collective is enabled for the run. Enabling brings the players' drones into the Bazaar, where they wait at one spot, so that the drone stations below can use them.");
+            DronesSpawnDroneCombinerStation = config.Bind("13 Drones", "SpawnDroneCombinerStation", true, "Spawns a Drone Combiner Station.");
+            DronesSpawnDroneUpgradeStation = config.Bind("13 Drones", "SpawnDroneUpgradeStation", true, "Spawns a Drone Upgrade Station.");
+            DronesSpawnDroneScrapper = config.Bind("13 Drones", "SpawnDroneScrapper", true, "Spawns a Drone Scrapper.");
+            DronesSpawnTripleDroneShop = config.Bind("13 Drones", "SpawnTripleDroneShop", true, "Spawns a Triple Drone Shop.");
 
             RefreshDerivedData(config);
             LunarShopAmountDependingOnCharacter.SettingChanged += LunarShopCharacterAmountsChanged;
