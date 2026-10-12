@@ -75,6 +75,7 @@ namespace BazaarIsMyHaven
                     {
                         self.cost = ModConfig.EquipmentCost.Value;
                         self.Networkcost = ModConfig.EquipmentCost.Value;
+                        self.NetworkcostType = ModConfig.EquipmentCostType.Value;
                     }
                 }
             }
