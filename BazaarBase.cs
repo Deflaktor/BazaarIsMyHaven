@@ -16,10 +16,6 @@ namespace BazaarIsMyHaven
     public abstract class BazaarBase
     {
         protected System.Random RNG = new System.Random();
-        protected readonly DirectorPlacementRule DirectPlacement = new DirectorPlacementRule
-        {
-            placementMode = DirectorPlacementRule.PlacementMode.Direct
-        };
 
         public abstract void Preload();
         public abstract void SetupBazaar();
@@ -50,47 +46,6 @@ namespace BazaarIsMyHaven
             }
             return result;
         }
-        protected List<GameObject> DoSpawnCard(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<InteractableSpawnCard> card, int max)
-        {
-            int count = 0;
-            if (ModConfig.SpawnCountByStage.Value) count = SetCountbyGameStage(max, ModConfig.SpawnCountOffset.Value);
-            else count = max;
-            List<GameObject> result = new List<GameObject>();
-            for (int i = 0; i < count; i++)
-            {
-                SpawnCard spawnCard = card.WaitForCompletion();
-                GameObject gameObject = spawnCard.DoSpawn(keyValuePairs[i].Position, Quaternion.identity, new DirectorSpawnRequest(spawnCard, DirectPlacement, Run.instance.runRNG)).spawnedInstance;
-                if (!gameObject)
-                {
-                    Log.LogWarning($"Could not spawn {spawnCard.name} at slot {i}.");
-                    continue;
-                }
-                gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
-                result.Add(gameObject);
-            }
-            return result;
-        }
-        protected virtual List<GameObject> DoSpawnGameObject(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<GameObject> card, int max)
-        {
-            int count = 0;
-            if (ModConfig.SpawnCountByStage.Value)
-            {
-                count = SetCountbyGameStage(max, ModConfig.SpawnCountOffset.Value);
-            }
-            else
-            {
-                count = max;
-            }
-            List<GameObject> result = new List<GameObject>();
-            for (int i = 0; i < count; i++)
-            {
-                GameObject gameObject = GameObject.Instantiate(card.WaitForCompletion(), keyValuePairs[i].Position, Quaternion.identity);
-                gameObject.transform.eulerAngles = keyValuePairs[i].Rotation;
-                NetworkServer.Spawn(gameObject);
-                result.Add(gameObject);
-            }
-            return result;
-        }
 
         public static void SpawnEffect(AsyncOperationHandle<GameObject> effect, Vector3 position, Color32 color, float scale = 1f)
         {
@@ -101,12 +56,6 @@ namespace BazaarIsMyHaven
                 scale = scale,
                 color = color
             }, true);
-        }
-        protected int SetCountbyGameStage(int max, int offset = 0)
-        {
-            int stageCount = Run.instance.stageClearCount;
-            int count = Math.Min(stageCount + offset, max);
-            return Math.Max(0, count);
         }
 
         protected bool IsCurrentMapInBazaar()
