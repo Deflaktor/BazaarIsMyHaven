@@ -12,7 +12,7 @@ namespace BazaarIsMyHaven
     {
         public static DroneSpot instance;
 
-        private static readonly Vector3 Position = new Vector3(-85.1194f, -21.4501f, 2.1068f);
+        private static readonly Vector3 Position = new Vector3(-79.9249f, -37.4302f, -17.9876f);
         // drones are spread out in a spiral, about this far apart
         private const float Spacing = 1.5f;
         private const float GoldenAngle = 2.39996f;
