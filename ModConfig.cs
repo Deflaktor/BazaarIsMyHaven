@@ -170,7 +170,7 @@ namespace BazaarIsMyHaven
             // 02 Printer
             PrinterSectionEnabled = config.Bind("02 Printer", "SectionEnabled", true, "Enables or disables the Printer section.");
             PrinterMaxAmount = config.Bind("02 Printer", "MaxAmount", 9, new ConfigDescription("Maximum number of printers the director can spawn (max 9).", new AcceptableValueRange<int>(0, 9)));
-            PrinterDirectorWeight = config.Bind("02 Printer", "DirectorWeight", 0.5f, "How likely the director picks a printer, compared to the DirectorWeight of the other interactables. Which tier it prints is rolled by the tier weights below.");
+            PrinterDirectorWeight = config.Bind("02 Printer", "DirectorWeight", 1f, "How likely the director picks a printer, compared to the DirectorWeight of the other interactables. Which tier it prints is rolled by the tier weights below.");
             PrinterDirectorCostWhite = config.Bind("02 Printer", "DirectorCostWhite", 5, "Director credits a printer for white (Tier 1) items costs.");
             PrinterDirectorCostGreen = config.Bind("02 Printer", "DirectorCostGreen", 10, "Director credits a printer for green (Tier 2) items costs.");
             PrinterDirectorCostRed = config.Bind("02 Printer", "DirectorCostRed", 15, "Director credits a printer for red (Tier 3) or Void items costs.");
@@ -189,7 +189,7 @@ namespace BazaarIsMyHaven
             CauldronSectionEnabled = config.Bind("03 Cauldron", "SectionEnabled", true, "Enables or disables the Cauldron section.");
             CauldronMaxAmount = config.Bind("03 Cauldron", "MaxAmount", 7, new ConfigDescription("Maximum number of cauldrons the director can spawn (max 7).", new AcceptableValueRange<int>(0, 7)));
             CauldronDirectorCost = config.Bind("03 Cauldron", "DirectorCost", 10, "Director credits a cauldron costs.");
-            CauldronDirectorWeight = config.Bind("03 Cauldron", "DirectorWeight", 0.5f, "How likely the director picks a cauldron, compared to the DirectorWeight of the other interactables. Which type it is is rolled by the weights below.");
+            CauldronDirectorWeight = config.Bind("03 Cauldron", "DirectorWeight", 1f, "How likely the director picks a cauldron, compared to the DirectorWeight of the other interactables. Which type it is is rolled by the weights below.");
             CauldronWhiteToGreenWeight = config.Bind("03 Cauldron", "WhiteToGreenWeight", 0.75f, "Weight for White->Green cauldrons.");
             CauldronWhiteToGreenCost = config.Bind("03 Cauldron", "WhiteToGreenCost", 3, "Number of White items required for Green conversion.");
             CauldronGreenToRedWeight = config.Bind("03 Cauldron", "GreenToRedWeight", 0.25f, "Weight for Green->Red cauldrons.");
