@@ -1,3 +1,4 @@
+using BepInEx.Logging;
 using RoR2;
 using RoR2.Skills;
 using System;
@@ -21,6 +22,20 @@ namespace BazaarIsMyHaven
 
         private readonly Dictionary<PlayerCharacterMasterController, int> donationsDuringRun = new Dictionary<PlayerCharacterMasterController, int>();
 
+        // Rewards are rolled several times a second, so each warning is logged once per run
+        private readonly ManualLogSource rewardLog = new ManualLogSource(Main.PluginName);
+        private readonly HashSet<string> loggedRewardWarnings = new HashSet<string>();
+
+        public BazaarDonate()
+        {
+            rewardLog.LogEvent += (sender, args) =>
+            {
+                string message = args.Data?.ToString();
+                if (message != null && loggedRewardWarnings.Add(message))
+                    Log.GetSource().Log(args.Level, message);
+            };
+        }
+
         public override void Preload()
         {
             BlueprintStation = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/BlueprintStation.prefab");
@@ -38,6 +53,7 @@ namespace BazaarIsMyHaven
         public override void RunStart()
         {
             donationsDuringRun.Clear();
+            loggedRewardWarnings.Clear();
         }
 
         public override void RunEnd()
@@ -89,9 +105,9 @@ namespace BazaarIsMyHaven
                         return;
 
                     var playerStruct = Main.instance.GetPlayerStruct(pc);
-                    if (playerStruct.RewardCount < ModConfig.DonateRewardLimitPerVisit.Value && donationsDuringRun.GetValueOrDefault(pc) < ModConfig.DonateRewardLimitPerRun.Value)
+                    if (CanGetReward(pc))
                     {
-                        if (!TryGetReward(characterBody, donationsDuringRun.GetValueOrDefault(pc), out var resolvedItems, out int tier))
+                        if (!TryGetReward(characterBody.bodyIndex, donationsDuringRun.GetValueOrDefault(pc), out var resolvedItems, out int tier))
                             return;
 
                         Helper.GivePickups(characterBody, resolvedItems, self.transform.position + Vector3.up * 6.0f, true);
@@ -107,7 +123,13 @@ namespace BazaarIsMyHaven
             orig(self, activator);
         }
 
-        private bool TryGetReward(CharacterBody characterBody, int donations, out Dictionary<PickupIndex, int> resolvedItems, out int tier)
+        private bool CanGetReward(PlayerCharacterMasterController pc)
+        {
+            return Main.instance.GetPlayerStruct(pc).RewardCount < ModConfig.DonateRewardLimitPerVisit.Value
+                && donationsDuringRun.GetValueOrDefault(pc) < ModConfig.DonateRewardLimitPerRun.Value;
+        }
+
+        private bool TryGetReward(BodyIndex bodyIndex, int donations, out Dictionary<PickupIndex, int> resolvedItems, out int tier)
         {
             tier = 0;
             resolvedItems = new Dictionary<PickupIndex, int>();
@@ -122,7 +144,7 @@ namespace BazaarIsMyHaven
             combined.RemoveAll(item => item.weight <= 0);
             if (combined.Count == 0)
             {
-                Log.LogWarning("No donation lists with a valid weight; no coins charged.");
+                rewardLog.LogWarning("No donation lists with a valid weight; no coins charged.");
                 return false;
             }
 
@@ -151,17 +173,17 @@ namespace BazaarIsMyHaven
             switch (tier)
             {
                 case 1:
-                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList1.Value, resolvedItems, Log.GetSource(), false);
+                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList1.Value, resolvedItems, rewardLog, false);
                     break;
                 case 2:
-                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList2.Value, resolvedItems, Log.GetSource(), false);
+                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList2.Value, resolvedItems, rewardLog, false);
                     break;
                 case 3:
-                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList3.Value, resolvedItems, Log.GetSource(), false);
+                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList3.Value, resolvedItems, rewardLog, false);
                     break;
                 case 4:
-                    var rewardList = ModConfig.DonateRewardListCharacters.GetValueOrDefault(characterBody.bodyIndex, ModConfig.DonateRewardListCharacterDefault).Value;
-                    ItemStringParser.ItemStringParser.ParseItemString(rewardList, resolvedItems, Log.GetSource(), false);
+                    var rewardList = ModConfig.DonateRewardListCharacters.GetValueOrDefault(bodyIndex, ModConfig.DonateRewardListCharacterDefault).Value;
+                    ItemStringParser.ItemStringParser.ParseItemString(rewardList, resolvedItems, rewardLog, false);
                     break;
             }
             foreach (var entry in resolvedItems.ToArray())
@@ -174,7 +196,7 @@ namespace BazaarIsMyHaven
 
             if (resolvedItems.Count == 0)
             {
-                Log.LogWarning("The chosen donation list has no valid rewards; no coins charged.");
+                rewardLog.LogWarning("The chosen donation list has no valid rewards; no coins charged.");
                 return false;
             }
             return true;
