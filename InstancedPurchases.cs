@@ -274,6 +274,24 @@ namespace BazaarIsMyHaven
             }
         }
 
+        // Shows a changed state to its player only; resending an empty bud would replay its closing sound
+        public static void UpdatePlayer(GameObject shop, PlayerCharacterMasterController pc)
+        {
+            if (!NetworkServer.active || !pc || !shop.TryGetComponent(out InstancedPurchase instance))
+            {
+                return;
+            }
+
+            if (pc.hasAuthority)
+            {
+                RestoreHostView(shop);
+            }
+            else
+            {
+                instance.QueueUpdate(pc);
+            }
+        }
+
         private static byte[] CreateUpdateMessage(NetworkIdentity identity, int channel, uint shopMask, uint purchaseMask)
         {
             var writer = new NetworkWriter();
