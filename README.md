@@ -30,7 +30,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
 
 - **Other Tweaks**:
   - Extra decoration in the Bazaar.
-  - Settings to gradually increase interactables as you complete more stages during the run.
+  - A director that decides which interactables appear, with more credits the further you are into the run.
   - Config changes apply from the next run, without restarting the game.
 
 - **Compatiblity with other Mods**
@@ -41,11 +41,18 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
 
 In-detail descriptions for some of the settings:
 
-### General - SpawnCountByStage
+### General - Director
 
-This settings makes it so that the more stage are completed, the more interactables are spawned in the Bazaar. If you just start the run and go immediately to the Bazaar you will see few interactables. But as you progress further, more and more interactables will get spawned. Up to the configured limit of each respective interactable. The `SpawnCountByStage` setting enables this behavior. There is also the `SpawnCountOffset` which allows you to either add a baseline amount of interactables or make interactables increase even later. Can be both positive or negative. The formula is a follows:
+Like the game's own scene director, a director decides which interactables appear in the Bazaar. On every visit it gets credits:
 
-Formula: `Amount of Interactables per Type = Number of Stages Completed + SpawnCountOffset`
+Formula: `Credits = DirectorExtraCredits + DirectorCreditsPerStage x Number of Stages Completed`
+
+It spends them at random on the interactables of the enabled sections, until it can't afford anything more. Each interactable has a `DirectorCost` and a `DirectorWeight`. The weight sets how likely the director picks it compared to the others, and `Amount` limits how many of a kind can spawn. By default, a printer costs 5 to 15 credits depending on its tier, and Lunar Buds cost nothing, so they always spawn up to their `Amount`.
+
+Two interactables work differently:
+
+- **Scrappers**: the director picks them only once, and then all `Amount` Scrappers spawn.
+- **Wandering Chef**: with `CraftableRecipesOnly`, he only offers a recipe that a player can cook from their inventory and what the Bazaar offers. If there is none, he leaves again and the director spends his credits on something else.
 
 ### Newt - DeathBehavior
 
@@ -101,9 +108,9 @@ Examples:
 
 ### Drones
 
-If the Alloyed Collective is enabled for the run, the Drones section spawns a Drone Combiner Station, a Drone Upgrade Station, a Drone Scrapper and a Triple Drone Shop. Each one has its own setting.
+If the Alloyed Collective is enabled for the run, the Drones section lets the director spawn a Drone Combiner Station, a Drone Upgrade Station, a Drone Scrapper and a Triple Drone Shop. Each one has its own settings.
 
-Drones normally stay behind when you enter the Bazaar, but these stations only work with drones that are there. So this section brings the players' drones along. They wait at one spot without moving or attacking. Drones that show up elsewhere, such as bought or upgraded ones, are moved there after 2 seconds. On the next stage, drones behave as usual again.
+Drones normally stay behind when you enter the Bazaar, but the Drone Combiner Station, the Drone Upgrade Station and the Drone Scrapper only work with drones that are there. So when one of them spawns, the players' drones come along. They wait at one spot without moving or attacking. Drones that show up elsewhere, such as bought or upgraded ones, are moved there after 2 seconds. On the next stage, drones behave as usual again.
 
 ## RewardListAvailableCharacters - Valid Keywords
 
