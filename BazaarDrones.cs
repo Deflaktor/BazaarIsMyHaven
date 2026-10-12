@@ -50,23 +50,19 @@ namespace BazaarIsMyHaven
                 return;
             }
 
-            AddStation(cards, "Drone Combiner Station", ModConfig.DronesSpawnDroneCombinerStation, ModConfig.DronesDroneCombinerStationDirectorCost, ModConfig.DronesDroneCombinerStationDirectorWeight,
+            AddStation(cards, "Drone Combiner Station", ModConfig.DronesDroneCombinerStationDirectorCost, ModConfig.DronesDroneCombinerStationDirectorWeight,
                 DroneCombinerStation, new SpawnCardStruct(new Vector3(-89.4022f, -23.4619f, -5.0529f), new Vector3(0f, 150f, 350f)), needsDrones: true);
-            AddStation(cards, "Drone Upgrade Station", ModConfig.DronesSpawnDroneUpgradeStation, ModConfig.DronesDroneUpgradeStationDirectorCost, ModConfig.DronesDroneUpgradeStationDirectorWeight,
+            AddStation(cards, "Drone Upgrade Station", ModConfig.DronesDroneUpgradeStationDirectorCost, ModConfig.DronesDroneUpgradeStationDirectorWeight,
                 DroneUpgradeStation, new SpawnCardStruct(new Vector3(-85.1751f, -22.264f, -3.539f), new Vector3(0f, 150f, 270f)), needsDrones: true);
-            AddStation(cards, "Drone Scrapper", ModConfig.DronesSpawnDroneScrapper, ModConfig.DronesDroneScrapperDirectorCost, ModConfig.DronesDroneScrapperDirectorWeight,
+            AddStation(cards, "Drone Scrapper", ModConfig.DronesDroneScrapperDirectorCost, ModConfig.DronesDroneScrapperDirectorWeight,
                 DroneScrapper, new SpawnCardStruct(new Vector3(-91.9756f, -26.0923f, -48.0897f), new Vector3(0f, 315f, 0f)), needsDrones: true);
-            AddStation(cards, "Triple Drone Shop", ModConfig.DronesSpawnTripleDroneShop, ModConfig.DronesTripleDroneShopDirectorCost, ModConfig.DronesTripleDroneShopDirectorWeight,
+            AddStation(cards, "Triple Drone Shop", ModConfig.DronesTripleDroneShopDirectorCost, ModConfig.DronesTripleDroneShopDirectorWeight,
                 TripleDroneShop, new SpawnCardStruct(new Vector3(-64.3101f, -23.0074f, -19.7406f), new Vector3(0f, 300f, 6f)), needsDrones: false);
         }
 
-        private void AddStation(List<DirectorCard> cards, string name, ConfigEntry<bool> enabled, ConfigEntry<int> cost, ConfigEntry<float> weight,
+        private void AddStation(List<DirectorCard> cards, string name, ConfigEntry<int> cost, ConfigEntry<float> weight,
             AsyncOperationHandle<GameObject> prefab, SpawnCardStruct slot, bool needsDrones)
         {
-            if (!enabled.Value)
-            {
-                return;
-            }
             var station = new Station { card = new DirectorCard(name, cost, weight, () => 1), prefab = prefab, slot = slot, needsDrones = needsDrones };
             stations.Add(station);
             cards.Add(station.card);
