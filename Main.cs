@@ -65,6 +65,7 @@ namespace BazaarIsMyHaven
             bazaarMods.Add(new BazaarCleansingPool());
             bazaarMods.Add(new BazaarDecorate());
             bazaarMods.Add(new BazaarWanderingChef());
+            bazaarMods.Add(new BazaarDrones());
 
             pickupTakenOrbPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/MealPrep/PickupTakenOrbEffect.prefab");
             foreach (var bazaarMod in bazaarMods)
