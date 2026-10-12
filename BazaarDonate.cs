@@ -132,7 +132,7 @@ namespace BazaarIsMyHaven
                         playerStruct.RewardCount += 1;
                         donationsDuringRun[pc] = donationsDuringRun.GetValueOrDefault(pc) + 1;
                         networkUser.DeductLunarCoins((uint)self.Networkcost);
-                        ShowRewardEffects(self, networkUser, characterBody, resolvedItems, tier);
+                        ShowRewardEffects(self, characterBody, resolvedItems, tier);
                         SpawnEffect(ShrineUseEffect, self.transform.position, new Color32(64, 127, 255, 255), 5f);
                         // empty the buds right away if the limit is reached
                         var display = self.GetComponent<DonationRewardDisplay>();
@@ -237,23 +237,9 @@ namespace BazaarIsMyHaven
             return true;
         }
 
-        private void ShowRewardEffects(PurchaseInteraction self, NetworkUser networkUser, CharacterBody characterBody, Dictionary<PickupIndex, int> resolvedItems, int tier)
+        private void ShowRewardEffects(PurchaseInteraction self, CharacterBody characterBody, Dictionary<PickupIndex, int> resolvedItems, int tier)
         {
-            switch(tier)
-            {
-                case 1:
-                    ChatHelper.ThanksTipNormal(networkUser, characterBody.master.playerCharacterMasterController, resolvedItems);
-                    break;
-                case 2:
-                    ChatHelper.ThanksTipElite(networkUser, characterBody.master.playerCharacterMasterController, resolvedItems);
-                    break;
-                case 3:
-                    ChatHelper.ThanksTipPeculiar(networkUser, characterBody.master.playerCharacterMasterController, resolvedItems);
-                    break;
-                case 4:
-                    ChatHelper.ThanksTipCharacter(networkUser, characterBody.master.playerCharacterMasterController, resolvedItems);
-                    break;
-            }
+            ChatHelper.DonationThanks(characterBody, resolvedItems, tier);
 
             SpawnEffect(LevelUpEffect, self.transform.position, new Color32(255, 255, 255, 255), 3f);
             SpawnEffect(MoneyPackPickupEffect, self.transform.position, new Color32(255, 255, 255, 255), 3f);

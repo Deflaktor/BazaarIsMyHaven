@@ -242,7 +242,7 @@ namespace BazaarIsMyHaven
         }
         private void GlobalEventManager_OnHitAll(On.RoR2.GlobalEventManager.orig_OnHitAll orig, GlobalEventManager self, DamageInfo damageInfo, GameObject hitObject)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.NewtTrashTalk.Value && IsCurrentMapInBazaar() && NetworkServer.active && hitObject != null)
+            if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.NewtDialogue.Value != ShopKeeper.Dialogue.Off && IsCurrentMapInBazaar() && NetworkServer.active && hitObject != null)
             {
                 if (hitObject.name.StartsWith("ShopkeeperBody") && damageInfo.attacker != null)
                 {
@@ -267,7 +267,7 @@ namespace BazaarIsMyHaven
                     ShopKeeper.DeathCount++;
                     if (ModConfig.NewtDeathBehavior.Value == ShopKeeper.DeathState.Default)
                     {
-                        if(ModConfig.NewtTrashTalk.Value)
+                        if (ModConfig.NewtDialogue.Value == ShopKeeper.Dialogue.BazaarIsMyHome)
                         {
                             ChatHelper.ShowNewtDeath();
                         }
@@ -285,7 +285,7 @@ namespace BazaarIsMyHaven
             // Other bodies share the Newt's spawn state, e.g. SPEX in the Computational Exchange
             if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && IsCurrentMapInBazaar() && IsShopkeeper(self.outer.gameObject) && NetworkServer.active)
             {
-                if (ModConfig.NewtGreeting.Value)
+                if (ModConfig.NewtDialogue.Value != ShopKeeper.Dialogue.Off)
                 {
                     StartCoroutine(ShopWelcomeWord());
                 }

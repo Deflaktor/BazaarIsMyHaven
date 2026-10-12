@@ -1,0 +1,15 @@
+{
+	"strings":
+	{
+		"NEWT_WELCOME_1": "Shape returns. Good good.",
+		"NEWT_WELCOME_2": "Welcome welcome. Trade shapes. Trade.",
+		"NEWT_WELCOME_3": "Coins for shapes. Shapes for coins.",
+		"NEWT_WELCOME_4": "Come closer. Browse browse.",
+		"NEWT_WELCOME_5": "Lunar shapes waiting. Waiting for you.",
+		"NEWT_ANGRY_WELCOME_1": "You. Bad shape. Bad bad.",
+		"NEWT_ANGRY_WELCOME_2": "Remember your shape. Remember everything.",
+		"NEWT_ANGRY_WELCOME_3": "Back again. Will not forget. Never.",
+		"NEWT_ANGRY_WELCOME_4": "Narrow shape returns. Stay narrow.",
+		"NEWT_ANGRY_WELCOME_5": "Broke me once. Not again. Not again."
+	}
+}

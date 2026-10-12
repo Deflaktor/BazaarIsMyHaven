@@ -56,5 +56,10 @@ namespace BazaarIsMyHaven
         {
             Default, Tank, Ghost, Hostile
         }
+
+        public enum Dialogue
+        {
+            Off, Default, BazaarIsMyHome
+        }
     }
 }
