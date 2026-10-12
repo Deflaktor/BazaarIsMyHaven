@@ -23,7 +23,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
 - **Newt Behavior Options**:
   - Stop him from throwing you out.
   - Change what happens after you kill him.
-  - Extra dialogue lines.
+  - Let him greet you and comment on your purchases, in each player's language.
 
 - **Portal Options**:
   - Spawn a Bazaar portal after *every* teleporter event.
@@ -52,6 +52,14 @@ Two interactables work differently:
 
 - **Scrappers**: the director picks them only once, and then all `MaxAmount` Scrappers spawn.
 - **Wandering Chef**: with `CraftableRecipesOnly`, he only offers a recipe that a player can cook from their inventory and what the Bazaar offers. If there is none, he leaves again and the director spends his credits on something else.
+
+### Newt - Dialogue
+
+Controls what Newt says in chat:
+
+- `Off` -> Newt says nothing.
+- `Default` -> Newt uses the game's own lines, which the game itself never shows. He comments when you donate at the Donation Altar, buy from a Lunar Bud or hit him, and every player sees these lines in their own language. He also greets you when you arrive, in English. The rewards of the Donation Altar are shown as the game's usual pickup messages.
+- `BazaarIsMyHome` -> The greetings and remarks of the original BazaarIsMyHome mod, in the host's language.
 
 ### Newt - DeathBehavior
 
