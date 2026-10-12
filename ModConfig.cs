@@ -14,6 +14,8 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<bool> SpawnCountByStage;
         public static ConfigEntry<int> SpawnCountOffset;
         public static ConfigEntry<bool> AlwaysSpawnShopPortal;
+        public static ConfigEntry<int> DirectorExtraCredits;
+        public static ConfigEntry<int> DirectorCreditsPerStage;
         public static ConfigEntry<bool> DecorateBazaar;
 
         // newt
@@ -133,6 +135,8 @@ namespace BazaarIsMyHaven
             // 00 General
             EnableMod = config.Bind("00 General", "Enabled", true, "Enable Mod");
             AlwaysSpawnShopPortal = config.Bind("00 General", "AlwaysSpawnShopPortal", false, "Spawn a portal to the Bazaar after each teleporter event.");
+            DirectorExtraCredits = config.Bind("00 General", "DirectorExtraCredits", 50, "Credits the director gets on every visit to the Bazaar, on top of DirectorCreditsPerStage. Like the game's scene director, it spends them at random on the sections' interactables, by their DirectorCost and DirectorWeight.");
+            DirectorCreditsPerStage = config.Bind("00 General", "DirectorCreditsPerStage", 50, "Credits the director gets for every stage cleared in the run.");
             SpawnCountByStage = config.Bind("00 General", "SpawnCountByStage", true, "The amount of spawned interactables are based on stage completion count, capped by the amount.\nFormula: Total = stage count + offset");
             SpawnCountOffset = config.Bind("00 General", "SpawnCountOffset", 0, "Offset value added to stage-based interactable spawns.");
 

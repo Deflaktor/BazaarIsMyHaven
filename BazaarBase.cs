@@ -26,6 +26,30 @@ namespace BazaarIsMyHaven
         public virtual void Hook() { }
         public virtual void RunStart() { }
         public virtual void RunEnd() { }
+        // Adds the cards the director can pick for this section; SetupBazaar spawns the picks
+        public virtual void AddDirectorCards(List<DirectorCard> cards) { }
+        // Runs a frame after setup, once the shops rolled their items. Returns credits to give back to the director.
+        public virtual int CheckAfterSetup() { return 0; }
+        // Spawns what the director picked in its final pass
+        public virtual void SpawnLatePicks() { }
+
+        // Spawns a prefab already rotated, so every client gets the rotation the host sees
+        protected static GameObject SpawnAt(GameObject prefab, SpawnCardStruct slot)
+        {
+            GameObject gameObject = GameObject.Instantiate(prefab, slot.Position, Quaternion.Euler(slot.Rotation));
+            NetworkServer.Spawn(gameObject);
+            return gameObject;
+        }
+
+        protected static List<GameObject> SpawnInSlots(Dictionary<int, SpawnCardStruct> slots, GameObject prefab, int start, int count)
+        {
+            List<GameObject> result = new List<GameObject>();
+            for (int i = start; i < start + count; i++)
+            {
+                result.Add(SpawnAt(prefab, slots[i]));
+            }
+            return result;
+        }
         protected List<GameObject> DoSpawnCard(Dictionary<int, SpawnCardStruct> keyValuePairs, AsyncOperationHandle<InteractableSpawnCard> card, int max)
         {
             int count = 0;
