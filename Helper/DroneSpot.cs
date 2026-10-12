@@ -13,10 +13,6 @@ namespace BazaarIsMyHaven
         public static DroneSpot instance;
 
         private static readonly Vector3 Position = new Vector3(-79.9249f, -37.4302f, -17.9876f);
-        // drones are spread out in a spiral, about this far apart
-        private const float Spacing = 1.5f;
-        private const float GoldenAngle = 2.39996f;
-        private const int MaxSlots = 200;
         // drones further away than this are moved to the spot
         private const float SpotRadius = 25f;
         // gives bought drones time to appear and upgraded ones time to leave the station
@@ -65,7 +61,7 @@ namespace BazaarIsMyHaven
                 // like the game's own respawn, only drones that come from the last stage
                 if (IsPlayerDrone(master) && !master.GetBodyObject() && Util.IsDontDestroyOnLoad(master.gameObject))
                 {
-                    master.Respawn(FindFreePosition(), Quaternion.identity, wasRevivedMidStage: true);
+                    master.Respawn(Position, Quaternion.identity, wasRevivedMidStage: true);
                 }
             }
         }
@@ -121,41 +117,12 @@ namespace BazaarIsMyHaven
 
         private static void MoveToSpot(CharacterBody body)
         {
-            var position = FindFreePosition();
-            TeleportHelper.TeleportBody(body, position);
+            TeleportHelper.TeleportBody(body, Position);
             var effect = Run.instance.GetTeleportEffectPrefab(body.gameObject);
             if (effect)
             {
-                EffectManager.SimpleEffect(effect, position, Quaternion.identity, transmit: true);
+                EffectManager.SimpleEffect(effect, Position, Quaternion.identity, transmit: true);
             }
-        }
-
-        private static Vector3 FindFreePosition()
-        {
-            for (int i = 0; i < MaxSlots; i++)
-            {
-                float radius = Spacing * Mathf.Sqrt(i);
-                float angle = i * GoldenAngle;
-                var slot = Position + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
-                if (!IsTaken(slot))
-                {
-                    return slot;
-                }
-            }
-            return Position;
-        }
-
-        private static bool IsTaken(Vector3 slot)
-        {
-            foreach (var master in CharacterMaster.readOnlyInstancesList)
-            {
-                var body = IsPlayerDrone(master) ? master.GetBody() : null;
-                if (body && (body.footPosition - slot).sqrMagnitude < Spacing * Spacing * 0.5f)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
     }
 }
