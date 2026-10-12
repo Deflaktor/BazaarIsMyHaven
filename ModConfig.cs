@@ -110,6 +110,8 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> ShrineOfOrderUseLimit;
         public static ConfigEntry<int> ShrineOfOrderCost;
         public static ConfigEntry<int> ShrineOfOrderCostMultiplier;
+        public static ConfigEntry<int> ShrineOfOrderDirectorCost;
+        public static ConfigEntry<float> ShrineOfOrderDirectorWeight;
 
         // donate
         public static ConfigEntry<bool> DonateSectionEnabled;
@@ -244,10 +246,12 @@ namespace BazaarIsMyHaven
             LunarSeerCost = config.Bind("09 LunarSeer", "Cost", 3, "Lunar coin cost for using Seer Stations.");
 
             // 10 ShrineOfOrder
-            ShrineOfOrderSectionEnabled = config.Bind("10 ShrineOfOrder", "SectionEnabled", true, "Enables or disables the Shrine of Order section. Enabling spawns a Shrine of Order near the Newt.");
+            ShrineOfOrderSectionEnabled = config.Bind("10 ShrineOfOrder", "SectionEnabled", true, "Enables or disables the Shrine of Order section. Enabling lets the director spawn a Shrine of Order near the Newt.");
             ShrineOfOrderUseLimit = config.Bind("10 ShrineOfOrder", "UseLimit", -1, "Limit the amount of Shrine of Order uses per visit to the Bazaar. -1 = Unlimited.");
             ShrineOfOrderCost = config.Bind("10 ShrineOfOrder", "Cost", 1, "Initial lunar coin cost for Shrine of Order.");
             ShrineOfOrderCostMultiplier = config.Bind("10 ShrineOfOrder", "CostMultiplier", 1, "Cost multiplier applied after each Shrine of Order use.");
+            ShrineOfOrderDirectorCost = config.Bind("10 ShrineOfOrder", "DirectorCost", 10, "Director credits the Shrine of Order costs.");
+            ShrineOfOrderDirectorWeight = config.Bind("10 ShrineOfOrder", "DirectorWeight", 1f, "How likely the director picks the Shrine of Order, compared to the DirectorWeight of the other interactables.");
 
             // 11 Donation
             DonateSectionEnabled = config.Bind("11 Donate", "SectionEnabled", true, "Enables or disables the Donate section. Enabling spawns a Donation Altar near the Newt.");
