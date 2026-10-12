@@ -28,6 +28,11 @@ namespace BazaarIsMyHaven
         // printer
         public static ConfigEntry<bool> PrinterSectionEnabled;
         public static ConfigEntry<int> PrinterAmount;
+        public static ConfigEntry<float> PrinterDirectorWeight;
+        public static ConfigEntry<int> PrinterDirectorCostWhite;
+        public static ConfigEntry<int> PrinterDirectorCostGreen;
+        public static ConfigEntry<int> PrinterDirectorCostRed;
+        public static ConfigEntry<int> PrinterDirectorCostBoss;
         public static ConfigEntry<float> PrinterTier1Weight;
         public static ConfigEntry<float> PrinterTier2Weight;
         public static ConfigEntry<float> PrinterTier3Weight;
@@ -149,7 +154,12 @@ namespace BazaarIsMyHaven
 
             // 02 Printer
             PrinterSectionEnabled = config.Bind("02 Printer", "SectionEnabled", true, "Enables or disables the Printer section.");
-            PrinterAmount = config.Bind("02 Printer", "Amount", 9, new ConfigDescription("Number of printers spawned (max 9).", new AcceptableValueRange<int>(0, 9)));
+            PrinterAmount = config.Bind("02 Printer", "Amount", 9, new ConfigDescription("Maximum number of printers the director can spawn (max 9).", new AcceptableValueRange<int>(0, 9)));
+            PrinterDirectorWeight = config.Bind("02 Printer", "DirectorWeight", 0.5f, "How likely the director picks a printer, compared to the DirectorWeight of the other interactables. Which tier it prints is rolled by the tier weights below.");
+            PrinterDirectorCostWhite = config.Bind("02 Printer", "DirectorCostWhite", 5, "Director credits a printer for white (Tier 1) items costs.");
+            PrinterDirectorCostGreen = config.Bind("02 Printer", "DirectorCostGreen", 10, "Director credits a printer for green (Tier 2) items costs.");
+            PrinterDirectorCostRed = config.Bind("02 Printer", "DirectorCostRed", 15, "Director credits a printer for red (Tier 3) or Void items costs.");
+            PrinterDirectorCostBoss = config.Bind("02 Printer", "DirectorCostBoss", 10, "Director credits a printer for Boss items costs.");
             PrinterTier1Weight = config.Bind("02 Printer", "Tier1Weight", 0.5f, "Weight for Tier 1 (white) items.");
             PrinterTier2Weight = config.Bind("02 Printer", "Tier2Weight", 0.25f, "Weight for Tier 2 (green) items.");
             PrinterTier3Weight = config.Bind("02 Printer", "Tier3Weight", 0.17f, "Weight for Tier 3 (red) items.");
