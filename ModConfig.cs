@@ -97,7 +97,6 @@ namespace BazaarIsMyHaven
         // donate
         public static ConfigEntry<bool> DonateSectionEnabled;
         public static ConfigEntry<int> DonateCost;
-        public static ConfigEntry<float> DonateRouletteInterval;
         public static ConfigEntry<int> DonateRewardLimitPerVisit;
         public static ConfigEntry<int> DonateRewardLimitPerRun;
         public static ConfigEntry<bool> DonateSequentialRewardLists;
@@ -215,7 +214,6 @@ namespace BazaarIsMyHaven
             DonateRewardLimitPerVisit = config.Bind("11 Donate", "RewardLimitPerVisit", 1, "Limit the number of rewards each player can get per visit to the Bazaar.");
             DonateRewardLimitPerRun = config.Bind("11 Donate", "RewardLimitPerRun", 1, "Limit the number of rewards each player can get in total over the course of the complete run. Must be equal or higher than RewardLimitPerVisit.");
             DonateCost = config.Bind("11 Donate", "Cost", 5, "Lunar coin cost for reward.");
-            DonateRouletteInterval = config.Bind("11 Donate", "RouletteInterval", 0.3f, "Seconds until the Donation Altar rolls the next reward. Each player sees their own reward on Lunar Buds above the altar and gets the one shown when they donate. 0.3 is the fastest speed of the Adaptive Chest; the minimum is 0.1.");
             DonateSequentialRewardLists = config.Bind("11 Donate", "SequentialRewardLists", false, "If enabled, the reward lists will be choosen sequentially, ordered from heighest weight to lowest weight. The current reward list is stored for each player per run and swaps around. Reward lists with weight = 0 will be ignored.");
             DonateRewardList1Weight = config.Bind("11 Donate", "RewardList1Weight", 0.60f, "Weight for choosing RewardList1.");
             DonateRewardList1 = config.Bind("11 Donate", "RewardList1", "2xdtChest1 | Tier2", $"Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation} Example: Hoof & Tier1");
