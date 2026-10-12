@@ -17,6 +17,8 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> lunarCauldronRedToWhite;
         AsyncOperationHandle<GameObject>[] LunarCauldronsCode;
         Dictionary<int, SpawnCardStruct> DicCauldrons = new Dictionary<int, SpawnCardStruct>();
+        DirectorCard card;
+        int spawned;
 
         public override void Preload()
         {
@@ -42,10 +44,39 @@ namespace BazaarIsMyHaven
             
         }
 
+        public override void AddDirectorCards(List<DirectorCard> cards)
+        {
+            card = null;
+            if (ModConfig.CauldronSectionEnabled.Value)
+            {
+                if (!GetRandomLunarCauldron().IsValid())
+                {
+                    Log.LogWarning("No cauldron types with a valid weight; skipping cauldrons.");
+                    return;
+                }
+                card = new DirectorCard("Lunar Cauldron", ModConfig.CauldronDirectorCost, ModConfig.CauldronDirectorWeight, () => ModConfig.CauldronAmount.Value);
+                cards.Add(card);
+            }
+        }
+
         public override void SetupBazaar()
         {
-            if (ModConfig.CauldronSectionEnabled.Value) {
-                SpawnLunarCauldron();
+            if (card != null)
+            {
+                DicCauldrons.Clear();
+                SetCauldron();
+                spawned = 0;
+                SpawnLatePicks();
+            }
+        }
+
+        public override void SpawnLatePicks()
+        {
+            if (card == null)
+                return;
+            for (; spawned < card.Count; spawned++)
+            {
+                SpawnAt(GetRandomLunarCauldron().WaitForCompletion(), DicCauldrons[spawned]);
             }
         }
 
@@ -139,31 +170,6 @@ namespace BazaarIsMyHaven
                 }
             }
             orig(self, newPickup, newHidden);
-        }
-
-        public void SpawnLunarCauldron()
-        {
-            if (ModConfig.CauldronAmount.Value > 0)
-            {
-                DicCauldrons.Clear();
-                SetCauldron();
-                int count = 0;
-                if (ModConfig.SpawnCountByStage.Value) count = SetCountbyGameStage(ModConfig.CauldronAmount.Value, ModConfig.SpawnCountOffset.Value);
-                else count = ModConfig.CauldronAmount.Value;
-                for (int i = 0; i < count; i++)
-                {
-                    AsyncOperationHandle<GameObject> randomCauldron = GetRandomLunarCauldron();
-                    if (!randomCauldron.IsValid())
-                    {
-                        Log.LogWarning("No cauldron types with a valid weight; skipping cauldrons.");
-                        break;
-                    }
-                    GameObject gameObject = randomCauldron.WaitForCompletion();
-                    gameObject = UnityEngine.Object.Instantiate<GameObject>(gameObject, DicCauldrons[i].Position, Quaternion.identity);
-                    gameObject.transform.eulerAngles = DicCauldrons[i].Rotation;
-                    NetworkServer.Spawn(gameObject);
-                }
-            }
         }
 
         private void SetCauldron()

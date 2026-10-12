@@ -46,6 +46,8 @@ namespace BazaarIsMyHaven
         // cauldron
         public static ConfigEntry<bool> CauldronSectionEnabled;
         public static ConfigEntry<int> CauldronAmount;
+        public static ConfigEntry<int> CauldronDirectorCost;
+        public static ConfigEntry<float> CauldronDirectorWeight;
         public static ConfigEntry<float> CauldronWhiteToGreenWeight;
         public static ConfigEntry<float> CauldronGreenToRedWeight;
         public static ConfigEntry<float> CauldronRedToWhiteWeight;
@@ -172,7 +174,9 @@ namespace BazaarIsMyHaven
 
             // 03 Cauldron
             CauldronSectionEnabled = config.Bind("03 Cauldron", "SectionEnabled", true, "Enables or disables the Cauldron section.");
-            CauldronAmount = config.Bind("03 Cauldron", "Amount", 7, new ConfigDescription("Number of cauldrons spawned (max 7).", new AcceptableValueRange<int>(0, 7)));
+            CauldronAmount = config.Bind("03 Cauldron", "Amount", 7, new ConfigDescription("Maximum number of cauldrons the director can spawn (max 7).", new AcceptableValueRange<int>(0, 7)));
+            CauldronDirectorCost = config.Bind("03 Cauldron", "DirectorCost", 10, "Director credits a cauldron costs.");
+            CauldronDirectorWeight = config.Bind("03 Cauldron", "DirectorWeight", 0.5f, "How likely the director picks a cauldron, compared to the DirectorWeight of the other interactables. Which type it is is rolled by the weights below.");
             CauldronWhiteToGreenWeight = config.Bind("03 Cauldron", "WhiteToGreenWeight", 0.75f, "Weight for White->Green cauldrons.");
             CauldronWhiteToGreenCost = config.Bind("03 Cauldron", "WhiteToGreenCost", 3, "Number of White items required for Green conversion.");
             CauldronGreenToRedWeight = config.Bind("03 Cauldron", "GreenToRedWeight", 0.25f, "Weight for Green->Red cauldrons.");
