@@ -21,6 +21,8 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> ShrineUseEffect;
 
         private readonly Dictionary<PlayerCharacterMasterController, int> donationsDuringRun = new Dictionary<PlayerCharacterMasterController, int>();
+        private DirectorCard card;
+        private bool spawned;
 
         // Rewards are rolled several times a second, so each warning is logged once per run
         private readonly ManualLogSource rewardLog = new ManualLogSource(Main.PluginName);
@@ -62,12 +64,28 @@ namespace BazaarIsMyHaven
             donationsDuringRun.Clear();
         }
 
-        public override void SetupBazaar()
+        public override void AddDirectorCards(List<DirectorCard> cards)
         {
+            card = null;
             if (ModConfig.DonateSectionEnabled.Value)
             {
-                SpawnDonateAltar();
+                card = new DirectorCard("Donation Altar", ModConfig.DonateDirectorCost, ModConfig.DonateDirectorWeight, () => 1);
+                cards.Add(card);
             }
+        }
+
+        public override void SetupBazaar()
+        {
+            spawned = false;
+            SpawnLatePicks();
+        }
+
+        public override void SpawnLatePicks()
+        {
+            if (card == null || card.Count == 0 || spawned)
+                return;
+            SpawnDonateAltar();
+            spawned = true;
         }
 
         public void BlueprintTerminal_Rebuild(On.RoR2.BlueprintTerminal.orig_Rebuild orig, BlueprintTerminal self)

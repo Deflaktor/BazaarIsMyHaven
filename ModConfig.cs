@@ -116,6 +116,8 @@ namespace BazaarIsMyHaven
         // donate
         public static ConfigEntry<bool> DonateSectionEnabled;
         public static ConfigEntry<int> DonateCost;
+        public static ConfigEntry<int> DonateDirectorCost;
+        public static ConfigEntry<float> DonateDirectorWeight;
         public static ConfigEntry<int> DonateRewardLimitPerVisit;
         public static ConfigEntry<int> DonateRewardLimitPerRun;
         public static ConfigEntry<bool> DonateSequentialRewardLists;
@@ -254,10 +256,12 @@ namespace BazaarIsMyHaven
             ShrineOfOrderDirectorWeight = config.Bind("10 ShrineOfOrder", "DirectorWeight", 1f, "How likely the director picks the Shrine of Order, compared to the DirectorWeight of the other interactables.");
 
             // 11 Donation
-            DonateSectionEnabled = config.Bind("11 Donate", "SectionEnabled", true, "Enables or disables the Donate section. Enabling spawns a Donation Altar near the Newt.");
+            DonateSectionEnabled = config.Bind("11 Donate", "SectionEnabled", true, "Enables or disables the Donate section. Enabling lets the director spawn a Donation Altar near the Newt.");
             DonateRewardLimitPerVisit = config.Bind("11 Donate", "RewardLimitPerVisit", 1, "Limit the number of rewards each player can get per visit to the Bazaar.");
             DonateRewardLimitPerRun = config.Bind("11 Donate", "RewardLimitPerRun", 1, "Limit the number of rewards each player can get in total over the course of the complete run. Must be equal or higher than RewardLimitPerVisit.");
             DonateCost = config.Bind("11 Donate", "Cost", 5, "Lunar coin cost for reward.");
+            DonateDirectorCost = config.Bind("11 Donate", "DirectorCost", 10, "Director credits the Donation Altar costs.");
+            DonateDirectorWeight = config.Bind("11 Donate", "DirectorWeight", 1f, "How likely the director picks the Donation Altar, compared to the DirectorWeight of the other interactables.");
             DonateSequentialRewardLists = config.Bind("11 Donate", "SequentialRewardLists", false, "If enabled, the reward lists will be choosen sequentially, ordered from heighest weight to lowest weight. The current reward list is stored for each player per run and swaps around. Reward lists with weight = 0 will be ignored.");
             DonateRewardList1Weight = config.Bind("11 Donate", "RewardList1Weight", 0.60f, "Weight for choosing RewardList1.");
             DonateRewardList1 = config.Bind("11 Donate", "RewardList1", "2xdtChest1 | Tier2", $"Item reward pool. Comma-separated list in the format keyword=amount for rewarding multiple of the item, or just the keyword for single reward. {itemKeyWordsExplanation} Example: Hoof & Tier1");
