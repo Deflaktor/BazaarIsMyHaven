@@ -14,7 +14,6 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<bool> AlwaysSpawnShopPortal;
         public static ConfigEntry<int> DirectorExtraCredits;
         public static ConfigEntry<int> DirectorCreditsPerStage;
-        public static ConfigEntry<bool> DecorateBazaar;
 
         // newt
         public static ConfigEntry<bool> NewtSectionEnabled;
