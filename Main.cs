@@ -178,6 +178,20 @@ namespace BazaarIsMyHaven
                 }
                 try
                 {
+                    var cards = new List<DirectorCard>();
+                    foreach (var bazaarMod in bazaarMods)
+                    {
+                        try
+                        {
+                            bazaarMod.AddDirectorCards(cards);
+                        }
+                        catch (Exception exception)
+                        {
+                            Log.LogError($"Could not add the director cards of {bazaarMod.GetType().Name}: {exception}");
+                        }
+                    }
+                    int credits = BazaarDirector.Spend(BazaarDirector.Credits, cards, "setup");
+
                     foreach (var bazaarMod in bazaarMods)
                     {
                         try
@@ -189,6 +203,7 @@ namespace BazaarIsMyHaven
                             Log.LogError($"Could not set up {bazaarMod.GetType().Name}: {exception}");
                         }
                     }
+                    BazaarDirector.Create(bazaarMods, cards, credits);
                 }
                 finally
                 {
