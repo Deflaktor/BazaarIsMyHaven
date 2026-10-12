@@ -144,6 +144,14 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<bool> DronesSpawnDroneUpgradeStation;
         public static ConfigEntry<bool> DronesSpawnDroneScrapper;
         public static ConfigEntry<bool> DronesSpawnTripleDroneShop;
+        public static ConfigEntry<int> DronesDroneCombinerStationDirectorCost;
+        public static ConfigEntry<float> DronesDroneCombinerStationDirectorWeight;
+        public static ConfigEntry<int> DronesDroneUpgradeStationDirectorCost;
+        public static ConfigEntry<float> DronesDroneUpgradeStationDirectorWeight;
+        public static ConfigEntry<int> DronesDroneScrapperDirectorCost;
+        public static ConfigEntry<float> DronesDroneScrapperDirectorWeight;
+        public static ConfigEntry<int> DronesTripleDroneShopDirectorCost;
+        public static ConfigEntry<float> DronesTripleDroneShopDirectorWeight;
 
         private const string itemTiersString = "Tier1 | Tier2 | Tier3 | Lunar | Boss | VoidTier1 | VoidTier2 | VoidTier3 | VoidBoss | FoodTier";
         private const string itemKeyWordsExplanation = $"Can use:\n - internal item names(see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)\nFollows ItemStringParser format.";
@@ -283,11 +291,19 @@ namespace BazaarIsMyHaven
             WanderingChefBuyToInventory = config.Bind("12 WanderingChef", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
 
             // 13 Drones
-            DronesSectionEnabled = config.Bind("13 Drones", "SectionEnabled", true, "Enables or disables the Drones section. Only works if the Alloyed Collective is enabled for the run. Enabling brings the players' drones into the Bazaar, where they wait at one spot, so that the drone stations below can use them.");
-            DronesSpawnDroneCombinerStation = config.Bind("13 Drones", "SpawnDroneCombinerStation", true, "Spawns a Drone Combiner Station.");
-            DronesSpawnDroneUpgradeStation = config.Bind("13 Drones", "SpawnDroneUpgradeStation", true, "Spawns a Drone Upgrade Station.");
-            DronesSpawnDroneScrapper = config.Bind("13 Drones", "SpawnDroneScrapper", true, "Spawns a Drone Scrapper.");
-            DronesSpawnTripleDroneShop = config.Bind("13 Drones", "SpawnTripleDroneShop", true, "Spawns a Triple Drone Shop.");
+            DronesSectionEnabled = config.Bind("13 Drones", "SectionEnabled", true, "Enables or disables the Drones section. Only works if the Alloyed Collective is enabled for the run. Enabling lets the director spawn the drone stations below. If one that uses drones spawns, the players' drones come along into the Bazaar and wait at one spot.");
+            DronesSpawnDroneCombinerStation = config.Bind("13 Drones", "SpawnDroneCombinerStation", true, "Lets the director spawn a Drone Combiner Station.");
+            DronesDroneCombinerStationDirectorCost = config.Bind("13 Drones", "DroneCombinerStationDirectorCost", 1, "Director credits the Drone Combiner Station costs.");
+            DronesDroneCombinerStationDirectorWeight = config.Bind("13 Drones", "DroneCombinerStationDirectorWeight", 1f, "How likely the director picks the Drone Combiner Station, compared to the DirectorWeight of the other interactables.");
+            DronesSpawnDroneUpgradeStation = config.Bind("13 Drones", "SpawnDroneUpgradeStation", true, "Lets the director spawn a Drone Upgrade Station.");
+            DronesDroneUpgradeStationDirectorCost = config.Bind("13 Drones", "DroneUpgradeStationDirectorCost", 15, "Director credits the Drone Upgrade Station costs.");
+            DronesDroneUpgradeStationDirectorWeight = config.Bind("13 Drones", "DroneUpgradeStationDirectorWeight", 1f, "How likely the director picks the Drone Upgrade Station, compared to the DirectorWeight of the other interactables.");
+            DronesSpawnDroneScrapper = config.Bind("13 Drones", "SpawnDroneScrapper", true, "Lets the director spawn a Drone Scrapper.");
+            DronesDroneScrapperDirectorCost = config.Bind("13 Drones", "DroneScrapperDirectorCost", 5, "Director credits the Drone Scrapper costs.");
+            DronesDroneScrapperDirectorWeight = config.Bind("13 Drones", "DroneScrapperDirectorWeight", 1f, "How likely the director picks the Drone Scrapper, compared to the DirectorWeight of the other interactables.");
+            DronesSpawnTripleDroneShop = config.Bind("13 Drones", "SpawnTripleDroneShop", true, "Lets the director spawn a Triple Drone Shop.");
+            DronesTripleDroneShopDirectorCost = config.Bind("13 Drones", "TripleDroneShopDirectorCost", 20, "Director credits the Triple Drone Shop costs.");
+            DronesTripleDroneShopDirectorWeight = config.Bind("13 Drones", "TripleDroneShopDirectorWeight", 1f, "How likely the director picks the Triple Drone Shop, compared to the DirectorWeight of the other interactables.");
 
             RefreshDerivedData(config);
             LunarShopAmountDependingOnCharacter.SettingChanged += LunarShopCharacterAmountsChanged;
