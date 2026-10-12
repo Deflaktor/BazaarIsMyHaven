@@ -37,7 +37,7 @@ namespace BazaarIsMyHaven
             if (ModConfig.ScrapperSectionEnabled.Value)
             {
                 // one pick spawns all the scrappers
-                card = new DirectorCard("Scrappers", ModConfig.ScrapperDirectorCost, ModConfig.ScrapperDirectorWeight, () => ModConfig.ScrapperAmount.Value > 0 ? 1 : 0);
+                card = new DirectorCard("Scrappers", ModConfig.ScrapperDirectorCost, ModConfig.ScrapperDirectorWeight, () => ModConfig.ScrapperMaxAmount.Value > 0 ? 1 : 0);
                 cards.Add(card);
             }
         }
@@ -54,7 +54,7 @@ namespace BazaarIsMyHaven
                 return;
             DicScrapers.Clear();
             SetScraper();
-            SpawnInSlots(DicScrapers, iscScrapper.WaitForCompletion().prefab, 0, ModConfig.ScrapperAmount.Value);
+            SpawnInSlots(DicScrapers, iscScrapper.WaitForCompletion().prefab, 0, ModConfig.ScrapperMaxAmount.Value);
             spawned = true;
         }
 

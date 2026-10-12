@@ -74,7 +74,7 @@ namespace BazaarIsMyHaven
             if (ModConfig.LunarShopSectionEnabled.Value)
             {
                 // the table layout depends on the number of buds, so none can be added later
-                card = new DirectorCard("Lunar Bud", ModConfig.LunarShopDirectorCost, ModConfig.LunarShopDirectorWeight, () => ModConfig.LunarShopAmount.Value, allowLatePicks: false);
+                card = new DirectorCard("Lunar Bud", ModConfig.LunarShopDirectorCost, ModConfig.LunarShopDirectorWeight, () => ModConfig.LunarShopMaxAmount.Value, allowLatePicks: false);
                 cards.Add(card);
             }
         }

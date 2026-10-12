@@ -61,7 +61,7 @@ namespace BazaarIsMyHaven
 
         private static int GetMaxTerminals()
         {
-            return Math.Min(ModConfig.EquipmentAmount.Value, ModConfig.EquipmentReplaceLunarSeersWithEquipment.Value ? 5 : 3);
+            return Math.Min(ModConfig.EquipmentMaxAmount.Value, ModConfig.EquipmentReplaceLunarSeersWithEquipment.Value ? 5 : 3);
         }
 
         public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
@@ -69,7 +69,7 @@ namespace BazaarIsMyHaven
             orig(self);
             if (ModConfig.EnableMod.Value && ModConfig.EquipmentSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
-                if (ModConfig.EquipmentAmount.Value > 0)
+                if (ModConfig.EquipmentMaxAmount.Value > 0)
                 {
                     if (self.name.StartsWith("MultiShopEquipmentTerminal"))
                     {

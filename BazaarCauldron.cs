@@ -54,7 +54,7 @@ namespace BazaarIsMyHaven
                     Log.LogWarning("No cauldron types with a valid weight; skipping cauldrons.");
                     return;
                 }
-                card = new DirectorCard("Lunar Cauldron", ModConfig.CauldronDirectorCost, ModConfig.CauldronDirectorWeight, () => ModConfig.CauldronAmount.Value);
+                card = new DirectorCard("Lunar Cauldron", ModConfig.CauldronDirectorCost, ModConfig.CauldronDirectorWeight, () => ModConfig.CauldronMaxAmount.Value);
                 cards.Add(card);
             }
         }
