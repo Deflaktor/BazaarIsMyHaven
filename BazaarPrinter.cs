@@ -196,7 +196,7 @@ namespace BazaarIsMyHaven
         {
             public readonly List<ItemTier> tiers = new List<ItemTier>();
 
-            public PrinterCard() : base("Printer", null, ModConfig.PrinterDirectorWeight, () => ModConfig.PrinterAmount.Value) { }
+            public PrinterCard() : base("Printer", null, ModConfig.PrinterDirectorWeight, () => ModConfig.PrinterMaxAmount.Value) { }
 
             protected override int CheapestCost()
             {

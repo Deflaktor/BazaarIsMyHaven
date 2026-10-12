@@ -24,7 +24,7 @@ namespace BazaarIsMyHaven
 
         // printer
         public static ConfigEntry<bool> PrinterSectionEnabled;
-        public static ConfigEntry<int> PrinterAmount;
+        public static ConfigEntry<int> PrinterMaxAmount;
         public static ConfigEntry<float> PrinterDirectorWeight;
         public static ConfigEntry<int> PrinterDirectorCostWhite;
         public static ConfigEntry<int> PrinterDirectorCostGreen;
@@ -42,7 +42,7 @@ namespace BazaarIsMyHaven
 
         // cauldron
         public static ConfigEntry<bool> CauldronSectionEnabled;
-        public static ConfigEntry<int> CauldronAmount;
+        public static ConfigEntry<int> CauldronMaxAmount;
         public static ConfigEntry<int> CauldronDirectorCost;
         public static ConfigEntry<float> CauldronDirectorWeight;
         public static ConfigEntry<float> CauldronWhiteToGreenWeight;
@@ -54,13 +54,13 @@ namespace BazaarIsMyHaven
 
         // scrapper
         public static ConfigEntry<bool> ScrapperSectionEnabled;
-        public static ConfigEntry<int> ScrapperAmount;
+        public static ConfigEntry<int> ScrapperMaxAmount;
         public static ConfigEntry<int> ScrapperDirectorCost;
         public static ConfigEntry<float> ScrapperDirectorWeight;
 
         // equipment
         public static ConfigEntry<bool> EquipmentSectionEnabled;
-        public static ConfigEntry<int> EquipmentAmount;
+        public static ConfigEntry<int> EquipmentMaxAmount;
         public static ConfigEntry<int> EquipmentDirectorCost;
         public static ConfigEntry<float> EquipmentDirectorWeight;
         public static ConfigEntry<bool> EquipmentInstancedPurchases;
@@ -72,7 +72,7 @@ namespace BazaarIsMyHaven
 
         // lunarShop
         public static ConfigEntry<bool> LunarShopSectionEnabled;
-        public static ConfigEntry<int> LunarShopAmount;
+        public static ConfigEntry<int> LunarShopMaxAmount;
         public static ConfigEntry<int> LunarShopDirectorCost;
         public static ConfigEntry<float> LunarShopDirectorWeight;
         public static ConfigEntry<int> LunarShopCost;
@@ -169,7 +169,7 @@ namespace BazaarIsMyHaven
 
             // 02 Printer
             PrinterSectionEnabled = config.Bind("02 Printer", "SectionEnabled", true, "Enables or disables the Printer section.");
-            PrinterAmount = config.Bind("02 Printer", "Amount", 9, new ConfigDescription("Maximum number of printers the director can spawn (max 9).", new AcceptableValueRange<int>(0, 9)));
+            PrinterMaxAmount = config.Bind("02 Printer", "MaxAmount", 9, new ConfigDescription("Maximum number of printers the director can spawn (max 9).", new AcceptableValueRange<int>(0, 9)));
             PrinterDirectorWeight = config.Bind("02 Printer", "DirectorWeight", 0.5f, "How likely the director picks a printer, compared to the DirectorWeight of the other interactables. Which tier it prints is rolled by the tier weights below.");
             PrinterDirectorCostWhite = config.Bind("02 Printer", "DirectorCostWhite", 5, "Director credits a printer for white (Tier 1) items costs.");
             PrinterDirectorCostGreen = config.Bind("02 Printer", "DirectorCostGreen", 10, "Director credits a printer for green (Tier 2) items costs.");
@@ -187,7 +187,7 @@ namespace BazaarIsMyHaven
 
             // 03 Cauldron
             CauldronSectionEnabled = config.Bind("03 Cauldron", "SectionEnabled", true, "Enables or disables the Cauldron section.");
-            CauldronAmount = config.Bind("03 Cauldron", "Amount", 7, new ConfigDescription("Maximum number of cauldrons the director can spawn (max 7).", new AcceptableValueRange<int>(0, 7)));
+            CauldronMaxAmount = config.Bind("03 Cauldron", "MaxAmount", 7, new ConfigDescription("Maximum number of cauldrons the director can spawn (max 7).", new AcceptableValueRange<int>(0, 7)));
             CauldronDirectorCost = config.Bind("03 Cauldron", "DirectorCost", 10, "Director credits a cauldron costs.");
             CauldronDirectorWeight = config.Bind("03 Cauldron", "DirectorWeight", 0.5f, "How likely the director picks a cauldron, compared to the DirectorWeight of the other interactables. Which type it is is rolled by the weights below.");
             CauldronWhiteToGreenWeight = config.Bind("03 Cauldron", "WhiteToGreenWeight", 0.75f, "Weight for White->Green cauldrons.");
@@ -200,13 +200,13 @@ namespace BazaarIsMyHaven
 
             // 04 Scrapper
             ScrapperSectionEnabled = config.Bind("04 Scrapper", "SectionEnabled", true, "Enables or disables the Scrapper section.");
-            ScrapperAmount = config.Bind("04 Scrapper", "Amount", 4, new ConfigDescription("Number of Scrappers spawned when the director picks them (max 4).", new AcceptableValueRange<int>(0, 4)));
+            ScrapperMaxAmount = config.Bind("04 Scrapper", "MaxAmount", 4, new ConfigDescription("Number of Scrappers spawned when the director picks them (max 4).", new AcceptableValueRange<int>(0, 4)));
             ScrapperDirectorCost = config.Bind("04 Scrapper", "DirectorCost", 5, "Director credits the Scrappers cost. The director picks them only once, and then all of them spawn.");
             ScrapperDirectorWeight = config.Bind("04 Scrapper", "DirectorWeight", 1f, "How likely the director picks the Scrappers, compared to the DirectorWeight of the other interactables.");
 
             // 05 Equipment
             EquipmentSectionEnabled = config.Bind("05 Equipment", "SectionEnabled", true, "Enables or disables the Equipment section.");
-            EquipmentAmount = config.Bind("05 Equipment", "Amount", 3, new ConfigDescription("Maximum number of Equipment Terminals the director can spawn (max 3 normally, 5 if replacing Lunar Seers).", new AcceptableValueRange<int>(0, 5)));
+            EquipmentMaxAmount = config.Bind("05 Equipment", "MaxAmount", 3, new ConfigDescription("Maximum number of Equipment Terminals the director can spawn (max 3 normally, 5 if replacing Lunar Seers).", new AcceptableValueRange<int>(0, 5)));
             EquipmentDirectorCost = config.Bind("05 Equipment", "DirectorCost", 2, "Director credits an Equipment Terminal costs.");
             EquipmentDirectorWeight = config.Bind("05 Equipment", "DirectorWeight", 1f, "How likely the director picks an Equipment Terminal, compared to the DirectorWeight of the other interactables.");
             EquipmentReplaceLunarSeersWithEquipment = config.Bind("05 Equipment", "ReplaceLunarSeersWithEquipment", false, "Replaces Lunar Seers with Equipment Terminals (increases equipment max to 5). Makes the Lunar Seer section irrelevant.");
@@ -218,8 +218,8 @@ namespace BazaarIsMyHaven
 
             // 06 LunarShop
             LunarShopSectionEnabled = config.Bind("06 LunarShop", "SectionEnabled", true, "Enables or disables the Lunar Shop section.");
-            LunarShopAmount = config.Bind("06 LunarShop", "Amount", 5, new ConfigDescription("Maximum number of Lunar Buds the director can spawn (max 20).", new AcceptableValueRange<int>(0, 20)));
-            LunarShopDirectorCost = config.Bind("06 LunarShop", "DirectorCost", 0, "Director credits a Lunar Bud costs. With 0, all buds up to Amount always spawn.");
+            LunarShopMaxAmount = config.Bind("06 LunarShop", "MaxAmount", 5, new ConfigDescription("Maximum number of Lunar Buds the director can spawn (max 20).", new AcceptableValueRange<int>(0, 20)));
+            LunarShopDirectorCost = config.Bind("06 LunarShop", "DirectorCost", 0, "Director credits a Lunar Bud costs. With 0, all buds up to MaxAmount always spawn.");
             LunarShopDirectorWeight = config.Bind("06 LunarShop", "DirectorWeight", 1f, "How likely the director picks a Lunar Bud, compared to the DirectorWeight of the other interactables.");
             LunarShopCost = config.Bind("06 LunarShop", "Cost", 1, "Lunar coin cost per Lunar Bud purchase.");
             LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar. -1 = Unlimited.");
@@ -331,8 +331,8 @@ namespace BazaarIsMyHaven
 
         private static void RefreshDerivedData(ConfigFile config)
         {
-            if (EquipmentAmount.Value > 3 && !EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentAmount.Value = 3;
-            if (EquipmentAmount.Value > 5 && EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentAmount.Value = 5;
+            if (EquipmentMaxAmount.Value > 3 && !EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentMaxAmount.Value = 3;
+            if (EquipmentMaxAmount.Value > 5 && EquipmentReplaceLunarSeersWithEquipment.Value) EquipmentMaxAmount.Value = 5;
             RefreshLunarShopCharacterAmounts();
             RefreshDonationRewardLists(config);
         }
