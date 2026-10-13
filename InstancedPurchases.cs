@@ -226,8 +226,13 @@ namespace BazaarIsMyHaven
         private static void ApplyState(GameObject shop, InstancedPurchaseStruct state, bool refreshAnimation)
         {
             var purchase = shop.GetComponent<PurchaseInteraction>();
-            var terminal = shop.GetComponent<ShopTerminalBehavior>();
             purchase.available = state.available;
+            // chests have no terminal; only their availability is per player
+            var terminal = shop.GetComponent<ShopTerminalBehavior>();
+            if (!terminal)
+            {
+                return;
+            }
             terminal.pickup = state.pickup;
             terminal.hidden = state.hidden;
             terminal.hasBeenPurchased = state.hasBeenPurchased;
@@ -253,7 +258,7 @@ namespace BazaarIsMyHaven
 
             var state = instance.GetOrOriginal(host);
             var terminal = shop.GetComponent<ShopTerminalBehavior>();
-            bool changed = !terminal.pickup.Equals(state.pickup) || terminal.hidden != state.hidden || terminal.hasBeenPurchased != state.hasBeenPurchased;
+            bool changed = terminal && (!terminal.pickup.Equals(state.pickup) || terminal.hidden != state.hidden || terminal.hasBeenPurchased != state.hasBeenPurchased);
             ApplyState(shop, state, forceAnimation || changed);
         }
 
@@ -420,16 +425,27 @@ namespace BazaarIsMyHaven
             {
                 instance.pcClient = pc;
                 var terminal = instance.GetComponent<ShopTerminalBehavior>();
-                int channel = terminal.GetNetworkChannel();
+                byte[] messages;
+                int channel;
+                if (terminal)
+                {
+                    channel = terminal.GetNetworkChannel();
 
-                //The first message sets the flag without triggering the item animation
-                // the second updates stock/availability with that flag already set
-                var purchaseMessage = CreateUpdateMessage(identity, channel, PurchasedMask, 0u);
-                var stockMessage = CreateUpdateMessage(identity, channel, PickupMask | HiddenMask, AvailableMask);
-                var messages = new byte[purchaseMessage.Length + stockMessage.Length];
+                    //The first message sets the flag without triggering the item animation
+                    // the second updates stock/availability with that flag already set
+                    var purchaseMessage = CreateUpdateMessage(identity, channel, PurchasedMask, 0u);
+                    var stockMessage = CreateUpdateMessage(identity, channel, PickupMask | HiddenMask, AvailableMask);
+                    messages = new byte[purchaseMessage.Length + stockMessage.Length];
 
-                Buffer.BlockCopy(purchaseMessage, 0, messages, 0, purchaseMessage.Length);
-                Buffer.BlockCopy(stockMessage, 0, messages, purchaseMessage.Length, stockMessage.Length);
+                    Buffer.BlockCopy(purchaseMessage, 0, messages, 0, purchaseMessage.Length);
+                    Buffer.BlockCopy(stockMessage, 0, messages, purchaseMessage.Length, stockMessage.Length);
+                }
+                else
+                {
+                    // chests only send their availability
+                    channel = instance.GetComponent<PurchaseInteraction>().GetNetworkChannel();
+                    messages = CreateUpdateMessage(identity, channel, 0u, AvailableMask);
+                }
 
                 if (connection.SendBytes(messages, messages.Length, channel))
                 {
