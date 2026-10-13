@@ -12,7 +12,7 @@ Thanks to WeeabooGod for the Lunar Shop rework and many of the fixes in this ver
 ### New sections
 
 - Add a Drones section for the Alloyed Collective: the director can spawn a Drone Combiner Station, a Drone Upgrade Station, a Drone Scrapper and a Triple Drone Shop, and the players' drones come along into the Bazaar.
-- Add a Command Chest section: it drops a Command Essence that lets you choose any item of its `Tier`. It has its own price, instanced purchases, and a buy to inventory option that opens the item picker right away.
+- Add a Command Chest section: it drops a Command Essence that lets you choose any item of its tier, which the director picks. Each tier has its own price, director cost and weight. It also has instanced purchases, and a buy to inventory option that opens the item picker right away.
 
 ### Lunar Shop
 
