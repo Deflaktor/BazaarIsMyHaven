@@ -101,6 +101,7 @@ namespace BazaarIsMyHaven
             On.RoR2.JunkController.GenerateJunk += JunkController_GenerateJunk;
             Inventory.onServerItemGiven += Inventory_onServerItemGiven;
             On.RoR2.Projectile.TinkerProjectile.TransmuteTargetObject += TinkerProjectile_TransmuteTargetObject;
+            On.EntityStates.CaptainSupplyDrop.UnlockTargetState.OnEnter += UnlockTargetState_OnEnter;
             On.RoR2.Util.KarmaEventTrigger += Util_KarmaEventTrigger;
             On.EntityStates.NewtMonster.KickFromShop.FixedUpdate += KickFromShop_FixedUpdate;
             On.RoR2.GlobalEventManager.OnHitAll += GlobalEventManager_OnHitAll;
@@ -254,6 +255,24 @@ namespace BazaarIsMyHaven
         }
 
         // Tinker rerolls shop terminals and pickers, and turns item pickups into scrap and temporary items
+        // Captain's hacking beacon sets a shop's price to 0 for good and then buys it.
+        // Shops in the Bazaar can be bought again, e.g. instanced ones by every player, so the hack only pays for its own purchase.
+        private void UnlockTargetState_OnEnter(On.EntityStates.CaptainSupplyDrop.UnlockTargetState.orig_OnEnter orig, EntityStates.CaptainSupplyDrop.UnlockTargetState self)
+        {
+            var target = self.target;
+            if (!ModConfig.EnableMod.Value || !NetworkServer.active || !IsCurrentMapInBazaar() || !target)
+            {
+                orig(self);
+                return;
+            }
+            int cost = target.cost;
+            orig(self);
+            if (target && target.cost != cost)
+            {
+                target.Networkcost = cost;
+            }
+        }
+
         private void TinkerProjectile_TransmuteTargetObject(On.RoR2.Projectile.TinkerProjectile.orig_TransmuteTargetObject orig, RoR2.Projectile.TinkerProjectile self, GameObject targetObject)
         {
             if (ModConfig.EnableMod.Value && ModConfig.PreventDrifterTinker.Value && IsCurrentMapInBazaar() && NetworkServer.active)

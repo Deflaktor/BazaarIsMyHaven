@@ -34,6 +34,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
   - Drifter can't bag the Bazaar's interactables, the Newt or other players.
   - Drifter gains no Junk in the Bazaar, so Salvage can't farm temporary items there.
   - Drifter's Tinker doesn't reroll or transmute anything in the Bazaar.
+  - Captain's hacking beacon only pays for one purchase of a Bazaar shop with a money price; afterwards it costs the usual price again.
   - Config changes apply from the next run, without restarting the game.
 
 - **Compatiblity with other Mods**
