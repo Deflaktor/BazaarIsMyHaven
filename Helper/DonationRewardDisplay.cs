@@ -91,7 +91,8 @@ namespace BazaarIsMyHaven
 
         private void Update()
         {
-            if (!NetworkServer.active)
+            // a copy of the altar, e.g. from a debug tool, has no rewards to show
+            if (!NetworkServer.active || rollReward == null)
             {
                 return;
             }
