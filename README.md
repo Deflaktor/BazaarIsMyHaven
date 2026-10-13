@@ -40,6 +40,16 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
   - [BiggerBazaar](https://thunderstore.io/package/MagnusMagnuson/BiggerBazaar/)
   - [InLobbyConfig](https://thunderstore.io/package/KingEnderBrine/InLobbyConfig/)
 
+## Credits
+
+- Lunzir, for [BazaarIsMyHome](https://thunderstore.io/package/Lunzir2/BazaarIsMyHome/), the mod this one is a fork of.
+- [WeeabooGod](https://github.com/WeeabooGod), for a large part of this mod:
+  - The Lunar Shop's instanced purchases, synced to each player, the configurable number of Lunar Buds, and rerolling them with the Lunar Recycler as its own section.
+  - Making unmodded clients see the Lunar Buds at the right size and opening them properly.
+  - The price signs above Equipment Terminals.
+  - Compatibility with QoLChests, and reloading the config at the start of each run.
+  - Many fixes for the Donation Altar, Lunar Buds, cauldrons, printers, the Wandering Chef and ShareSuite, and a rework of this README.
+
 ## Key Settings
 
 In-detail descriptions for some of the settings:
