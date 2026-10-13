@@ -292,7 +292,7 @@ namespace BazaarIsMyHaven
             WanderingChefDirectorWeight = config.Bind("12 WanderingChef", "DirectorWeight", 0.5f, "How likely the director picks the Wandering Chef, compared to the DirectorWeight of the other interactables.");
 
             // 13 Drones
-            DronesSectionEnabled = config.Bind("13 Drones", "SectionEnabled", true, "Enables or disables the Drones section. Only works if the Alloyed Collective is enabled for the run. Enabling lets the director spawn the drone stations below. If one that uses drones spawns, the players' drones come along into the Bazaar and wait at one spot.");
+            DronesSectionEnabled = config.Bind("13 Drones", "SectionEnabled", true, "Enables or disables the Drones section. Only works if the Alloyed Collective is enabled for the run. Enabling lets the director spawn the drone stations below, and the players' drones come along into the Bazaar like on any other stage.");
             DronesDroneCombinerStationDirectorCost = config.Bind("13 Drones", "DroneCombinerStationDirectorCost", 1, "Director credits the Drone Combiner Station costs.");
             DronesDroneCombinerStationDirectorWeight = config.Bind("13 Drones", "DroneCombinerStationDirectorWeight", 1f, "How likely the director picks the Drone Combiner Station, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
             DronesDroneUpgradeStationDirectorCost = config.Bind("13 Drones", "DroneUpgradeStationDirectorCost", 5, "Director credits the Drone Upgrade Station costs.");
