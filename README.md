@@ -173,6 +173,8 @@ FalseSon
 Seeker
 Drifter
 DroneTech
+Acolyte
+Enforcer2
 
 ### Other Bodies
 
