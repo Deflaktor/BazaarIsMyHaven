@@ -12,6 +12,7 @@ namespace BazaarIsMyHaven
         // general
         public static ConfigEntry<bool> EnableMod;
         public static ConfigEntry<bool> AlwaysSpawnShopPortal;
+        public static ConfigEntry<bool> ScaleMoneyCosts;
         public static ConfigEntry<bool> PreventDrifterBagging;
         public static ConfigEntry<bool> PreventDrifterJunk;
         public static ConfigEntry<bool> PreventDrifterTinker;
@@ -163,6 +164,7 @@ namespace BazaarIsMyHaven
             // 00 General
             EnableMod = config.Bind("00 General", "Enabled", true, "Enable Mod");
             AlwaysSpawnShopPortal = config.Bind("00 General", "AlwaysSpawnShopPortal", false, "Spawn a portal to the Bazaar after each teleporter event.");
+            ScaleMoneyCosts = config.Bind("00 General", "ScaleMoneyCosts", true, "Costs paid in Money scale with difficulty, like the game's own shops. E.g. an Equipment Terminal with Cost 50 then costs what the game's triple equipment shop costs.");
             PreventDrifterBagging = config.Bind("00 General", "PreventDrifterBagging", true, "Drifter can't put anything into his bag in the Bazaar: no interactables, no Newt, no other players or drones. The bag stays empty, like when he grabs something he can't carry.");
             PreventDrifterJunk = config.Bind("00 General", "PreventDrifterJunk", true, "Drifter gains no Junk in the Bazaar, so Salvage can't farm temporary items there or on the next stage. Junk brought into the Bazaar can still be used.");
             PreventDrifterTinker = config.Bind("00 General", "PreventDrifterTinker", true, "Drifter's Tinker changes nothing in the Bazaar: it doesn't reroll Lunar Buds, terminals or printers, and doesn't turn item pickups into scrap and temporary items. The shockwave still hits.");
@@ -223,7 +225,7 @@ namespace BazaarIsMyHaven
             EquipmentReplaceWithEliteList = config.Bind("05 Equipment", "ReplaceWithEliteList", "EliteEarthEquipment | EliteFireEquipment | EliteIceEquipment | EliteLunarEquipment | EliteLightningEquipment", "With which elite equipments to replace. List in the format equipment1 | equipment2. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md). Follows ItemStringParser format.");
             EquipmentInstancedPurchases = config.Bind("05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
             EquipmentCost = config.Bind("05 Equipment", "Cost", 0, "Cost of an equipment purchase, paid in CostType.");
-            EquipmentCostType = config.Bind("05 Equipment", "CostType", CostTypeIndex.Money, "What equipment purchases cost, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price sign shows it too. Money is not scaled with difficulty.");
+            EquipmentCostType = config.Bind("05 Equipment", "CostType", CostTypeIndex.Money, "What equipment purchases cost, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price sign shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground.");
 
             // 06 LunarShop
@@ -232,7 +234,7 @@ namespace BazaarIsMyHaven
             LunarShopDirectorCost = config.Bind("06 LunarShop", "DirectorCost", 0, "Director credits a Lunar Bud costs. With 0, all buds up to MaxAmount always spawn.");
             LunarShopDirectorWeight = config.Bind("06 LunarShop", "DirectorWeight", 1f, "How likely the director picks a Lunar Bud, compared to the DirectorWeight of the other interactables.");
             LunarShopCost = config.Bind("06 LunarShop", "Cost", 1, "Cost of a Lunar Bud purchase, paid in CostType.");
-            LunarShopCostType = config.Bind("06 LunarShop", "CostType", CostTypeIndex.LunarCoin, "What Lunar Bud purchases cost, e.g. LunarCoin, Money, WhiteItem or PercentHealth. The price tag shows it too. Money is not scaled with difficulty.");
+            LunarShopCostType = config.Bind("06 LunarShop", "CostType", CostTypeIndex.LunarCoin, "What Lunar Bud purchases cost, e.g. LunarCoin, Money, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar. -1 = Unlimited.");
             LunarShopSequentialItems = config.Bind("06 LunarShop", "SequentialItems", false, "Picks items sequentially from the list instead of randomly.");
             var items = "Tonic | AutoCastEquipment | RandomDamageZone | LunarDagger | HalfSpeedDoubleHealth | ShieldOnly | ShieldOnly | ShieldOnly | LunarPrimaryReplacement | LunarSecondaryReplacement | LunarSpecialReplacement | LunarBadLuck | LunarBadLuck | LunarBadLuck | LunarSun | HalfAttackSpeedHalfCooldowns | HalfAttackSpeedHalfCooldowns";

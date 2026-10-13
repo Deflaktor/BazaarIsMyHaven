@@ -118,8 +118,9 @@ namespace BazaarIsMyHaven
                     self.NetworkcostType = ModConfig.LunarShopCostType.Value;
                     if (ModConfig.LunarShopCost.Value >= 0)
                     {
-                        self.cost = ModConfig.LunarShopCost.Value;
-                        self.Networkcost = ModConfig.LunarShopCost.Value;
+                        var cost = Helper.GetCost(ModConfig.LunarShopCost.Value, ModConfig.LunarShopCostType.Value);
+                        self.cost = cost;
+                        self.Networkcost = cost;
                     }
                 }
                 // RemoveLunarRecycler removes it otherwise
