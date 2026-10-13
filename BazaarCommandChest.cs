@@ -1,4 +1,5 @@
 using RoR2;
+using RoR2.Artifacts;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -14,6 +15,12 @@ namespace BazaarIsMyHaven
         DirectorCard card;
         bool spawned;
         GameObject chest;
+        // the player opening the chest, while the purchase runs
+        Interactor buyer;
+        // who opened the chest without instanced purchases, until it gives its essence
+        Interactor openedBy;
+        // essences given to one player; only they can use it
+        readonly Dictionary<PickupPickerController, CharacterMaster> essenceOwners = new Dictionary<PickupPickerController, CharacterMaster>();
 
         public override void Preload()
         {
@@ -23,7 +30,10 @@ namespace BazaarIsMyHaven
         public override void Hook()
         {
             On.RoR2.ChestBehavior.Roll += ChestBehavior_Roll;
+            On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.ChestBehavior.Open += ChestBehavior_Open;
+            On.RoR2.ChestBehavior.ItemDrop += ChestBehavior_ItemDrop;
+            On.RoR2.PickupPickerController.GetInteractability += PickupPickerController_GetInteractability;
             On.RoR2.PickupPickerController.CreatePickup_UniquePickup += PickupPickerController_CreatePickup;
         }
 
@@ -41,6 +51,9 @@ namespace BazaarIsMyHaven
         {
             spawned = false;
             chest = null;
+            buyer = null;
+            openedBy = null;
+            essenceOwners.Clear();
             SpawnLatePicks();
         }
 
@@ -88,25 +101,107 @@ namespace BazaarIsMyHaven
             }
         }
 
-        // An instanced chest stays closed for the others and drops each buyer their own essence
+        private void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
+        {
+            if (!IsBazaarChest(self))
+            {
+                orig(self, activator);
+                return;
+            }
+            var previousBuyer = buyer;
+            buyer = activator;
+            try
+            {
+                orig(self, activator);
+            }
+            finally
+            {
+                buyer = previousBuyer;
+            }
+        }
+
+        // An instanced chest stays closed for the others and gives each buyer their own essence
         private void ChestBehavior_Open(On.RoR2.ChestBehavior.orig_Open orig, ChestBehavior self)
         {
-            if (!IsBazaarChest(self) || !self.GetComponent<InstancedPurchase>())
+            if (!IsBazaarChest(self))
             {
                 orig(self);
                 return;
             }
+            if (!self.GetComponent<InstancedPurchase>())
+            {
+                // the opening chest gives its essence in ItemDrop
+                openedBy = buyer;
+                orig(self);
+                return;
+            }
+            GiveEssence(self, buyer);
+            self.Roll();
+        }
 
-            var dropTransform = self.dropTransform ? self.dropTransform : self.transform;
+        private void ChestBehavior_ItemDrop(On.RoR2.ChestBehavior.orig_ItemDrop orig, ChestBehavior self)
+        {
+            if (!IsBazaarChest(self) || !ModConfig.CommandChestBuyToInventory.Value || !openedBy)
+            {
+                orig(self);
+                return;
+            }
+            SpawnEssenceFor(self, openedBy);
+            openedBy = null;
+            self.currentPickup = UniquePickup.none;
+            self.NetworkisChestOpened = true;
+        }
+
+        private void GiveEssence(ChestBehavior chestBehavior, Interactor activator)
+        {
+            if (ModConfig.CommandChestBuyToInventory.Value && activator)
+            {
+                SpawnEssenceFor(chestBehavior, activator);
+                return;
+            }
+            var dropTransform = chestBehavior.dropTransform ? chestBehavior.dropTransform : chestBehavior.transform;
             var pickupInfo = new GenericPickupController.CreatePickupInfo
             {
-                pickup = self.currentPickup,
+                pickup = chestBehavior.currentPickup,
                 position = dropTransform.position + Vector3.up * 1.5f,
-                chest = self,
+                chest = chestBehavior,
                 artifactFlag = GenericPickupController.PickupArtifactFlag.Command
             };
-            PickupDropletController.CreatePickupDroplet(pickupInfo, pickupInfo.position, Vector3.up * self.dropUpVelocityStrength + dropTransform.forward * self.dropForwardVelocityStrength);
-            self.Roll();
+            PickupDropletController.CreatePickupDroplet(pickupInfo, pickupInfo.position, Vector3.up * chestBehavior.dropUpVelocityStrength + dropTransform.forward * chestBehavior.dropForwardVelocityStrength);
+        }
+
+        // Spawns the essence a dropped pickup would turn into, but right away at the chest, and opens its picker for the buyer
+        private void SpawnEssenceFor(ChestBehavior chestBehavior, Interactor activator)
+        {
+            var pickup = chestBehavior.currentPickup;
+            var dropTransform = chestBehavior.dropTransform ? chestBehavior.dropTransform : chestBehavior.transform;
+            var essence = Object.Instantiate(CommandArtifactManager.commandCubePrefab, dropTransform.position + Vector3.up * 1.5f, Quaternion.identity);
+            essence.GetComponent<PickupIndexNetworker>().NetworkpickupState = pickup;
+            var picker = essence.GetComponent<PickupPickerController>();
+            picker.SetOptionsFromPickupForCommandArtifact(pickup);
+            picker.chestGeneratedFrom = chestBehavior;
+            picker.pickupThatGeneratedOptions = pickup;
+            NetworkServer.Spawn(essence);
+
+            var body = activator.GetComponent<CharacterBody>();
+            if (body && body.master)
+            {
+                essenceOwners[picker] = body.master;
+            }
+            picker.OnInteractionBegin(activator);
+        }
+
+        private Interactability PickupPickerController_GetInteractability(On.RoR2.PickupPickerController.orig_GetInteractability orig, PickupPickerController self, Interactor activator)
+        {
+            if (NetworkServer.active && essenceOwners.TryGetValue(self, out var owner) && owner)
+            {
+                var body = activator ? activator.GetComponent<CharacterBody>() : null;
+                if (!body || body.master != owner)
+                {
+                    return Interactability.Disabled;
+                }
+            }
+            return orig(self, activator);
         }
 
         // The item chosen from the chest's essence goes to the player who chose it

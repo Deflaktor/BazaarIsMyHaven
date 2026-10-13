@@ -136,7 +136,7 @@ Drones normally stay behind when you enter the Bazaar, but the Drone Combiner St
 
 The CommandChest section lets the director spawn the game's Command Chest. Opening it drops a Command Essence, from which you choose any item of the chest's `Tier`, such as `Tier2` (the default) or `Tier3`. A drop table like `dtCommandChest`, the game's own mix, rolls the tier by its weights. `Cost` and `CostType` set its price, which the price tag shows.
 
-With `InstancedPurchases`, each player can open it once: it stays closed and drops each buyer their own essence. With `BuyToInventory`, the chosen item goes straight into the inventory of the player who chose it.
+With `InstancedPurchases`, each player can open it once: it stays closed and drops each buyer their own essence. With `BuyToInventory`, opening the chest shows the item picker right away, and the chosen item goes straight into your inventory, without an essence dropping first. If you close the picker, the essence stays at the chest and only you can use it.
 
 ## RewardListAvailableCharacters - Valid Keywords
 
