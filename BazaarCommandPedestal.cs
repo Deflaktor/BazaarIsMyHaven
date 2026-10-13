@@ -80,6 +80,23 @@ namespace BazaarIsMyHaven
         // hidden essences waiting for their owner's choice; interacting with the vault again opens them
         readonly Dictionary<PickupPickerController, Essence> essences = new Dictionary<PickupPickerController, Essence>();
 
+        public static BazaarCommandPedestal instance;
+
+        public BazaarCommandPedestal()
+        {
+            instance = this;
+        }
+
+        // The items this player could still choose from the pedestal's essence, e.g. for the Wandering CHEF's recipes
+        public IEnumerable<PickupIndex> GetChoicesFor(PlayerCharacterMasterController player)
+        {
+            if (!pedestal || !hasOffer || sold || (ModConfig.CommandPedestalInstancedPurchases.Value && buyers.Contains(player)))
+            {
+                return Enumerable.Empty<PickupIndex>();
+            }
+            return PickupTransmutationManager.GetAvailableGroupFromPickupIndex(offer.pickupIndex) ?? Enumerable.Empty<PickupIndex>();
+        }
+
         public override void Preload()
         {
             vaultPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/PowerOrbPedestal/PowerOrbVault.prefab");
