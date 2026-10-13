@@ -320,13 +320,13 @@ namespace BazaarIsMyHaven
             DronesTripleDroneShopDirectorWeight = config.Bind("13 Drones", "TripleDroneShopDirectorWeight", 1f, "How likely the director picks the Triple Drone Shop, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
 
             // 14 CommandChest
-            CommandChestSectionEnabled = config.Bind("14 CommandChest", "SectionEnabled", true, "Enables or disables the Command Chest section. Enabling lets the director spawn a Command Chest, which drops a Command Essence that lets you choose any item of its tier.");
+            CommandChestSectionEnabled = config.Bind("14 CommandChest", "SectionEnabled", true, "Enables or disables the Command Chest section. Enabling lets the director spawn a Command Chest, which drops a Command Essence that lets you choose any item of its tier. Unmodded clients can't spawn the game's own Command Chest, so it is an Ocular Vault, with its price shown above it; clients see the vault's own \"Place Ocular Battery\" text.");
             CommandChestDirectorCost = config.Bind("14 CommandChest", "DirectorCost", 20, "Director credits the Command Chest costs.");
             CommandChestDirectorWeight = config.Bind("14 CommandChest", "DirectorWeight", 0.2f, "How likely the director picks the Command Chest, compared to the DirectorWeight of the other interactables.");
             CommandChestTier = config.Bind("14 CommandChest", "Tier", "Tier2", $"The tier the Command Essence offers, e.g. Tier1, Tier2, Tier3, Boss or Lunar. A drop table like dtCommandChest (the game's own mix) rolls the tier by its weights. {itemKeyWordsExplanation}");
             CommandChestCost = config.Bind("14 CommandChest", "Cost", 100, "Cost of opening the Command Chest, paid in CostType.");
             CommandChestCostType = config.Bind("14 CommandChest", "CostType", CostTypeIndex.Money, "What opening the Command Chest costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
-            CommandChestInstancedPurchases = config.Bind("14 CommandChest", "InstancedPurchases", true, "Each player can open the Command Chest once, independently of the others. It then stays closed and drops each buyer their own Command Essence.");
+            CommandChestInstancedPurchases = config.Bind("14 CommandChest", "InstancedPurchases", true, "Each player can buy from the Command Chest once, independently of the others. It stays ready for the others, and each buyer gets their own Command Essence.");
             CommandChestBuyToInventory = config.Bind("14 CommandChest", "BuyToInventory", true, "Opening the Command Chest shows its item picker right away, and the chosen item goes directly into your inventory. No essence drops; if you close the picker, the essence stays at the chest and only you can use it.");
 
             RefreshDerivedData(config);
