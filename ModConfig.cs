@@ -321,9 +321,9 @@ namespace BazaarIsMyHaven
             // 14 CommandChest
             CommandChestSectionEnabled = config.Bind("14 CommandChest", "SectionEnabled", true, "Enables or disables the Command Chest section. Enabling lets the director spawn a Command Chest, which drops a Command Essence that lets you choose any item of its tier.");
             CommandChestTier = config.Bind("14 CommandChest", "Tier", "Tier2", $"The tier the Command Essence offers, e.g. Tier1, Tier2, Tier3, Boss or Lunar. A drop table like dtCommandChest (the game's own mix) rolls the tier by its weights. {itemKeyWordsExplanation}");
-            CommandChestDirectorCost = config.Bind("14 CommandChest", "DirectorCost", 10, "Director credits the Command Chest costs.");
-            CommandChestDirectorWeight = config.Bind("14 CommandChest", "DirectorWeight", 1f, "How likely the director picks the Command Chest, compared to the DirectorWeight of the other interactables.");
-            CommandChestCost = config.Bind("14 CommandChest", "Cost", 50, "Cost of opening the Command Chest, paid in CostType.");
+            CommandChestDirectorCost = config.Bind("14 CommandChest", "DirectorCost", 20, "Director credits the Command Chest costs.");
+            CommandChestDirectorWeight = config.Bind("14 CommandChest", "DirectorWeight", 0.2f, "How likely the director picks the Command Chest, compared to the DirectorWeight of the other interactables.");
+            CommandChestCost = config.Bind("14 CommandChest", "Cost", 100, "Cost of opening the Command Chest, paid in CostType.");
             CommandChestCostType = config.Bind("14 CommandChest", "CostType", CostTypeIndex.Money, "What opening the Command Chest costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             CommandChestInstancedPurchases = config.Bind("14 CommandChest", "InstancedPurchases", true, "Each player can open the Command Chest once, independently of the others. It then stays closed and drops each buyer their own Command Essence.");
             CommandChestBuyToInventory = config.Bind("14 CommandChest", "BuyToInventory", true, "Opening the Command Chest shows its item picker right away, and the chosen item goes directly into your inventory. No essence drops; if you close the picker, the essence stays at the chest and only you can use it.");
