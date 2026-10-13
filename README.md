@@ -31,6 +31,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
 - **Other Tweaks**:
   - A director that decides which interactables appear, with more credits the further you are into the run.
   - Drifter can't bag the Bazaar's interactables, the Newt or other players.
+  - Drifter gains no Junk in the Bazaar, so Salvage can't farm temporary items there.
   - Config changes apply from the next run, without restarting the game.
 
 - **Compatiblity with other Mods**
