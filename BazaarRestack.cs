@@ -22,7 +22,6 @@ namespace BazaarIsMyHaven
 
         public override void Hook()
         {
-            On.RoR2.PurchaseInteraction.ScaleCost += PurchaseInteraction_ScaleCost;
         }
         public override void RunStart()
         {
@@ -51,18 +50,6 @@ namespace BazaarIsMyHaven
                 return;
             SpawnShrineRestack();
             spawned = true;
-        }
-
-        private void PurchaseInteraction_ScaleCost(On.RoR2.PurchaseInteraction.orig_ScaleCost orig, PurchaseInteraction self, float scalar)
-        {
-            if (ModConfig.EnableMod.Value && ModConfig.ShrineOfOrderSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
-            {
-                if (self.name.StartsWith("ShrineRestack"))
-                {
-                    scalar = (float)ModConfig.ShrineOfOrderCostMultiplier.Value;
-                }
-            }
-            orig(self, scalar);
         }
 
         private void SpawnShrineRestack()
