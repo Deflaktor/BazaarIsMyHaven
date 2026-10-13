@@ -10,7 +10,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
 
 - **Extra Interactables in the Bazaar** (configurable):
   - 3D Printers
-  - Additional Cauldrons
+  - Additional Cauldrons, also Transcendent Cauldrons (with Hallowed Concepts)
   - Scrappers
   - Equipment Terminals
   - Lunar Shop (customizable)

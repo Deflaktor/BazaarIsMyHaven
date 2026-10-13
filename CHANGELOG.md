@@ -50,6 +50,7 @@ Thanks to WeeabooGod for the Lunar Shop rework and many of the fixes in this ver
 - Config changes now apply from the next run, without restarting the game.
 - The Wandering CHEF only appears with the Alloyed Collective. With `CraftableRecipesOnly`, he only offers a recipe that someone can cook, and otherwise doesn't appear.
 - At most 2 Scrappers spawn, instead of 4.
+- Add Transcendent Cauldrons from Hallowed Concepts as a cauldron type, with weight 0 by default.
 - Remove the Bazaar decoration (`DecorateBazaar`) and the unused Green to Purple and Green to Yellow cauldron weights.
 - The settings in each config section are now in a sensible order.
 

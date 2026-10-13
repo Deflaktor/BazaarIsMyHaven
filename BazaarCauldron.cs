@@ -15,6 +15,7 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> lunarCauldronWhiteToGreen;
         AsyncOperationHandle<GameObject> lunarCauldronGreenToRed;
         AsyncOperationHandle<GameObject> lunarCauldronRedToWhite;
+        AsyncOperationHandle<GameObject> transcendentCauldron;
         AsyncOperationHandle<GameObject>[] LunarCauldronsCode;
         Dictionary<int, SpawnCardStruct> DicCauldrons = new Dictionary<int, SpawnCardStruct>();
         DirectorCard card;
@@ -25,10 +26,12 @@ namespace BazaarIsMyHaven
             lunarCauldronWhiteToGreen = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, WhiteToGreen.prefab");
             lunarCauldronGreenToRed = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, GreenToRed Variant.prefab");
             lunarCauldronRedToWhite = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, RedToWhite Variant.prefab");
+            transcendentCauldron = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/BetterCauldron.prefab");
             LunarCauldronsCode = [
                 lunarCauldronWhiteToGreen,
                 lunarCauldronGreenToRed,
-                lunarCauldronRedToWhite
+                lunarCauldronRedToWhite,
+                transcendentCauldron
             ];
         }
 
@@ -98,6 +101,11 @@ namespace BazaarIsMyHaven
                 {
                     self.cost = ModConfig.CauldronRedToWhiteCost.Value;
                     self.Networkcost = ModConfig.CauldronRedToWhiteCost.Value;
+                }
+                if (self.name.StartsWith("BetterCauldron"))
+                {
+                    self.cost = ModConfig.CauldronTranscendentCost.Value;
+                    self.Networkcost = ModConfig.CauldronTranscendentCost.Value;
                 }
             }
         }
@@ -217,13 +225,16 @@ namespace BazaarIsMyHaven
             float w_g = ModConfig.CauldronWhiteToGreenWeight.Value;
             float g_r = ModConfig.CauldronGreenToRedWeight.Value;
             float r_w = ModConfig.CauldronRedToWhiteWeight.Value;
+            // clients only have Transcendent Cauldrons if the run has Hallowed Concepts
+            float t = DLC4Content.DLC4 && Run.instance.IsExpansionEnabled(DLC4Content.DLC4) ? ModConfig.CauldronTranscendentWeight.Value : 0f;
 
             // Negative weights count as off.
             if (w_g < 0) w_g = 0;
             if (g_r < 0) g_r = 0;
             if (r_w < 0) r_w = 0;
+            if (t < 0) t = 0;
 
-            float total = w_g + g_r + r_w;
+            float total = w_g + g_r + r_w + t;
 
             // No cauldron type is on when all weights are zero.
             if (total == 0)
@@ -232,7 +243,8 @@ namespace BazaarIsMyHaven
             double d = RNG.NextDouble() * total;
             if (d < w_g) return LunarCauldronsCode[0];
             else if (d < w_g + g_r) return LunarCauldronsCode[1];
-            else { return LunarCauldronsCode[2]; }
+            else if (d < w_g + g_r + r_w) return LunarCauldronsCode[2];
+            else { return LunarCauldronsCode[3]; }
         }
     }
 }

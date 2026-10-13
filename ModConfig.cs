@@ -57,6 +57,8 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> CauldronWhiteToGreenCost;
         public static ConfigEntry<int> CauldronGreenToRedCost;
         public static ConfigEntry<int> CauldronRedToWhiteCost;
+        public static ConfigEntry<float> CauldronTranscendentWeight;
+        public static ConfigEntry<int> CauldronTranscendentCost;
 
         // scrapper
         public static ConfigEntry<bool> ScrapperSectionEnabled;
@@ -217,6 +219,8 @@ namespace BazaarIsMyHaven
             CauldronGreenToRedCost = config.Bind("03 Cauldron", "GreenToRedCost", 5, "Number of Green items required for Red conversion.");
             CauldronRedToWhiteWeight = config.Bind("03 Cauldron", "RedToWhiteWeight", 0f, "Weight for Red->White cauldrons.");
             CauldronRedToWhiteCost = config.Bind("03 Cauldron", "RedToWhiteCost", 1, "Number of Red items required for White conversion.");
+            CauldronTranscendentWeight = config.Bind("03 Cauldron", "TranscendentWeight", 0f, "Weight for Transcendent Cauldrons from Hallowed Concepts, which turn a Hex into a cursed item. Only spawns if Hallowed Concepts is enabled for the run.");
+            CauldronTranscendentCost = config.Bind("03 Cauldron", "TranscendentCost", 1, "Number of Hexes a Transcendent Cauldron takes.");
 
             // 04 Scrapper
             ScrapperSectionEnabled = config.Bind("04 Scrapper", "SectionEnabled", true, "Enables or disables the Scrapper section.");
