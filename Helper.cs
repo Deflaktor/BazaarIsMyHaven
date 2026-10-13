@@ -26,6 +26,27 @@ namespace BazaarIsMyHaven
             return cost;
         }
 
+        public static bool CanAfford(CostTypeIndex costType, int cost, Interactor activator, CharacterBody body)
+        {
+            var costTypeDef = CostTypeCatalog.GetCostTypeDef(costType);
+            return costTypeDef != null && costTypeDef.IsAffordable(TeamManager.AdjustCostForLongstandingSolitude(costType, cost, body), activator);
+        }
+
+        // Pays like the game's purchases do, in any cost type, but without their purchase events
+        public static void PayCost(CostTypeIndex costType, int cost, Interactor activator, CharacterBody body, GameObject purchasedObject, Xoroshiro128Plus rng)
+        {
+            var costTypeDef = CostTypeCatalog.GetCostTypeDef(costType);
+            int adjustedCost = TeamManager.AdjustCostForLongstandingSolitude(costType, cost, body);
+            var results = costTypeDef.PayCost(adjustedCost, activator, purchasedObject, rng, ItemIndex.None);
+            foreach (var item in results.itemStacksTaken)
+            {
+                for (int i = 0; i < item.stackValues.totalStacks; i++)
+                {
+                    PurchaseInteraction.CreateItemTakenOrb(body.corePosition, purchasedObject, item.itemIndex);
+                }
+            }
+        }
+
         public static void CreateItemTakenOrb(Vector3 effectOrigin, GameObject targetObject, PickupIndex pickupIndex)
         {
             if (!NetworkServer.active)
