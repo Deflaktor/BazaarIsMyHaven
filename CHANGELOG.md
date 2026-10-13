@@ -12,7 +12,7 @@ Thanks to WeeabooGod for the Lunar Shop rework and many of the fixes in this ver
 ### New sections
 
 - Add a Drones section for the Alloyed Collective: the director can spawn a Drone Combiner Station, a Drone Upgrade Station, a Drone Scrapper and a Triple Drone Shop, and the players' drones come along into the Bazaar.
-- Add a Command Chest section: it drops a Command Essence that lets you choose any item of its tier, which the director picks. Each tier has its own price, director cost and weight. It also has instanced purchases, and a buy to inventory option that opens the item picker right away.
+- Add a Command Chest section: buying from it gives a Command Essence that lets you choose any item of its tier. The director picks the tier, and each tier has its own price, director cost and weight. Unmodded clients can't spawn the game's own Command Chest, so it is the Alloyed Collective's Ocular Vault, with the essence it gives shown above it. With `InstancedPurchases`, each player can buy once. With `BuyToInventory`, the item picker opens right away, and the price is only charged once an item is picked.
 
 ### Lunar Shop
 
@@ -31,7 +31,8 @@ Thanks to WeeabooGod for the Lunar Shop rework and many of the fixes in this ver
 
 ### Donation Altar
 
-- Each player sees rewards they could get on Lunar Buds above the altar.
+- Unmodded clients can now see and use the Donation Altar. It is now the Deep Void Signal, without its beam, with its price shown in front of it.
+- Each player sees rewards they could get on Lunar Buds on top of the altar, arranged by how many items the reward has.
 - Characters whose own reward list gives nothing now get `RewardListCharacterDefault`.
 - Add default reward lists for Acolyte and Enforcer.
 
@@ -51,6 +52,8 @@ Thanks to WeeabooGod for the Lunar Shop rework and many of the fixes in this ver
 - The Wandering CHEF only appears with the Alloyed Collective. With `CraftableRecipesOnly`, he only offers a recipe that someone can cook, and otherwise doesn't appear.
 - At most 2 Scrappers spawn, instead of 4.
 - Add Transcendent Cauldrons from Hallowed Concepts as a cauldron type, with weight 0 by default.
+- With `BuyToInventory`, Equipment Terminals, the Command Chest and the Wandering CHEF only sell equipment into an empty equipment slot.
+- Captain's hacking beacon only pays for one purchase of a Bazaar shop; afterwards it costs the usual price again.
 - Remove the Bazaar decoration (`DecorateBazaar`) and the unused Green to Purple and Green to Yellow cauldron weights.
 - The settings in each config section are now in a sensible order.
 
@@ -60,6 +63,7 @@ Thanks to WeeabooGod for the Lunar Shop rework and many of the fixes in this ver
 - Fix equipment rewards: they fill the free slots from Functional Couplers, and equipment that doesn't fit drops instead of disappearing.
 - Fix the item selection of Void printers, and skip printer tiers without available items.
 - Fix cauldrons without choices, and pay ShareSuite's cauldron refund only after a successful trade.
+- With `BuyToInventory`, the Wandering CHEF checks that you have the ingredients before cooking.
 - Newt settings no longer affect other characters, such as SPEX in the Computational Exchange.
 - Stop QoLChests from hiding Lunar Buds, and keep the Lunar Recycler's cooldown.
 - The hovering Lunar Coin no longer appears without the Cleansing Pool.
