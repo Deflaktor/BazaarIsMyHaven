@@ -9,7 +9,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace BazaarIsMyHaven
 {
     // Clients build the Donation Altar's display from their prefab, which only holds Transcendence, so the altar hides it.
-    // Each player sees rewards they could get on half-scale Lunar Buds above the altar instead, sent as instanced bud states.
+    // Each player sees rewards they could get on Lunar Buds around the altar instead, sent as instanced bud states.
     // The shown rewards are only examples; a donation rolls its own reward.
     public class DonationRewardDisplay : MonoBehaviour
     {
@@ -18,16 +18,16 @@ namespace BazaarIsMyHaven
         // PurchaseInteraction's cost SyncVar
         private const uint CostDirtyBit = 16u;
         private const float CostResendInterval = 1f;
-        // at the prefab's half scale, a bud holds its item this high above its base
-        private const float BudItemHeight = 0.94f;
-        // in the altar's space: the first bud holds its item where Transcendence floated, the others are around and below it
+        // every bud stands at this height
+        private const float BudHeight = -19.6321f;
+        // in the altar's space: one bud below where Transcendence floated, the others around it
         private static readonly Vector3[] BudOffsets =
         {
             new Vector3(0f, 0f, 0f),
-            new Vector3(0.9f, -0.3f, 0f),
-            new Vector3(-0.9f, -0.3f, 0f),
-            new Vector3(0f, -0.3f, 0.9f),
-            new Vector3(0f, -0.3f, -0.9f),
+            new Vector3(1.2f, 0f, 0f),
+            new Vector3(-1.2f, 0f, 0f),
+            new Vector3(0f, 0f, 1.2f),
+            new Vector3(0f, 0f, -1.2f),
         };
 
         private static AsyncOperationHandle<GameObject> budPrefab;
@@ -65,20 +65,26 @@ namespace BazaarIsMyHaven
             }
 
             var altarRotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
-            var center = displayPosition - Vector3.up * BudItemHeight;
+            var center = new Vector3(displayPosition.x, BudHeight, displayPosition.z);
+            var budObjects = new List<GameObject>();
             foreach (var offset in BudOffsets)
             {
-                var outward = altarRotation * new Vector3(offset.x, 0f, offset.z);
+                var outward = altarRotation * offset;
                 var rotation = outward == Vector3.zero ? altarRotation : Quaternion.LookRotation(outward);
-                var bud = Instantiate(budPrefab.WaitForCompletion(), center + altarRotation * offset, rotation);
+                var bud = Instantiate(budPrefab.WaitForCompletion(), center + outward, rotation);
                 // the Lunar Shop replaces every object with the prefab's name
                 bud.name = BudObjectName;
+                // full size, like the Lunar Shop's buds; the prefab is half scale
+                bud.transform.localScale = Vector3.one;
                 bud.GetComponent<PurchaseInteraction>().available = false;
                 bud.GetComponent<ShopTerminalBehavior>().selfGeneratePickup = false;
                 // every player starts with an empty, unavailable bud
                 buds.Add(bud.AddComponent<InstancedPurchase>());
                 NetworkServer.Spawn(bud);
+                budObjects.Add(bud);
             }
+            // clients would keep the prefab's half scale
+            LunarBudScaleSync.Apply(budObjects);
         }
 
         private void Update()
