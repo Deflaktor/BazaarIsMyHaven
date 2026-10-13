@@ -19,6 +19,8 @@ namespace BazaarIsMyHaven
         private const float SignHeight = 4.5f;
         // with BuyToInventory, the essence stays this far below the vault, out of sight but within the picker's 10 m range
         private const float HiddenEssenceDepth = 5f;
+        // the essence shown above the vault rests on whatever is below this point
+        private const float DisplayDropHeight = 5f;
 
         private class Essence
         {
@@ -34,6 +36,10 @@ namespace BazaarIsMyHaven
         Xoroshiro128Plus rng;
         // bought without instanced purchases; nobody can buy it any more
         bool sold;
+        // rolled once per visit, so the essence shown above the vault is the one everyone gets
+        UniquePickup offer;
+        bool hasOffer;
+        GameObject displayEssence;
         // players who bought from the chest with instanced purchases
         readonly HashSet<PlayerCharacterMasterController> buyers = new HashSet<PlayerCharacterMasterController>();
         // hidden essences waiting for their owner's choice; interacting with the vault again opens them
@@ -67,6 +73,8 @@ namespace BazaarIsMyHaven
         {
             spawned = false;
             chest = null;
+            displayEssence = null;
+            hasOffer = false;
             sold = false;
             buyers.Clear();
             essences.Clear();
@@ -132,9 +140,9 @@ namespace BazaarIsMyHaven
                         Refuse(self);
                     }
                 }
-                else if (TryRollPickup(out var hiddenPickup) && Helper.HasRoomFor(body, hiddenPickup.pickupIndex))
+                else if (hasOffer && Helper.HasRoomFor(body, offer.pickupIndex))
                 {
-                    SpawnHiddenEssence(self, hiddenPickup, activator);
+                    SpawnHiddenEssence(self, offer, activator);
                 }
                 else
                 {
@@ -143,14 +151,14 @@ namespace BazaarIsMyHaven
                 return;
             }
 
-            if (!TryRollPickup(out var pickup))
+            if (!hasOffer)
             {
                 Refuse(self);
                 return;
             }
             Helper.PayCost(costType, cost, activator, body, chest, rng);
             CompletePurchase(self, player);
-            DropEssence(self, pickup);
+            DropEssence(self, offer);
         }
 
         // The vault's own refusal
@@ -175,6 +183,10 @@ namespace BazaarIsMyHaven
             }
 
             sold = true;
+            if (displayEssence)
+            {
+                NetworkServer.Destroy(displayEssence);
+            }
             vault.DoInteractResult(true);
             vault.CallRpcInteractResult(true);
             // nobody else can buy it now, so their open pickers close
@@ -374,11 +386,53 @@ namespace BazaarIsMyHaven
             CompletePurchase(vault, player);
         }
 
+        // Shows the essence the vault gives above it, as a Command Essence nobody can use.
+        // Clients run its physics themselves, so it is placed where it comes to rest.
+        private void SpawnDisplayEssence()
+        {
+            var prefab = CommandArtifactManager.commandCubePrefab;
+            var collider = prefab ? prefab.GetComponent<SphereCollider>() : null;
+            if (!collider)
+            {
+                return;
+            }
+            int layerMask = 0;
+            for (int layer = 0; layer < 32; layer++)
+            {
+                if (!Physics.GetIgnoreLayerCollision(prefab.layer, layer))
+                {
+                    layerMask |= 1 << layer;
+                }
+            }
+            var origin = chest.transform.position + Vector3.up * DisplayDropHeight;
+            if (!Physics.SphereCast(origin, collider.radius, Vector3.down, out var hit, DisplayDropHeight * 2f, layerMask, QueryTriggerInteraction.Ignore))
+            {
+                Log.LogWarning("Found nothing for the Command Chest's essence to rest on.");
+                return;
+            }
+
+            displayEssence = Object.Instantiate(prefab, origin + Vector3.down * hit.distance, Quaternion.identity);
+            displayEssence.GetComponent<PickupIndexNetworker>().NetworkpickupState = offer;
+            displayEssence.GetComponent<PickupPickerController>().SetAvailable(false);
+            if (displayEssence.TryGetComponent(out Rigidbody rigidbody))
+            {
+                rigidbody.isKinematic = true;
+            }
+            NetworkServer.Spawn(displayEssence);
+            Log.LogDebug($"The Command Chest's essence rests on {hit.collider.name}, {displayEssence.transform.position.y - chest.transform.position.y:0.00} m above the vault.");
+        }
+
         private void SpawnCommandChest()
         {
             rng = new Xoroshiro128Plus(Run.instance.treasureRng.nextUlong);
             chest = Object.Instantiate(vaultPrefab.WaitForCompletion(), new Vector3(-63.4376f, -27.1783f, -73.8056f), Quaternion.Euler(0f, 305f, 10f));
             NetworkServer.Spawn(chest);
+
+            hasOffer = TryRollPickup(out offer);
+            if (hasOffer)
+            {
+                SpawnDisplayEssence();
+            }
 
             var costType = ModConfig.CommandChestCostType.Value;
             PriceSigns.Apply(new List<GameObject> { chest }, Helper.GetCost(ModConfig.CommandChestCost.Value, costType), costType, SignHeight);
