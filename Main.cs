@@ -359,7 +359,8 @@ namespace BazaarIsMyHaven
                 if (ShopKeeper.Body && ShopKeeper.Body.inventory && ModConfig.NewtDeathBehavior.Value != ShopKeeper.DeathState.Default)
                 {
                     ShopKeeper.Body.inventory.GiveItemPermanent(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("ExtraLife")), 1000);
-                    ShopKeeper.Body.inventory.GiveItemPermanent(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("CutHp")), 200);
+                    var cutHp = ModConfig.NewtDeathBehavior.Value == ShopKeeper.DeathState.Tank ? 300 : 200;
+                    ShopKeeper.Body.inventory.GiveItemPermanent(ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex("CutHp")), cutHp);
                 }
             }
             orig(self);
