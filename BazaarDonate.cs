@@ -14,7 +14,7 @@ namespace BazaarIsMyHaven
 {
     public class BazaarDonate : BazaarBase
     {
-        AsyncOperationHandle<GameObject> BlueprintStation;
+        AsyncOperationHandle<GameObject> altarPrefab;
         AsyncOperationHandle<GameObject> LevelUpEffect;
         AsyncOperationHandle<GameObject> MoneyPackPickupEffect;
         AsyncOperationHandle<GameObject> TeamWarCryActivation;
@@ -23,6 +23,9 @@ namespace BazaarIsMyHaven
         private readonly Dictionary<PlayerCharacterMasterController, int> donationsDuringRun = new Dictionary<PlayerCharacterMasterController, int>();
         private DirectorCard card;
         private bool spawned;
+        private GameObject altar;
+        // above the reward buds
+        private const float AltarSignHeight = 6.5f;
 
         // Rewards are rolled several times a second, so each warning is logged once per run
         private readonly ManualLogSource rewardLog = new ManualLogSource(Main.PluginName);
@@ -40,18 +43,18 @@ namespace BazaarIsMyHaven
 
         public override void Preload()
         {
-            BlueprintStation = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/BlueprintStation.prefab");
+            altarPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/DeepVoidPortalBattery/DeepVoidPortalBattery.prefab");
             LevelUpEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/LevelUpEffect.prefab");
             MoneyPackPickupEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/BonusGoldPackOnKill/MoneyPackPickupEffect.prefab");
             TeamWarCryActivation = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/TeamWarCry/TeamWarCryActivation.prefab");
             ShrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab");
             DonationRewardDisplay.Preload();
+            PriceSigns.Preload();
         }
 
         public override void Hook()
         {
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
-            On.RoR2.BlueprintTerminal.Rebuild += BlueprintTerminal_Rebuild;
         }
         public override void RunStart()
         {
@@ -77,6 +80,7 @@ namespace BazaarIsMyHaven
         public override void SetupBazaar()
         {
             spawned = false;
+            altar = null;
             SpawnLatePicks();
         }
 
@@ -88,28 +92,11 @@ namespace BazaarIsMyHaven
             spawned = true;
         }
 
-        public void BlueprintTerminal_Rebuild(On.RoR2.BlueprintTerminal.orig_Rebuild orig, BlueprintTerminal self)
-        {
-            // hides the host's display like the clients'
-            orig(self);
-            if (ModConfig.EnableMod.Value & ModConfig.DonateSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active && self.name.StartsWith("BlueprintStation"))
-            {
-                // Rebuild sets the prefab's price
-                PurchaseInteraction purchaseInteraction = self.GetComponent<PurchaseInteraction>();
-                if (purchaseInteraction != null)
-                {
-                    var cost = Helper.GetCost(ModConfig.DonateCost.Value, ModConfig.DonateCostType.Value);
-                    purchaseInteraction.cost = cost;
-                    purchaseInteraction.Networkcost = cost;
-                }
-            }
-        }
-
         private void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
         {
             if (ModConfig.EnableMod.Value && ModConfig.DonateSectionEnabled.Value && IsCurrentMapInBazaar() && NetworkServer.active)
             {
-                if (self.name.StartsWith("BlueprintStation"))
+                if (altar && self.gameObject == altar)
                 {
                     CharacterBody characterBody = activator ? activator.GetComponent<CharacterBody>() : null;
                     if (!characterBody || !characterBody.master || !characterBody.inventory)
@@ -272,22 +259,23 @@ namespace BazaarIsMyHaven
             SpawnEffect(TeamWarCryActivation, self.transform.position, new Color32(255, 255, 255, 255), 3f);
         }
 
+        // The altar is the game's Deep Void Signal: unmodded clients only spawn prefabs the game registers for them.
+        // It never charges, since the donation handler takes its interaction.
         private void SpawnDonateAltar()
         {
-            GameObject gameObject = GameObject.Instantiate(BlueprintStation.WaitForCompletion(), new Vector3(-117.1011f, -24.1373f, -48.4219f), Quaternion.identity);
-            // RoR2/Base/WarCryOnMultiKill/WarCryEffect.prefab: -17.2625f
-
-            gameObject.transform.eulerAngles = new Vector3(0.0f, 300f, 0.0f);
+            altar = GameObject.Instantiate(altarPrefab.WaitForCompletion(), new Vector3(-117.1011f, -24.1373f, -48.4219f), Quaternion.Euler(0f, 300f, 0f));
+            var purchaseInteraction = altar.GetComponent<PurchaseInteraction>();
             var cost = Helper.GetCost(ModConfig.DonateCost.Value, ModConfig.DonateCostType.Value);
-            gameObject.GetComponent<PurchaseInteraction>().cost = cost;
-            gameObject.GetComponent<PurchaseInteraction>().Networkcost = cost;
-            // the price tag shows the cost type too
-            gameObject.GetComponent<PurchaseInteraction>().NetworkcostType = ModConfig.DonateCostType.Value;
-            gameObject.GetComponent<PurchaseInteraction>().contextToken = "NEWT_STATUE_CONTEXT";
-            gameObject.GetComponent<PurchaseInteraction>().NetworkcontextToken = "NEWT_STATUE_CONTEXT";
+            purchaseInteraction.cost = cost;
+            purchaseInteraction.Networkcost = cost;
+            purchaseInteraction.NetworkcostType = ModConfig.DonateCostType.Value;
+            purchaseInteraction.NetworkdisplayNameToken = "NEWT_STATUE_NAME";
+            purchaseInteraction.NetworkcontextToken = "NEWT_STATUE_CONTEXT";
 
-            DonationRewardDisplay.Apply(gameObject, RollReward);
-            NetworkServer.Spawn(gameObject);
+            DonationRewardDisplay.Apply(altar, RollReward);
+            NetworkServer.Spawn(altar);
+            // the Deep Void Signal has no price hologram of its own
+            PriceSigns.Apply(new List<GameObject> { altar }, cost, ModConfig.DonateCostType.Value, AltarSignHeight);
         }
     }
 }
