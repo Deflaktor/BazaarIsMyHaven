@@ -69,6 +69,8 @@ In runs with karma enabled, angering Newt raises the run's karma, which makes th
 - `OnDamage` -> Vanilla. Karma rises when he would kick you out after being hit, also if `NoKickFromShop` keeps you in the Bazaar.
 - `OnKill` -> Karma only rises when Newt is killed.
 
+Newt can revive and be angered again. With `KarmaTriggerOncePerVisit` (on by default), karma rises at most once per visit to the Bazaar.
+
 ### Newt - DeathBehavior
 
 Controls how Newt acts after being killed:
