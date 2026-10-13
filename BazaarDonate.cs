@@ -24,8 +24,6 @@ namespace BazaarIsMyHaven
         private DirectorCard card;
         private bool spawned;
         private GameObject altar;
-        // just above the reward buds, which stand on top of the altar and hold their items about 2 m up
-        private const float AltarSignHeight = 3f;
 
         // Rewards are rolled several times a second, so each warning is logged once per run
         private readonly ManualLogSource rewardLog = new ManualLogSource(Main.PluginName);
@@ -263,7 +261,7 @@ namespace BazaarIsMyHaven
             // only the signal's model stays, without its beam
             VoidSignalBeam.Remove(altar);
             // the Deep Void Signal has no price hologram of its own
-            PriceSigns.Apply(new List<GameObject> { altar }, cost, ModConfig.DonateCostType.Value, AltarSignHeight);
+            PriceSigns.Apply(altar, new Vector3(-113.487f, -21.4248f, -48.7292f), Quaternion.Euler(0f, 210f, 0f), cost, ModConfig.DonateCostType.Value);
         }
     }
 }
