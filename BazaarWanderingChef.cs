@@ -42,7 +42,7 @@ namespace BazaarIsMyHaven
         public override void RunStart()
         {
             RunEnd();
-            if (ModConfig.WanderingChefSectionEnabled.Value && !ModConfig.WanderingChefUnrestrictedCrafting.Value)
+            if (ModConfig.WanderingChefSectionEnabled.Value && IsAlloyedCollectiveEnabled() && !ModConfig.WanderingChefUnrestrictedCrafting.Value)
             {
                 allAvailableRecipes = GetAvailableRecipes();
                 allAvailableTargetPickupIndexes = allAvailableRecipes.Keys.ToArray();
@@ -57,10 +57,16 @@ namespace BazaarIsMyHaven
             possibleRecipes = null;
             cauldron = null;
         }
+        // the Wandering CHEF is Alloyed Collective content
+        private static bool IsAlloyedCollectiveEnabled()
+        {
+            return DLC3Content.DLC3 && Run.instance && Run.instance.IsExpansionEnabled(DLC3Content.DLC3);
+        }
+
         public override void AddDirectorCards(List<DirectorCard> cards)
         {
             card = null;
-            if (ModConfig.WanderingChefSectionEnabled.Value)
+            if (ModConfig.WanderingChefSectionEnabled.Value && IsAlloyedCollectiveEnabled())
             {
                 if (!ModConfig.WanderingChefUnrestrictedCrafting.Value &&
                     (allAvailableTargetPickupIndexes == null || allAvailableTargetPickupIndexes.Length == 0))
