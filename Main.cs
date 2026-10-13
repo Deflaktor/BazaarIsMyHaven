@@ -169,6 +169,7 @@ namespace BazaarIsMyHaven
             {
                 ShopKeeper.Body = null;
                 ShopKeeper.DeathCount = 0;
+                raisedNewtKarmaThisVisit = false;
                 playerStructs_.Clear();
 
                 ArtifactDef artifactDef = ArtifactCatalog.FindArtifactDef("Sacrifice");
@@ -245,15 +246,26 @@ namespace BazaarIsMyHaven
         // The game's karma trigger for angering Newt; it fires when his kick state ends, also when NoKickFromShop cancels the kick
         private const string NewtKarmaTriggerName = "KickedOutOfBazaar";
         private bool raisingNewtKarmaOnKill;
+        private bool raisedNewtKarmaThisVisit;
 
         private bool Util_KarmaEventTrigger(On.RoR2.Util.orig_KarmaEventTrigger orig, string identifier)
         {
-            if (identifier == NewtKarmaTriggerName && !raisingNewtKarmaOnKill && ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value
-                && ModConfig.NewtKarmaTrigger.Value == ShopKeeper.KarmaTrigger.OnKill && IsCurrentMapInBazaar())
+            if (identifier != NewtKarmaTriggerName || !ModConfig.EnableMod.Value || !ModConfig.NewtSectionEnabled.Value || !IsCurrentMapInBazaar())
+            {
+                return orig(identifier);
+            }
+            if (ModConfig.NewtKarmaTrigger.Value == ShopKeeper.KarmaTrigger.OnKill && !raisingNewtKarmaOnKill)
             {
                 return false;
             }
-            return orig(identifier);
+            // the trigger is repeatable, and a revived Newt can be angered again
+            if (ModConfig.NewtKarmaTriggerOncePerVisit.Value && raisedNewtKarmaThisVisit)
+            {
+                return false;
+            }
+            bool raised = orig(identifier);
+            raisedNewtKarmaThisVisit |= raised;
+            return raised;
         }
 
         private void RaiseNewtKarmaOnKill()
