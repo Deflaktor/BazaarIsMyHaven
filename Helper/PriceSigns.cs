@@ -12,13 +12,12 @@ using UnityEngine.SceneManagement;
 
 namespace BazaarIsMyHaven
 {
-    // Equipment terminals have no price display; in vanilla it belongs to the multishop around them.
-    // Each terminal gets a Lunar Seer, whose price sign is not part of its model. Clients are set up with vanilla
-    // messages only: a Wisp death state removes the Seer's model and collider, and a teleport moves the sign above the terminal.
-    public class EquipmentPriceSigns : MonoBehaviour
+    // Price signs for interactables that have none for clients, like Equipment Terminals, whose price display belongs
+    // to the multishop around them in vanilla, or the Donation Altar.
+    // Each one gets a Lunar Seer, whose price sign is not part of its model. Clients are set up with vanilla
+    // messages only: a Wisp death state removes the Seer's model and collider, and a teleport moves the sign above it.
+    public class PriceSigns : MonoBehaviour
     {
-        // the vanilla multishop shows its price this high above its terminals
-        private const float SignHeight = 5.25f;
         // clients spawn the Seer here, out of sight until its model is gone
         private static readonly Vector3 SetupPosition = new Vector3(0f, 10000f, 0f);
 
@@ -38,30 +37,34 @@ namespace BazaarIsMyHaven
 
         public static void Preload()
         {
-            seerPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/bazaar/SeerStation.prefab");
+            if (!seerPrefab.IsValid())
+            {
+                seerPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/bazaar/SeerStation.prefab");
+            }
         }
 
-        public static void Apply(List<GameObject> terminals)
+        // Shows cost in costType this high above each of the terminals, from their front
+        public static void Apply(List<GameObject> terminals, int cost, CostTypeIndex costType, float signHeight)
         {
-            if (!NetworkServer.active || terminals.Count == 0 || ModConfig.EquipmentCost.Value <= 0 || signsUnavailable)
+            if (!NetworkServer.active || terminals.Count == 0 || cost <= 0 || signsUnavailable)
             {
                 return;
             }
 
-            var syncObject = new GameObject("EquipmentPriceSigns");
+            var syncObject = new GameObject("PriceSigns");
             SceneManager.MoveGameObjectToScene(syncObject, terminals[0].scene);
-            var priceSigns = syncObject.AddComponent<EquipmentPriceSigns>();
+            var priceSigns = syncObject.AddComponent<PriceSigns>();
             try
             {
                 foreach (var terminal in terminals)
                 {
-                    priceSigns.signs.Add(CreateSign(terminal));
+                    priceSigns.signs.Add(CreateSign(terminal, cost, costType, signHeight));
                 }
             }
             catch (Exception exception)
             {
                 signsUnavailable = true;
-                Log.LogError($"Could not create equipment price signs: {exception}");
+                Log.LogError($"Could not create price signs: {exception}");
                 foreach (var sign in priceSigns.signs)
                 {
                     NetworkServer.Destroy(sign.seer.gameObject);
@@ -72,7 +75,7 @@ namespace BazaarIsMyHaven
             priceSigns.StartCoroutine(priceSigns.SynchronizeClients());
         }
 
-        private static Sign CreateSign(GameObject terminal)
+        private static Sign CreateSign(GameObject terminal, int cost, CostTypeIndex costType, float signHeight)
         {
             var seer = Instantiate(seerPrefab.WaitForCompletion(), SetupPosition, Quaternion.identity);
             SceneManager.MoveGameObjectToScene(seer, terminal.scene);
@@ -98,13 +101,13 @@ namespace BazaarIsMyHaven
                     throw new InvalidOperationException("The states the price signs need are missing.");
                 }
 
-                seer.name = "EquipmentPriceSign";
-                purchaseInteraction.Networkcost = Helper.GetCost(ModConfig.EquipmentCost.Value, ModConfig.EquipmentCostType.Value);
-                purchaseInteraction.NetworkcostType = ModConfig.EquipmentCostType.Value;
+                seer.name = "PriceSign";
+                purchaseInteraction.Networkcost = cost;
+                purchaseInteraction.NetworkcostType = costType;
 
                 // readable from the terminal's front, like the Seer's own sign in front of its table
                 var pivot = projector.hologramPivot;
-                var signPosition = terminal.transform.position + Vector3.up * SignHeight;
+                var signPosition = terminal.transform.position + Vector3.up * signHeight;
                 var signRotation = terminal.transform.rotation * Quaternion.Euler(0f, 180f, 0f);
                 var sign = new Sign { terminal = terminal, seer = seer.GetComponent<NetworkIdentity>() };
                 sign.clientRotation = signRotation * Quaternion.Inverse(pivot.localRotation);

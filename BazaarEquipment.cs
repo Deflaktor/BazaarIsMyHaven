@@ -23,7 +23,7 @@ namespace BazaarIsMyHaven
         public override void Preload()
         {
             multiShopEquipmentTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MultiShopEquipmentTerminal/MultiShopEquipmentTerminal.prefab");
-            EquipmentPriceSigns.Preload();
+            PriceSigns.Preload();
         }
 
         public override void Hook()
@@ -210,7 +210,8 @@ namespace BazaarIsMyHaven
                     instancedPurchase.original.hasBeenPurchased = shopTerminalBehavior.hasBeenPurchased;
                 }
             });
-            EquipmentPriceSigns.Apply(terminals);
+            // the vanilla multishop shows its price this high above its terminals
+            PriceSigns.Apply(terminals, Helper.GetCost(ModConfig.EquipmentCost.Value, ModConfig.EquipmentCostType.Value), ModConfig.EquipmentCostType.Value, 5.25f);
         }
     }
 }
