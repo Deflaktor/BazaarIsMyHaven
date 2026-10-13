@@ -71,7 +71,14 @@ namespace BazaarIsMyHaven
         private List<DirectorCard> cards;
         private int credits;
 
-        public static int Credits => ModConfig.DirectorExtraCredits.Value + ModConfig.DirectorCreditsPerStage.Value * Run.instance.stageClearCount;
+        public static int Credits
+        {
+            get
+            {
+                int credits = ModConfig.DirectorExtraCredits.Value + ModConfig.DirectorCreditsPerStage.Value * Run.instance.stageClearCount;
+                return ModConfig.DirectorCreditsCap.Value >= 0 ? Math.Min(credits, ModConfig.DirectorCreditsCap.Value) : credits;
+            }
+        }
 
         // Returns the credits left over
         public static int Spend(int credits, IEnumerable<DirectorCard> cards, string round)

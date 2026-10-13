@@ -18,6 +18,7 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<bool> PreventDrifterTinker;
         public static ConfigEntry<int> DirectorExtraCredits;
         public static ConfigEntry<int> DirectorCreditsPerStage;
+        public static ConfigEntry<int> DirectorCreditsCap;
 
         // newt
         public static ConfigEntry<bool> NewtSectionEnabled;
@@ -180,6 +181,7 @@ namespace BazaarIsMyHaven
             PreventDrifterTinker = config.Bind("00 General", "PreventDrifterTinker", true, "Drifter's Tinker changes nothing in the Bazaar: it doesn't reroll Lunar Buds, terminals or printers, and doesn't turn item pickups into scrap and temporary items. It causes issues together with Instanced Purchases.");
             DirectorExtraCredits = config.Bind("00 General", "DirectorExtraCredits", 15, "Credits the director gets on every visit to the Bazaar, on top of DirectorCreditsPerStage. Like the game's scene director, it spends them at random on the sections' interactables, by their DirectorCost and DirectorWeight.");
             DirectorCreditsPerStage = config.Bind("00 General", "DirectorCreditsPerStage", 25, "Credits the director gets for every stage cleared in the run.");
+            DirectorCreditsCap = config.Bind("00 General", "DirectorCreditsCap", 200, "The most credits the director gets on a visit, DirectorExtraCredits included. -1 = No cap.");
 
             // 01 Newt
             NewtSectionEnabled = config.Bind("01 Newt", "SectionEnabled", true, "Enables or disables the Newt section.");

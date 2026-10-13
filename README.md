@@ -48,7 +48,7 @@ In-detail descriptions for some of the settings:
 
 Like the game's own scene director, a director decides which interactables appear in the Bazaar. On every visit it gets credits:
 
-Formula: `Credits = DirectorExtraCredits + DirectorCreditsPerStage x Number of Stages Completed`
+Formula: `Credits = DirectorExtraCredits + DirectorCreditsPerStage x Number of Stages Completed`, at most `DirectorCreditsCap` (200 by default, -1 for no cap)
 
 It spends them at random on the interactables of the enabled sections, until it can't afford anything more. Each interactable has a `DirectorCost` and a `DirectorWeight`. The weight sets how likely the director picks it compared to the others, and `MaxAmount` limits how many of a kind can spawn. By default, a printer costs 5 to 15 credits depending on its tier, and Lunar Buds cost nothing, so they always spawn up to their `MaxAmount`.
 
