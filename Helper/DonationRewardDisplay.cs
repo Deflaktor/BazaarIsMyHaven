@@ -14,8 +14,8 @@ namespace BazaarIsMyHaven
     {
         private const string BudObjectName = "DonationRewardBud";
         private const float CycleInterval = 2f;
-        // every bud stands at this height
-        private const float BudHeight = -22.1381f;
+        // every bud stands this high above the altar's base
+        private const float BudHeight = 0.4636f;
         // how far the outer buds stand from the middle one
         private const float BudSpacing = 0.3f;
         // in the altar's space: one bud above the altar, the others around it
@@ -67,7 +67,7 @@ namespace BazaarIsMyHaven
             }
 
             var altarRotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
-            var center = new Vector3(displayPosition.x, BudHeight, displayPosition.z);
+            var center = displayPosition + Vector3.up * BudHeight;
             var budObjects = new List<GameObject>();
             foreach (var offset in BudOffsets)
             {
