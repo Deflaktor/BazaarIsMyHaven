@@ -24,6 +24,9 @@ namespace BazaarIsMyHaven
         private DirectorCard card;
         private bool spawned;
         private GameObject altar;
+        // in the altar's space: where its price sign floats, in front of it, and how it is turned
+        private static readonly Vector3 AltarSignOffset = new Vector3(1.5534f, 1.1769f, -0.1835f);
+        private static readonly Quaternion AltarSignRotation = Quaternion.Euler(0f, 270f, 0f);
 
         // Rewards are rolled several times a second, so each warning is logged once per run
         private readonly ManualLogSource rewardLog = new ManualLogSource(Main.PluginName);
@@ -261,7 +264,7 @@ namespace BazaarIsMyHaven
             // only the signal's model stays, without its beam
             VoidSignalBeam.Remove(altar);
             // the Deep Void Signal has no price hologram of its own
-            PriceSigns.Apply(altar, new Vector3(-113.487f, -21.4248f, -48.7292f), Quaternion.Euler(0f, 210f, 0f), cost, ModConfig.DonateCostType.Value);
+            PriceSigns.Apply(altar, altar.transform.TransformPoint(AltarSignOffset), altar.transform.rotation * AltarSignRotation, cost, ModConfig.DonateCostType.Value);
         }
     }
 }
