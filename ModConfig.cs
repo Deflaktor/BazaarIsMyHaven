@@ -19,6 +19,7 @@ namespace BazaarIsMyHaven
         // newt
         public static ConfigEntry<bool> NewtSectionEnabled;
         public static ConfigEntry<bool> NewtNoKickFromShop;
+        public static ConfigEntry<ShopKeeper.KarmaTrigger> NewtKarmaTrigger;
         public static ConfigEntry<ShopKeeper.DeathState> NewtDeathBehavior;
         public static ConfigEntry<ShopKeeper.Dialogue> NewtDialogue;
 
@@ -167,6 +168,7 @@ namespace BazaarIsMyHaven
             NewtSectionEnabled = config.Bind("01 Newt", "SectionEnabled", true, "Enables or disables the Newt section.");
             NewtDialogue = config.Bind("01 Newt", "Dialogue", ShopKeeper.Dialogue.Default, "What Newt says in chat.\nOff: Nothing\nDefault: The game's own unused Newt lines when you donate, buy from a Lunar Bud or hit him, shown in each player's language. He also greets you, in English.\nBazaarIsMyHome: The greetings and remarks of the original BazaarIsMyHome mod, in the host's language");
             NewtNoKickFromShop = config.Bind("01 Newt", "NoKickFromShop", true, "Prevents being kicked out of the Bazaar after angering Newt.");
+            NewtKarmaTrigger = config.Bind("01 Newt", "KarmaTrigger", ShopKeeper.KarmaTrigger.OnKill, "When angering Newt raises the run's karma, if karma is enabled for the run.\nOnDamage: Vanilla - When he would kick you out after being hit, also if NoKickFromShop keeps you in\nOnKill: Only when he is killed");
             NewtDeathBehavior = config.Bind("01 Newt", "DeathBehavior", ShopKeeper.DeathState.Tank, "Determines Newt's behavior after death.\nDefault: Vanilla - Unchanged behavior\nTank: Doubles Newt's health after each kill\nGhost: Newt respawns as a passive ghost\nHostile: Newt revives hostile and attacks players");
 
             // 02 Printer

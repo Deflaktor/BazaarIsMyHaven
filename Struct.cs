@@ -61,5 +61,10 @@ namespace BazaarIsMyHaven
         {
             Off, Default, BazaarIsMyHome
         }
+
+        public enum KarmaTrigger
+        {
+            OnDamage, OnKill
+        }
     }
 }
