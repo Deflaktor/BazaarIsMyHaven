@@ -1,6 +1,7 @@
 using EntityStates.Missions.RepurposedCrater;
 using RoR2;
 using RoR2.Artifacts;
+using RoR2.Networking;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -209,6 +210,7 @@ namespace BazaarIsMyHaven
             {
                 buyers.Add(player);
                 SetInteractabilityForClient(player, Interactability.Disabled);
+                HideDisplayFor(player);
                 if (vault.activationEffectPrefab && vault.activationEffectAttach)
                 {
                     EffectManager.SpawnEffect(vault.activationEffectPrefab, new EffectData { origin = vault.activationEffectAttach.position }, transmit: true);
@@ -419,6 +421,36 @@ namespace BazaarIsMyHaven
             // the item flies from the vault, not from where the essence hides
             Helper.GivePickup(body, pickupState.pickupIndex, essence.vaultPosition, true);
             CompletePurchase(vault, player);
+        }
+
+        // The buyer of an instanced chest no longer sees the essence it gives; the others still do
+        private void HideDisplayFor(PlayerCharacterMasterController player)
+        {
+            var identity = displayEssence ? displayEssence.GetComponent<NetworkIdentity>() : null;
+            var connection = player.networkUser ? player.networkUser.connectionToClient : null;
+            if (!identity || connection == null)
+            {
+                return;
+            }
+            if (Util.ConnectionIsLocal(connection))
+            {
+                // the host sees the server's own essence, so only its visuals go
+                var visuals = displayEssence.transform.Find("PickupDisplay");
+                if (visuals)
+                {
+                    visuals.gameObject.SetActive(false);
+                }
+                return;
+            }
+            // the vanilla message that removes a spawned object, sent to this client only
+            var writer = new NetworkWriter();
+            writer.StartMessage(MsgType.ObjectDestroy);
+            writer.Write(identity.netId);
+            writer.FinishMessage();
+            if (!connection.SendWriter(writer, QosChannelIndex.defaultReliable.intVal))
+            {
+                Log.LogWarning("Could not hide the Command Chest's essence for a client.");
+            }
         }
 
         // Shows the essence the vault gives above it, as a Command Essence nobody can use.
