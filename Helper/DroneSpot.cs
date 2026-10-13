@@ -13,8 +13,8 @@ namespace BazaarIsMyHaven
         public static DroneSpot instance;
 
         private static readonly Vector3 Position = new Vector3(-79.9249f, -37.4302f, -17.9876f);
-        // drones further away than this are moved to the spot
-        private const float SpotRadius = 25f;
+        // drones further away than this are moved to the spot; the drone stations are about 21 m away
+        private const float SpotRadius = 10f;
         // gives bought drones time to appear and upgraded ones time to leave the station
         private const float MoveDelay = 2f;
         private const float CheckInterval = 0.5f;
