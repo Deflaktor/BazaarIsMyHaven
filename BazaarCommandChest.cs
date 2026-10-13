@@ -378,8 +378,6 @@ namespace BazaarIsMyHaven
         {
             rng = new Xoroshiro128Plus(Run.instance.treasureRng.nextUlong);
             chest = Object.Instantiate(vaultPrefab.WaitForCompletion(), new Vector3(-63.4376f, -27.1783f, -73.8056f), Quaternion.Euler(0f, 305f, 10f));
-            // outside its mission the vault stays retracted; spawning it extended raises its container for every client
-            chest.GetComponent<PowerOrbPedestalManager>().Network_hasExtended = true;
             NetworkServer.Spawn(chest);
 
             var costType = ModConfig.CommandChestCostType.Value;
