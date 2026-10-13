@@ -228,10 +228,7 @@ namespace BazaarIsMyHaven
                 buyers.Add(player);
                 SetInteractabilityForClient(player, Interactability.Disabled);
                 HideDisplayFor(player);
-                if (vault.activationEffectPrefab && vault.activationEffectAttach)
-                {
-                    EffectManager.SpawnEffect(vault.activationEffectPrefab, new EffectData { origin = vault.activationEffectAttach.position }, transmit: true);
-                }
+                OpenFor(vault, player);
                 return;
             }
 
@@ -251,6 +248,46 @@ namespace BazaarIsMyHaven
                 }
             }
             essences.Clear();
+        }
+
+        // The buyer of an instanced pedestal sees and hears the vault open, as everyone does without instanced purchases;
+        // it stays closed for the others, who see its burst
+        private void OpenFor(PowerOrbPedestalManager vault, PlayerCharacterMasterController player)
+        {
+            var connection = player.networkUser ? player.networkUser.connectionToClient : null;
+            if (connection != null && !Util.ConnectionIsLocal(connection))
+            {
+                // the vault's own result, sent to this client only; the client passes the burst on to the others
+                var writer = new NetworkWriter();
+                writer.StartMessage(MsgType.Rpc);
+                writer.WritePackedUInt32(unchecked((uint)PowerOrbPedestalManager.kRpcRpcInteractResult));
+                writer.Write(vault.netId);
+                writer.Write(true);
+                writer.FinishMessage();
+                if (connection.SendWriter(writer, QosChannelIndex.defaultReliable.intVal))
+                {
+                    return;
+                }
+                Log.LogWarning("Could not open the Command Pedestal for a client.");
+            }
+            else if (connection != null)
+            {
+                // the host's own view: the result without disabling the vault for everyone
+                if (vault.containerAnimator)
+                {
+                    vault.containerAnimator.Play("Open");
+                }
+                if (vault.itemObject)
+                {
+                    vault.itemObject.SetActive(true);
+                }
+                Util.PlaySound(vault.AkEventPedestalActivate, vault.gameObject);
+            }
+
+            if (vault.activationEffectPrefab && vault.activationEffectAttach)
+            {
+                EffectManager.SpawnEffect(vault.activationEffectPrefab, new EffectData { origin = vault.activationEffectAttach.position }, transmit: true);
+            }
         }
 
         private bool TryGetWaitingEssence(CharacterMaster master, out PickupPickerController picker)
