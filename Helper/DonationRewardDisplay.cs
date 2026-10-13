@@ -15,15 +15,17 @@ namespace BazaarIsMyHaven
         private const string BudObjectName = "DonationRewardBud";
         private const float CycleInterval = 2f;
         // every bud stands at this height
-        private const float BudHeight = -19.6321f;
+        private const float BudHeight = -22.1381f;
+        // how far the outer buds stand from the middle one
+        private const float BudSpacing = 0.3f;
         // in the altar's space: one bud above the altar, the others around it
         private static readonly Vector3[] BudOffsets =
         {
             new Vector3(0f, 0f, 0f),
-            new Vector3(0f, 0f, 1.2f),
-            new Vector3(0f, 0f, -1.2f),
-            new Vector3(1.2f, 0f, 0f),
-            new Vector3(-1.2f, 0f, 0f),
+            new Vector3(0f, 0f, BudSpacing),
+            new Vector3(0f, 0f, -BudSpacing),
+            new Vector3(BudSpacing, 0f, 0f),
+            new Vector3(-BudSpacing, 0f, 0f),
         };
         // the buds that show a reward of each size: odd sizes use the middle bud,
         // two items stand on the outer buds of the z axis and four form a ring

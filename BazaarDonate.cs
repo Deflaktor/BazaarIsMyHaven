@@ -249,7 +249,7 @@ namespace BazaarIsMyHaven
         // It never charges, since the donation handler takes its interaction.
         private void SpawnDonateAltar()
         {
-            altar = GameObject.Instantiate(altarPrefab.WaitForCompletion(), new Vector3(-117.1011f, -24.1373f, -48.4219f), Quaternion.Euler(0f, 300f, 0f));
+            altar = GameObject.Instantiate(altarPrefab.WaitForCompletion(), new Vector3(-114.4226f, -22.6017f, -49.9827f), Quaternion.Euler(0f, 300f, 0f));
             var purchaseInteraction = altar.GetComponent<PurchaseInteraction>();
             var cost = Helper.GetCost(ModConfig.DonateCost.Value, ModConfig.DonateCostType.Value);
             purchaseInteraction.cost = cost;
