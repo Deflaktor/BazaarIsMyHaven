@@ -99,6 +99,7 @@ namespace BazaarIsMyHaven
             On.RoR2.DrifterBagController.AssignPassenger += DrifterBagController_AssignPassenger;
             On.RoR2.JunkController.GenerateJunk += JunkController_GenerateJunk;
             Inventory.onServerItemGiven += Inventory_onServerItemGiven;
+            On.RoR2.Projectile.TinkerProjectile.TransmuteTargetObject += TinkerProjectile_TransmuteTargetObject;
             On.RoR2.Util.KarmaEventTrigger += Util_KarmaEventTrigger;
             On.EntityStates.NewtMonster.KickFromShop.FixedUpdate += KickFromShop_FixedUpdate;
             On.RoR2.GlobalEventManager.OnHitAll += GlobalEventManager_OnHitAll;
@@ -249,6 +250,16 @@ namespace BazaarIsMyHaven
             {
                 inventory.RemoveItemPermanent(itemIndex, count);
             }
+        }
+
+        // Tinker rerolls shop terminals and pickers, and turns item pickups into scrap and temporary items
+        private void TinkerProjectile_TransmuteTargetObject(On.RoR2.Projectile.TinkerProjectile.orig_TransmuteTargetObject orig, RoR2.Projectile.TinkerProjectile self, GameObject targetObject)
+        {
+            if (ModConfig.EnableMod.Value && ModConfig.PreventDrifterTinker.Value && IsCurrentMapInBazaar() && NetworkServer.active)
+            {
+                return;
+            }
+            orig(self, targetObject);
         }
 
         private void DrifterBagController_AssignPassenger(On.RoR2.DrifterBagController.orig_AssignPassenger orig, DrifterBagController self, GameObject passengerObject)
