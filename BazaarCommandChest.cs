@@ -16,6 +16,15 @@ namespace BazaarIsMyHaven
     {
         // a price sign shows this high above the vault
         private const float SignHeight = 4.5f;
+        // with BuyToInventory, the essence stays this far below the vault, out of sight but within the picker's 10 m range
+        private const float HiddenEssenceDepth = 5f;
+
+        private class Essence
+        {
+            public CharacterMaster owner;
+            // the chosen item flies from here instead of from the hidden essence
+            public Vector3 vaultPosition;
+        }
 
         AsyncOperationHandle<GameObject> vaultPrefab;
         DirectorCard card;
@@ -24,8 +33,8 @@ namespace BazaarIsMyHaven
         Xoroshiro128Plus rng;
         // players who bought from the chest with instanced purchases
         readonly HashSet<PlayerCharacterMasterController> buyers = new HashSet<PlayerCharacterMasterController>();
-        // essences given to one player; only they can use it
-        readonly Dictionary<PickupPickerController, CharacterMaster> essenceOwners = new Dictionary<PickupPickerController, CharacterMaster>();
+        // hidden essences waiting for their owner's choice; interacting with the vault again opens them
+        readonly Dictionary<PickupPickerController, Essence> essences = new Dictionary<PickupPickerController, Essence>();
 
         public override void Preload()
         {
@@ -56,7 +65,7 @@ namespace BazaarIsMyHaven
             spawned = false;
             chest = null;
             buyers.Clear();
-            essenceOwners.Clear();
+            essences.Clear();
             SpawnLatePicks();
         }
 
@@ -92,7 +101,17 @@ namespace BazaarIsMyHaven
             var body = interactorObject ? interactorObject.GetComponent<CharacterBody>() : null;
             var player = GetPlayer(interactorObject);
             bool instanced = ModConfig.CommandChestInstancedPurchases.Value;
-            if (!activator || !body || !player || (instanced && buyers.Contains(player)))
+            if (!activator || !body || !player)
+            {
+                return;
+            }
+            if (TryGetWaitingEssence(body.master, out var waitingEssence))
+            {
+                // reopens the picker its owner closed
+                waitingEssence.OnInteractionBegin(activator);
+                return;
+            }
+            if (instanced && buyers.Contains(player))
             {
                 return;
             }
@@ -112,7 +131,10 @@ namespace BazaarIsMyHaven
             {
                 // the vault stays ready for the others
                 buyers.Add(player);
-                DisableForClient(player);
+                if (!ModConfig.CommandChestBuyToInventory.Value)
+                {
+                    SetInteractabilityForClient(player, Interactability.Disabled);
+                }
                 if (self.activationEffectPrefab && self.activationEffectAttach)
                 {
                     EffectManager.SpawnEffect(self.activationEffectPrefab, new EffectData { origin = self.activationEffectAttach.position }, transmit: true);
@@ -123,22 +145,50 @@ namespace BazaarIsMyHaven
                 // opens the vault for everyone and disables it
                 self.DoInteractResult(true);
                 self.CallRpcInteractResult(true);
+                if (ModConfig.CommandChestBuyToInventory.Value)
+                {
+                    // the buyer can still reopen their essence's picker at the vault
+                    SetInteractabilityForClient(player, Interactability.Available);
+                }
             }
             GiveEssence(self, pickup, activator);
         }
 
-        // Buyers can't use an instanced chest again; this covers the host's own player and the server's checks
+        private bool TryGetWaitingEssence(CharacterMaster master, out PickupPickerController picker)
+        {
+            foreach (var entry in essences)
+            {
+                if (entry.Key && entry.Value.owner == master)
+                {
+                    picker = entry.Key;
+                    return true;
+                }
+            }
+            picker = null;
+            return false;
+        }
+
+        // Players with a waiting essence can use the vault to open it; buyers of an instanced chest can't use it again.
+        // This covers the host's own player and the server's checks.
         private Interactability GenericInteraction_GetInteractability(On.RoR2.GenericInteraction.orig_RoR2_IInteractable_GetInteractability orig, GenericInteraction self, Interactor activator)
         {
-            if (IsBazaarChest(self) && activator && buyers.Contains(GetPlayer(activator.gameObject)))
+            if (IsBazaarChest(self) && activator)
             {
-                return Interactability.Disabled;
+                var body = activator.GetComponent<CharacterBody>();
+                if (body && body.master && TryGetWaitingEssence(body.master, out _))
+                {
+                    return Interactability.Available;
+                }
+                if (buyers.Contains(GetPlayer(activator.gameObject)))
+                {
+                    return Interactability.Disabled;
+                }
             }
             return orig(self, activator);
         }
 
-        // Shows the chest as used to this player's client only, with the vault's own interactability field
-        private void DisableForClient(PlayerCharacterMasterController player)
+        // Shows the vault as usable or used to this player's client only, with the vault's own interactability field
+        private void SetInteractabilityForClient(PlayerCharacterMasterController player, Interactability interactability)
         {
             var connection = player.networkUser ? player.networkUser.connectionToClient : null;
             var identity = chest.GetComponent<NetworkIdentity>();
@@ -155,7 +205,7 @@ namespace BazaarIsMyHaven
             var previousInteractability = interaction.interactability;
             try
             {
-                interaction.interactability = Interactability.Disabled;
+                interaction.interactability = interactability;
                 // every component must be serialized in the order the client reads them
                 foreach (var behaviour in identity.GetBehavioursOfSameChannel(channel, false))
                 {
@@ -179,7 +229,7 @@ namespace BazaarIsMyHaven
             writer.FinishMessage();
             if (!connection.SendWriter(writer, channel))
             {
-                Log.LogWarning("Could not hide the used Command Chest for a client.");
+                Log.LogWarning("Could not update the Command Chest for a client.");
             }
         }
 
@@ -212,7 +262,7 @@ namespace BazaarIsMyHaven
             var position = GetEssencePosition(vault);
             if (ModConfig.CommandChestBuyToInventory.Value)
             {
-                SpawnEssenceFor(position, pickup, activator);
+                SpawnEssenceFor(vault, pickup, activator);
                 return;
             }
             var pickupInfo = new GenericPickupController.CreatePickupInfo
@@ -224,10 +274,10 @@ namespace BazaarIsMyHaven
             PickupDropletController.CreatePickupDroplet(pickupInfo, position, Vector3.up * 20f + vault.transform.forward * 2f);
         }
 
-        // Spawns the essence a dropped pickup would turn into, but right away at the vault, and opens its picker for the buyer
-        private void SpawnEssenceFor(Vector3 position, UniquePickup pickup, Interactor activator)
+        // Spawns the essence a dropped pickup would turn into, hidden below the vault for good, and opens its picker for the buyer
+        private void SpawnEssenceFor(PowerOrbPedestalManager vault, UniquePickup pickup, Interactor activator)
         {
-            var essence = Object.Instantiate(CommandArtifactManager.commandCubePrefab, position, Quaternion.identity);
+            var essence = Object.Instantiate(CommandArtifactManager.commandCubePrefab, vault.transform.position + Vector3.down * HiddenEssenceDepth, Quaternion.identity);
             essence.GetComponent<PickupIndexNetworker>().NetworkpickupState = pickup;
             var picker = essence.GetComponent<PickupPickerController>();
             picker.SetOptionsFromPickupForCommandArtifact(pickup);
@@ -235,19 +285,16 @@ namespace BazaarIsMyHaven
             NetworkServer.Spawn(essence);
 
             var body = activator.GetComponent<CharacterBody>();
-            if (body && body.master)
-            {
-                essenceOwners[picker] = body.master;
-            }
+            essences[picker] = new Essence { owner = body ? body.master : null, vaultPosition = GetEssencePosition(vault) };
             picker.OnInteractionBegin(activator);
         }
 
         private Interactability PickupPickerController_GetInteractability(On.RoR2.PickupPickerController.orig_GetInteractability orig, PickupPickerController self, Interactor activator)
         {
-            if (NetworkServer.active && essenceOwners.TryGetValue(self, out var owner) && owner)
+            if (NetworkServer.active && essences.TryGetValue(self, out var essence) && essence.owner)
             {
                 var body = activator ? activator.GetComponent<CharacterBody>() : null;
-                if (!body || body.master != owner)
+                if (!body || body.master != essence.owner)
                 {
                     return Interactability.Disabled;
                 }
@@ -260,12 +307,21 @@ namespace BazaarIsMyHaven
         {
             var master = self.networkUIPromptController ? self.networkUIPromptController.currentParticipantMaster : null;
             var body = master ? master.GetBody() : null;
-            if (!NetworkServer.active || !essenceOwners.ContainsKey(self) || !body || !body.inventory)
+            if (!NetworkServer.active || !essences.TryGetValue(self, out var essence) || !body || !body.inventory)
             {
                 orig(self, pickupState);
                 return;
             }
-            Helper.GivePickup(body, pickupState.pickupIndex, self.transform.position, true);
+            // the item flies from the vault, not from where the essence hides
+            Helper.GivePickup(body, pickupState.pickupIndex, essence.vaultPosition, true);
+
+            // the essence is used up; the vault no longer opens it
+            essences.Remove(self);
+            var player = master.playerCharacterMasterController;
+            if (player && chest)
+            {
+                SetInteractabilityForClient(player, Interactability.Disabled);
+            }
         }
 
         private void SpawnCommandChest()

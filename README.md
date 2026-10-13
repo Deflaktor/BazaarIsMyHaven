@@ -150,7 +150,7 @@ The CommandChest section lets the director spawn a Command Chest. Buying from it
 
 Unmodded clients can't spawn the game's own Command Chest, so it is an Ocular Vault from the Alloyed Collective. Its hover text still says "Place Ocular Battery", since only the host has the mod. Buying opens the vault; if a player can't afford it, the vault plays its refusal.
 
-With `InstancedPurchases`, each player can buy from it once: the vault stays ready for the others, and each buyer gets their own essence. With `BuyToInventory`, opening the chest shows the item picker right away, and the chosen item goes straight into your inventory, without an essence dropping first. If you close the picker, the essence stays at the vault and only you can use it.
+With `InstancedPurchases`, each player can buy from it once: the vault stays ready for the others, and each buyer gets their own essence. With `BuyToInventory`, buying shows the item picker right away, and the chosen item goes straight into your inventory, without an essence appearing. If you close the picker, use the vault again to reopen it.
 
 ## RewardListAvailableCharacters - Valid Keywords
 
