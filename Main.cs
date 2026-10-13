@@ -96,6 +96,7 @@ namespace BazaarIsMyHaven
             On.RoR2.BazaarController.SetUpSeerStations += BazaarController_SetUpSeerStations;
             RoR2.SceneDirector.onPrePopulateSceneServer += SceneDirector_onPrePopulateSceneServer;
             On.RoR2.TeleporterInteraction.Start += TeleporterInteraction_Start;
+            On.RoR2.DrifterBagController.AssignPassenger += DrifterBagController_AssignPassenger;
             On.EntityStates.NewtMonster.KickFromShop.FixedUpdate += KickFromShop_FixedUpdate;
             On.RoR2.GlobalEventManager.OnHitAll += GlobalEventManager_OnHitAll;
             On.RoR2.CharacterMaster.OnBodyDeath += CharacterMaster_OnBodyDeath;
@@ -221,6 +222,25 @@ namespace BazaarIsMyHaven
                 self.shouldAttemptToSpawnShopPortal = true;
             }
         }
+        // The host decides what goes into the bag, so refusing here empties it on every client
+        private void DrifterBagController_AssignPassenger(On.RoR2.DrifterBagController.orig_AssignPassenger orig, DrifterBagController self, GameObject passengerObject)
+        {
+            if (ModConfig.EnableMod.Value && ModConfig.PreventDrifterBagging.Value && IsCurrentMapInBazaar() && NetworkServer.active && passengerObject)
+            {
+                // the same as the game's refusal of a target that can't be carried
+                if (self.isAuthority)
+                {
+                    self.EmptyBagAuthority();
+                }
+                else
+                {
+                    self.CallRpcEmptyBag();
+                }
+                return;
+            }
+            orig(self, passengerObject);
+        }
+
         private void KickFromShop_FixedUpdate(On.EntityStates.NewtMonster.KickFromShop.orig_FixedUpdate orig, EntityStates.NewtMonster.KickFromShop self)
         {
             if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.NewtNoKickFromShop.Value && IsCurrentMapInBazaar() && IsShopkeeper(self.outer.gameObject) && NetworkServer.active)

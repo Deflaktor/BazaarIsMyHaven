@@ -12,6 +12,7 @@ namespace BazaarIsMyHaven
         // general
         public static ConfigEntry<bool> EnableMod;
         public static ConfigEntry<bool> AlwaysSpawnShopPortal;
+        public static ConfigEntry<bool> PreventDrifterBagging;
         public static ConfigEntry<int> DirectorExtraCredits;
         public static ConfigEntry<int> DirectorCreditsPerStage;
 
@@ -158,6 +159,7 @@ namespace BazaarIsMyHaven
             // 00 General
             EnableMod = config.Bind("00 General", "Enabled", true, "Enable Mod");
             AlwaysSpawnShopPortal = config.Bind("00 General", "AlwaysSpawnShopPortal", false, "Spawn a portal to the Bazaar after each teleporter event.");
+            PreventDrifterBagging = config.Bind("00 General", "PreventDrifterBagging", true, "Drifter can't put anything into his bag in the Bazaar: no interactables, no Newt, no other players or drones. The bag stays empty, like when he grabs something he can't carry.");
             DirectorExtraCredits = config.Bind("00 General", "DirectorExtraCredits", 15, "Credits the director gets on every visit to the Bazaar, on top of DirectorCreditsPerStage. Like the game's scene director, it spends them at random on the sections' interactables, by their DirectorCost and DirectorWeight.");
             DirectorCreditsPerStage = config.Bind("00 General", "DirectorCreditsPerStage", 25, "Credits the director gets for every stage cleared in the run.");
 
