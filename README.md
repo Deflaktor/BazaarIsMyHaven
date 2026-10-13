@@ -62,6 +62,13 @@ Controls what Newt says in chat:
 - `Default` -> Newt uses the game's own lines, which the game itself never shows. He comments when you donate at the Donation Altar, buy from a Lunar Bud or hit him, and every player sees these lines in their own language. He also greets you when you arrive, in English. The rewards of the Donation Altar are shown as the game's usual pickup messages.
 - `BazaarIsMyHome` -> The greetings and remarks of the original BazaarIsMyHome mod, in the host's language.
 
+### Newt - KarmaTrigger
+
+In runs with karma enabled, angering Newt raises the run's karma, which makes the final fight harder:
+
+- `OnDamage` -> Vanilla. Karma rises when he would kick you out after being hit, also if `NoKickFromShop` keeps you in the Bazaar.
+- `OnKill` -> Karma only rises when Newt is killed.
+
 ### Newt - DeathBehavior
 
 Controls how Newt acts after being killed:
