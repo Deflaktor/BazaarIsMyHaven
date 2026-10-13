@@ -264,7 +264,7 @@ namespace BazaarIsMyHaven
             // 10 ShrineOfOrder
             ShrineOfOrderSectionEnabled = config.Bind("10 ShrineOfOrder", "SectionEnabled", true, "Enables or disables the Shrine of Order section. Enabling lets the director spawn a Shrine of Order near the Newt.");
             ShrineOfOrderUseLimit = config.Bind("10 ShrineOfOrder", "UseLimit", -1, "Limit the amount of Shrine of Order uses per visit to the Bazaar. -1 = Unlimited.");
-            ShrineOfOrderCost = config.Bind("10 ShrineOfOrder", "Cost", 1, "Initial lunar coin cost for Shrine of Order.");
+            ShrineOfOrderCost = config.Bind("10 ShrineOfOrder", "Cost", 1, "Lunar coin cost of each Shrine of Order use.");
             ShrineOfOrderDirectorCost = config.Bind("10 ShrineOfOrder", "DirectorCost", 5, "Director credits the Shrine of Order costs.");
             ShrineOfOrderDirectorWeight = config.Bind("10 ShrineOfOrder", "DirectorWeight", 1f, "How likely the director picks the Shrine of Order, compared to the DirectorWeight of the other interactables.");
 

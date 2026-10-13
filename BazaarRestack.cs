@@ -63,6 +63,8 @@ namespace BazaarIsMyHaven
             {
                 shrinerestackOne.GetComponent<ShrineRestackBehavior>().maxPurchaseCount = int.MaxValue;
             }
+            // the shrine doubles its price after each use; keep it at Cost instead
+            shrinerestackOne.GetComponent<ShrineRestackBehavior>().costMultiplierPerPurchase = 1f;
             shrinerestackOne.GetComponent<PurchaseInteraction>().cost = ModConfig.ShrineOfOrderCost.Value;
             shrinerestackOne.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.ShrineOfOrderCost.Value;
         }
