@@ -60,7 +60,7 @@ namespace BazaarIsMyHaven
 
         private void SetScraper()
         {
-            List<int> total = new List<int> { 0, 1, 2, 3 };
+            List<int> total = new List<int> { 0, 1 };
             List<int> random = new List<int>();
             while (total.Count > 0)
             {
@@ -68,10 +68,8 @@ namespace BazaarIsMyHaven
                 random.Add(total[index]);
                 total.RemoveAt(index);
             }
-            DicScrapers.Add(random[0], new SpawnCardStruct(new Vector3(-95.0f, -25.5f, -45.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-            DicScrapers.Add(random[1], new SpawnCardStruct(new Vector3(-100.0f, -25.0f, -40.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-            DicScrapers.Add(random[2], new SpawnCardStruct(new Vector3(-90.0f, -25.5f, -40.0f), new Vector3(0.0f, 72.0f, 0.0f)));
-            DicScrapers.Add(random[3], new SpawnCardStruct(new Vector3(-95.0f, -25.5f, -35.0f), new Vector3(0.0f, 72.0f, 0.0f)));
+            DicScrapers.Add(random[0], new SpawnCardStruct(new Vector3(-100.0f, -25.0f, -40.0f), new Vector3(0.0f, 72.0f, 0.0f)));
+            DicScrapers.Add(random[1], new SpawnCardStruct(new Vector3(-95.0f, -25.5f, -35.0f), new Vector3(0.0f, 72.0f, 0.0f)));
         }
 
     }

@@ -205,7 +205,7 @@ namespace BazaarIsMyHaven
 
             // 04 Scrapper
             ScrapperSectionEnabled = config.Bind("04 Scrapper", "SectionEnabled", true, "Enables or disables the Scrapper section.");
-            ScrapperMaxAmount = config.Bind("04 Scrapper", "MaxAmount", 4, new ConfigDescription("Number of Scrappers spawned when the director picks them (max 4).", new AcceptableValueRange<int>(0, 4)));
+            ScrapperMaxAmount = config.Bind("04 Scrapper", "MaxAmount", 2, new ConfigDescription("Number of Scrappers spawned when the director picks them (max 2).", new AcceptableValueRange<int>(0, 2)));
             ScrapperDirectorCost = config.Bind("04 Scrapper", "DirectorCost", 5, "Director credits the Scrappers cost. The director picks them only once, and then all of them spawn.");
             ScrapperDirectorWeight = config.Bind("04 Scrapper", "DirectorWeight", 1f, "How likely the director picks the Scrappers, compared to the DirectorWeight of the other interactables.");
 
