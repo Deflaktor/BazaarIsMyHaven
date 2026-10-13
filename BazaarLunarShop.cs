@@ -87,6 +87,25 @@ namespace BazaarIsMyHaven
                 whichStallsHaveBeenBoughtOnce.Clear();
                 SpawnLunarShopTerminal();
             }
+            RemoveLunarRecycler();
+        }
+
+        // The recycler only rerolls buds, so it also goes when the director spawned none
+        private void RemoveLunarRecycler()
+        {
+            bool disabled = ModConfig.LunarRecyclerSectionEnabled.Value && (!ModConfig.LunarRecyclerAvailable.Value || ModConfig.LunarRecyclerCost.Value < 0);
+            bool noBuds = card != null && card.Count == 0;
+            if (!disabled && !noBuds)
+            {
+                return;
+            }
+            foreach (var purchaseInteraction in UnityEngine.Object.FindObjectsOfType<PurchaseInteraction>())
+            {
+                if (purchaseInteraction.name.StartsWith("LunarRecycler"))
+                {
+                    NetworkServer.Destroy(purchaseInteraction.gameObject);
+                }
+            }
         }
 
         public void PurchaseInteraction_Awake(On.RoR2.PurchaseInteraction.orig_Awake orig, PurchaseInteraction self)
@@ -103,20 +122,11 @@ namespace BazaarIsMyHaven
                         self.Networkcost = ModConfig.LunarShopCost.Value;
                     }
                 }
-                if (ModConfig.LunarRecyclerSectionEnabled.Value)
+                // RemoveLunarRecycler removes it otherwise
+                if (ModConfig.LunarRecyclerSectionEnabled.Value && ModConfig.LunarRecyclerAvailable.Value && ModConfig.LunarRecyclerCost.Value >= 0 && self.name.StartsWith("LunarRecycler"))
                 {
-                    if (self.name.StartsWith("LunarRecycler"))
-                    {
-                        if (ModConfig.LunarRecyclerAvailable.Value && ModConfig.LunarRecyclerCost.Value >= 0)
-                        {
-                            self.cost = ModConfig.LunarRecyclerCost.Value;
-                            self.Networkcost = ModConfig.LunarRecyclerCost.Value;
-                        }
-                        else
-                        {
-                            NetworkServer.Destroy(self.gameObject);
-                        }
-                    }
+                    self.cost = ModConfig.LunarRecyclerCost.Value;
+                    self.Networkcost = ModConfig.LunarRecyclerCost.Value;
                 }
             }
         }
