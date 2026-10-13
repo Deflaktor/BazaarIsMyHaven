@@ -11,11 +11,11 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace BazaarIsMyHaven
 {
-    // A Command Chest gives a Command Essence, which offers every item of the tier it rolled.
+    // A Command Pedestal gives a Command Essence, which offers every item of the tier it rolled.
     // Unmodded clients can't spawn the game's own Command Chest, so it is built from the Alloyed Collective's Ocular Vault:
     // the host takes its interaction, charges the price and plays the vault's own opening or refusal.
     // With BuyToInventory the vault only opens a private item picker, and the price is charged once an item is picked.
-    public class BazaarCommandChest : BazaarBase
+    public class BazaarCommandPedestal : BazaarBase
     {
         // a price sign shows this high above the vault
         private const float SignHeight = 4.5f;
@@ -32,15 +32,15 @@ namespace BazaarIsMyHaven
         }
 
         // The director picks the tier among those it can afford, by their DirectorWeight; the tier sets the essence and the price
-        private class CommandChestCard : DirectorCard
+        private class CommandPedestalCard : DirectorCard
         {
-            public ModConfig.CommandChestTier tier;
+            public ModConfig.CommandPedestalTier tier;
 
-            public CommandChestCard() : base("Command Chest", null, null, () => 1) { }
+            public CommandPedestalCard() : base("Command Pedestal", null, null, () => 1) { }
 
-            private static List<ModConfig.CommandChestTier> GetTiers()
+            private static List<ModConfig.CommandPedestalTier> GetTiers()
             {
-                return ModConfig.CommandChestTiers.Where(tier => tier.directorWeight.Value > 0f && tier.dropList(Run.instance).Count > 0).ToList();
+                return ModConfig.CommandPedestalTiers.Where(tier => tier.directorWeight.Value > 0f && tier.dropList(Run.instance).Count > 0).ToList();
             }
 
             public override float Weight => GetTiers().Sum(tier => tier.directorWeight.Value);
@@ -53,7 +53,7 @@ namespace BazaarIsMyHaven
 
             protected override int PickCost(int credits)
             {
-                var weightedSelection = new WeightedSelection<ModConfig.CommandChestTier>();
+                var weightedSelection = new WeightedSelection<ModConfig.CommandPedestalTier>();
                 foreach (var choice in GetTiers())
                 {
                     if (System.Math.Max(0, choice.directorCost.Value) <= credits)
@@ -65,9 +65,9 @@ namespace BazaarIsMyHaven
         }
 
         AsyncOperationHandle<GameObject> vaultPrefab;
-        CommandChestCard card;
+        CommandPedestalCard card;
         bool spawned;
-        GameObject chest;
+        GameObject pedestal;
         Xoroshiro128Plus rng;
         // bought without instanced purchases; nobody can buy it any more
         bool sold;
@@ -75,7 +75,7 @@ namespace BazaarIsMyHaven
         UniquePickup offer;
         bool hasOffer;
         GameObject displayEssence;
-        // players who bought from the chest with instanced purchases
+        // players who bought from the pedestal with instanced purchases
         readonly HashSet<PlayerCharacterMasterController> buyers = new HashSet<PlayerCharacterMasterController>();
         // hidden essences waiting for their owner's choice; interacting with the vault again opens them
         readonly Dictionary<PickupPickerController, Essence> essences = new Dictionary<PickupPickerController, Essence>();
@@ -97,9 +97,9 @@ namespace BazaarIsMyHaven
         public override void AddDirectorCards(List<DirectorCard> cards)
         {
             card = null;
-            if (ModConfig.CommandChestSectionEnabled.Value)
+            if (ModConfig.CommandPedestalSectionEnabled.Value)
             {
-                card = new CommandChestCard();
+                card = new CommandPedestalCard();
                 cards.Add(card);
             }
         }
@@ -107,7 +107,7 @@ namespace BazaarIsMyHaven
         public override void SetupBazaar()
         {
             spawned = false;
-            chest = null;
+            pedestal = null;
             displayEssence = null;
             hasOffer = false;
             sold = false;
@@ -120,13 +120,13 @@ namespace BazaarIsMyHaven
         {
             if (card == null || card.Count == 0 || spawned)
                 return;
-            SpawnCommandChest();
+            SpawnCommandPedestal();
             spawned = true;
         }
 
         private bool IsBazaarChest(Component component)
         {
-            return chest && component && component.gameObject == chest && NetworkServer.active;
+            return pedestal && component && component.gameObject == pedestal && NetworkServer.active;
         }
 
         private static PlayerCharacterMasterController GetPlayer(GameObject bodyObject)
@@ -147,12 +147,12 @@ namespace BazaarIsMyHaven
             var activator = interactorObject ? interactorObject.GetComponent<Interactor>() : null;
             var body = interactorObject ? interactorObject.GetComponent<CharacterBody>() : null;
             var player = GetPlayer(interactorObject);
-            if (!activator || !body || !player || sold || (ModConfig.CommandChestInstancedPurchases.Value && buyers.Contains(player)))
+            if (!activator || !body || !player || sold || (ModConfig.CommandPedestalInstancedPurchases.Value && buyers.Contains(player)))
             {
                 return;
             }
 
-            var costType = ModConfig.CommandChestCostType.Value;
+            var costType = ModConfig.CommandPedestalCostType.Value;
             int cost = GetPrice();
             if (!Helper.CanAfford(costType, cost, activator, body))
             {
@@ -160,7 +160,7 @@ namespace BazaarIsMyHaven
                 return;
             }
 
-            if (ModConfig.CommandChestBuyToInventory.Value)
+            if (ModConfig.CommandPedestalBuyToInventory.Value)
             {
                 // only opens the picker; the price is charged once an item is picked.
                 // An equipment essence offers only equipment, which needs an empty slot.
@@ -191,7 +191,7 @@ namespace BazaarIsMyHaven
                 Refuse(self);
                 return;
             }
-            Helper.PayCost(costType, cost, activator, body, chest, rng);
+            Helper.PayCost(costType, cost, activator, body, pedestal, rng);
             CompletePurchase(self, player);
             DropEssence(self, offer);
         }
@@ -203,10 +203,10 @@ namespace BazaarIsMyHaven
             vault.CallRpcInteractResult(false);
         }
 
-        // Counts a paid purchase: an instanced chest stays ready for the others, otherwise the vault opens for everyone
+        // Counts a paid purchase: an instanced pedestal stays ready for the others, otherwise the vault opens for everyone
         private void CompletePurchase(PowerOrbPedestalManager vault, PlayerCharacterMasterController player)
         {
-            if (ModConfig.CommandChestInstancedPurchases.Value)
+            if (ModConfig.CommandPedestalInstancedPurchases.Value)
             {
                 buyers.Add(player);
                 SetInteractabilityForClient(player, Interactability.Disabled);
@@ -250,7 +250,7 @@ namespace BazaarIsMyHaven
             return false;
         }
 
-        // Players with a waiting essence can use the vault to open it; buyers of an instanced chest can't use it again.
+        // Players with a waiting essence can use the vault to open it; buyers of an instanced pedestal can't use it again.
         // This covers the host's own player and the server's checks.
         private Interactability GenericInteraction_GetInteractability(On.RoR2.GenericInteraction.orig_RoR2_IInteractable_GetInteractability orig, GenericInteraction self, Interactor activator)
         {
@@ -273,8 +273,8 @@ namespace BazaarIsMyHaven
         private void SetInteractabilityForClient(PlayerCharacterMasterController player, Interactability interactability)
         {
             var connection = player.networkUser ? player.networkUser.connectionToClient : null;
-            var identity = chest.GetComponent<NetworkIdentity>();
-            var interaction = chest.GetComponent<GenericInteraction>();
+            var identity = pedestal.GetComponent<NetworkIdentity>();
+            var interaction = pedestal.GetComponent<GenericInteraction>();
             if (connection == null || !connection.isReady || Util.ConnectionIsLocal(connection) || !identity || !interaction)
             {
                 return;
@@ -311,14 +311,14 @@ namespace BazaarIsMyHaven
             writer.FinishMessage();
             if (!connection.SendWriter(writer, channel))
             {
-                Log.LogWarning("Could not update the Command Chest for a client.");
+                Log.LogWarning("Could not update the Command Pedestal for a client.");
             }
         }
 
         // The tier's price, scaled with difficulty if it is paid in money
         private int GetPrice()
         {
-            return card != null && card.tier != null ? Helper.GetCost(card.tier.cost.Value, ModConfig.CommandChestCostType.Value) : 0;
+            return card != null && card.tier != null ? Helper.GetCost(card.tier.cost.Value, ModConfig.CommandPedestalCostType.Value) : 0;
         }
 
         // Rolls an item of the director's tier; the essence then offers every item of that tier
@@ -401,11 +401,11 @@ namespace BazaarIsMyHaven
             var body = master ? master.GetBody() : null;
             var activator = body ? body.GetComponent<Interactor>() : null;
             var player = master ? master.playerCharacterMasterController : null;
-            var vault = chest ? chest.GetComponent<PowerOrbPedestalManager>() : null;
-            var costType = ModConfig.CommandChestCostType.Value;
+            var vault = pedestal ? pedestal.GetComponent<PowerOrbPedestalManager>() : null;
+            var costType = ModConfig.CommandPedestalCostType.Value;
             int cost = GetPrice();
             if (!vault || !body || !body.inventory || !activator || !player || sold
-                || (ModConfig.CommandChestInstancedPurchases.Value && buyers.Contains(player))
+                || (ModConfig.CommandPedestalInstancedPurchases.Value && buyers.Contains(player))
                 || !Helper.CanAfford(costType, cost, activator, body)
                 || !Helper.HasRoomFor(body, pickupState.pickupIndex))
             {
@@ -417,13 +417,13 @@ namespace BazaarIsMyHaven
                 return;
             }
 
-            Helper.PayCost(costType, cost, activator, body, chest, rng);
+            Helper.PayCost(costType, cost, activator, body, pedestal, rng);
             // the item flies from the vault, not from where the essence hides
             Helper.GivePickup(body, pickupState.pickupIndex, essence.vaultPosition, true);
             CompletePurchase(vault, player);
         }
 
-        // The buyer of an instanced chest no longer sees the essence it gives; the others still do
+        // The buyer of an instanced pedestal no longer sees the essence it gives; the others still do
         private void HideDisplayFor(PlayerCharacterMasterController player)
         {
             var identity = displayEssence ? displayEssence.GetComponent<NetworkIdentity>() : null;
@@ -449,7 +449,7 @@ namespace BazaarIsMyHaven
             writer.FinishMessage();
             if (!connection.SendWriter(writer, QosChannelIndex.defaultReliable.intVal))
             {
-                Log.LogWarning("Could not hide the Command Chest's essence for a client.");
+                Log.LogWarning("Could not hide the Command Pedestal's essence for a client.");
             }
         }
 
@@ -471,10 +471,10 @@ namespace BazaarIsMyHaven
                     layerMask |= 1 << layer;
                 }
             }
-            var origin = chest.transform.position + Vector3.up * DisplayDropHeight;
+            var origin = pedestal.transform.position + Vector3.up * DisplayDropHeight;
             if (!Physics.SphereCast(origin, collider.radius, Vector3.down, out var hit, DisplayDropHeight * 2f, layerMask, QueryTriggerInteraction.Ignore))
             {
-                Log.LogWarning("Found nothing for the Command Chest's essence to rest on.");
+                Log.LogWarning("Found nothing for the Command Pedestal's essence to rest on.");
                 return;
             }
 
@@ -486,14 +486,14 @@ namespace BazaarIsMyHaven
                 rigidbody.isKinematic = true;
             }
             NetworkServer.Spawn(displayEssence);
-            Log.LogDebug($"The Command Chest's essence rests on {hit.collider.name}, {displayEssence.transform.position.y - chest.transform.position.y:0.00} m above the vault.");
+            Log.LogDebug($"The Command Pedestal's essence rests on {hit.collider.name}, {displayEssence.transform.position.y - pedestal.transform.position.y:0.00} m above the pedestal.");
         }
 
-        private void SpawnCommandChest()
+        private void SpawnCommandPedestal()
         {
             rng = new Xoroshiro128Plus(Run.instance.treasureRng.nextUlong);
-            chest = Object.Instantiate(vaultPrefab.WaitForCompletion(), new Vector3(-63.9613f, -26.3518f, -73.8056f), Quaternion.identity);
-            NetworkServer.Spawn(chest);
+            pedestal = Object.Instantiate(vaultPrefab.WaitForCompletion(), new Vector3(-63.9613f, -26.3518f, -73.8056f), Quaternion.identity);
+            NetworkServer.Spawn(pedestal);
 
             hasOffer = TryRollPickup(out offer);
             if (hasOffer)
@@ -501,8 +501,8 @@ namespace BazaarIsMyHaven
                 SpawnDisplayEssence();
             }
 
-            Log.LogDebug($"The Command Chest offers {card.tier.name}.");
-            PriceSigns.Apply(new List<GameObject> { chest }, GetPrice(), ModConfig.CommandChestCostType.Value, SignHeight);
+            Log.LogDebug($"The Command Pedestal offers {card.tier.name}.");
+            PriceSigns.Apply(new List<GameObject> { pedestal }, GetPrice(), ModConfig.CommandPedestalCostType.Value, SignHeight);
         }
     }
 }

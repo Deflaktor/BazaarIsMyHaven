@@ -12,7 +12,7 @@ Thanks to WeeabooGod for the Lunar Shop rework and many of the fixes in this ver
 ### New sections
 
 - Add a Drones section for the Alloyed Collective: the director can spawn a Drone Combiner Station, a Drone Upgrade Station, a Drone Scrapper and a Triple Drone Shop, and the players' drones come along into the Bazaar.
-- Add a Command Chest section: buying from it gives a Command Essence that lets you choose any item of its tier. The director picks the tier, and each tier has its own price, director cost and weight. Unmodded clients can't spawn the game's own Command Chest, so it is the Alloyed Collective's Ocular Vault, with the essence it gives shown above it. With `InstancedPurchases`, each player can buy once. With `BuyToInventory`, the item picker opens right away, and the price is only charged once an item is picked.
+- Add a Command Pedestal section: buying from it gives a Command Essence that lets you choose any item of its tier. The director picks the tier, and each tier has its own price, director cost and weight. Unmodded clients can't spawn the game's own Command Chest, so it is the Alloyed Collective's Ocular Vault, with the essence it gives shown above it. With `InstancedPurchases`, each player can buy once. With `BuyToInventory`, the item picker opens right away, and the price is only charged once an item is picked.
 
 ### Lunar Shop
 
@@ -52,7 +52,7 @@ Thanks to WeeabooGod for the Lunar Shop rework and many of the fixes in this ver
 - The Wandering CHEF only appears with the Alloyed Collective. With `CraftableRecipesOnly`, he only offers a recipe that someone can cook, and otherwise doesn't appear.
 - At most 2 Scrappers spawn, instead of 4.
 - Add Transcendent Cauldrons from Hallowed Concepts as a cauldron type, with weight 0 by default.
-- With `BuyToInventory`, Equipment Terminals, the Command Chest and the Wandering CHEF only sell equipment into an empty equipment slot.
+- With `BuyToInventory`, Equipment Terminals, the Command Pedestal and the Wandering CHEF only sell equipment into an empty equipment slot.
 - Captain's hacking beacon only pays for one purchase of a Bazaar shop; afterwards it costs the usual price again.
 - Remove the Bazaar decoration (`DecorateBazaar`) and the unused Green to Purple and Green to Yellow cauldron weights.
 - The settings in each config section are now in a sensible order.
