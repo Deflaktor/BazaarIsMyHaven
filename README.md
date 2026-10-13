@@ -19,7 +19,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
   - Donation Altar
   - Wandering Chef (with the Alloyed Collective)
   - Drone stations from the Alloyed Collective
-  - Command Chest
+  - Command Pedestal
 
 - **Newt Behavior Options**:
   - Stop him from throwing you out.
@@ -100,7 +100,7 @@ Controls how Newt acts after being killed:
 
 With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too. `CostType` sets what the price is paid in, such as money (the default), Lunar Coins or items of a tier. With `ScaleMoneyCosts`, money prices scale with difficulty like the game's own shops.
 
-With `BuyToInventory`, bought equipment goes straight into your inventory, so it can only be bought with an empty equipment slot. The same goes for the Command Chest and the Wandering Chef's recipes.
+With `BuyToInventory`, bought equipment goes straight into your inventory, so it can only be bought with an empty equipment slot. The same goes for the Command Pedestal and the Wandering Chef's recipes.
 
 ### LunarShop
 
@@ -147,13 +147,13 @@ If the Alloyed Collective is enabled for the run, the Drones section lets the di
 
 Drones normally stay behind when you enter the Bazaar, but the Drone Combiner Station, the Drone Upgrade Station and the Drone Scrapper only work with drones that are there. So with the Drones section enabled, the players' drones come along like on any other stage and behave as usual. Other allies still stay behind.
 
-### Command Chest
+### Command Pedestal
 
-The CommandChest section lets the director spawn a Command Chest. Buying from it drops a Command Essence, from which you choose any item of the chest's tier. The tiers are white, green, red, boss and lunar items, equipment, and the four void tiers. Each has its own `DirectorCost`, `DirectorWeight` and `Cost`, e.g. `Tier2DirectorCost`: the director picks a tier it can afford by the tiers' weights, once per visit, and the essence it gives is shown above the vault. The price is paid in `CostType` and shown on a price sign above the vault. By default the tiers follow the game's own Command Chest mix, without lunar items.
+The CommandPedestal section lets the director spawn a Command Pedestal. Buying from it drops a Command Essence, from which you choose any item of the pedestal's tier. The tiers are white, green, red, boss and lunar items, equipment, and the four void tiers. Each has its own `DirectorCost`, `DirectorWeight` and `Cost`, e.g. `Tier2DirectorCost`: the director picks a tier it can afford by the tiers' weights, once per visit, and the essence it gives is shown above the pedestal. The price is paid in `CostType` and shown on a price sign above the pedestal. By default the tiers follow the game's own Command Chest mix, without lunar items.
 
-Unmodded clients can't spawn the game's own Command Chest, so it is an Ocular Vault from the Alloyed Collective. Its hover text still says "Place Ocular Battery", since only the host has the mod. Buying opens the vault; if a player can't afford it, the vault plays its refusal.
+Unmodded clients can't spawn the game's own Command Chest, so it is an Ocular Vault from the Alloyed Collective. Its hover text still says "Place Ocular Battery", since only the host has the mod. Buying opens the pedestal; if a player can't afford it, the pedestal plays the pedestal's refusal.
 
-With `InstancedPurchases`, each player can buy from it once: the vault stays ready for the others, and each buyer gets their own essence. With `BuyToInventory`, using the vault shows the item picker right away, without an essence appearing. The price is only charged once you pick an item, which goes straight into your inventory. Equipment needs an empty equipment slot; closing the picker costs nothing, and using the vault again reopens it. Without `InstancedPurchases`, the first player to pick an item buys the vault. Without `BuyToInventory`, buying drops a Command Essence that anyone can use.
+With `InstancedPurchases`, each player can buy from it once: the pedestal stays ready for the others, and each buyer gets their own essence. With `BuyToInventory`, using the pedestal shows the item picker right away, without an essence appearing. The price is only charged once you pick an item, which goes straight into your inventory. Equipment needs an empty equipment slot; closing the picker costs nothing, and using the pedestal again reopens it. Without `InstancedPurchases`, the first player to pick an item buys the pedestal. Without `BuyToInventory`, buying drops a Command Essence that anyone can use.
 
 ## RewardListAvailableCharacters - Valid Keywords
 

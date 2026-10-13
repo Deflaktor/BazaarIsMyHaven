@@ -158,12 +158,12 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> DronesTripleDroneShopDirectorCost;
         public static ConfigEntry<float> DronesTripleDroneShopDirectorWeight;
 
-        // command chest
-        public static ConfigEntry<bool> CommandChestSectionEnabled;
-        public static readonly List<CommandChestTier> CommandChestTiers = new List<CommandChestTier>();
-        public static ConfigEntry<CostTypeIndex> CommandChestCostType;
-        public static ConfigEntry<bool> CommandChestInstancedPurchases;
-        public static ConfigEntry<bool> CommandChestBuyToInventory;
+        // command pedestal
+        public static ConfigEntry<bool> CommandPedestalSectionEnabled;
+        public static readonly List<CommandPedestalTier> CommandPedestalTiers = new List<CommandPedestalTier>();
+        public static ConfigEntry<CostTypeIndex> CommandPedestalCostType;
+        public static ConfigEntry<bool> CommandPedestalInstancedPurchases;
+        public static ConfigEntry<bool> CommandPedestalBuyToInventory;
 
         private const string itemTiersString = "Tier1 | Tier2 | Tier3 | Lunar | Boss | VoidTier1 | VoidTier2 | VoidTier3 | VoidBoss | FoodTier";
         private const string itemKeyWordsExplanation = $"Can use:\n - internal item names(see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)\nFollows ItemStringParser format.";
@@ -320,23 +320,23 @@ namespace BazaarIsMyHaven
             DronesTripleDroneShopDirectorCost = config.Bind("13 Drones", "TripleDroneShopDirectorCost", 8, "Director credits the Triple Drone Shop costs.");
             DronesTripleDroneShopDirectorWeight = config.Bind("13 Drones", "TripleDroneShopDirectorWeight", 1f, "How likely the director picks the Triple Drone Shop, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
 
-            // 14 CommandChest
-            CommandChestSectionEnabled = config.Bind("14 CommandChest", "SectionEnabled", true, "Enables or disables the Command Chest section. Enabling lets the director spawn a Command Chest, which drops a Command Essence that lets you choose any item of its tier. Unmodded clients can't spawn the game's own Command Chest, so it is an Ocular Vault, with its price shown above it; clients see the vault's own \"Place Ocular Battery\" text.");
-            CommandChestTiers.Clear();
+            // 14 CommandPedestal
+            CommandPedestalSectionEnabled = config.Bind("14 CommandPedestal", "SectionEnabled", true, "Enables or disables the Command Pedestal section. Enabling lets the director spawn a Command Pedestal, which drops a Command Essence that lets you choose any item of its tier. Unmodded clients can't spawn the game's own Command Chest, so it is an Ocular Vault, with its price shown above it; clients see the vault's own \"Place Ocular Battery\" text.");
+            CommandPedestalTiers.Clear();
             // like the game's own Command Chest mix, without lunar items; together as likely as one interactable with DirectorWeight 0.2
-            AddCommandChestTier(config, "Tier1", "white items", run => run.availableTier1DropList, 50, 10, 0.04f);
-            AddCommandChestTier(config, "Tier2", "green items", run => run.availableTier2DropList, 100, 20, 0.04f);
-            AddCommandChestTier(config, "Tier3", "red items", run => run.availableTier3DropList, 800, 30, 0.01f);
-            AddCommandChestTier(config, "Boss", "boss items", run => run.availableBossDropList, 400, 20, 0.01f);
-            AddCommandChestTier(config, "Equipment", "equipment", run => run.availableEquipmentDropList, 100, 10, 0.04f);
-            AddCommandChestTier(config, "Lunar", "lunar items", run => run.availableLunarItemDropList, 100, 20, 0f);
-            AddCommandChestTier(config, "VoidTier1", "void white items", run => run.availableVoidTier1DropList, 50, 10, 0.02f);
-            AddCommandChestTier(config, "VoidTier2", "void green items", run => run.availableVoidTier2DropList, 100, 20, 0.02f);
-            AddCommandChestTier(config, "VoidTier3", "void red items", run => run.availableVoidTier3DropList, 800, 30, 0.01f);
-            AddCommandChestTier(config, "VoidBoss", "void boss items", run => run.availableVoidBossDropList, 400, 20, 0.01f);
-            CommandChestCostType = config.Bind("14 CommandChest", "CostType", CostTypeIndex.Money, "What opening the Command Chest costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
-            CommandChestInstancedPurchases = config.Bind("14 CommandChest", "InstancedPurchases", true, "Each player can buy from the Command Chest once, independently of the others. It stays ready for the others, and each buyer gets their own Command Essence.");
-            CommandChestBuyToInventory = config.Bind("14 CommandChest", "BuyToInventory", true, "Using the Command Chest shows its item picker right away, and the price is only charged once you pick an item, which goes directly into your inventory. Equipment needs an empty equipment slot. No essence appears; closing the picker costs nothing, and using the Command Chest again reopens it. Otherwise buying drops a Command Essence that anyone can use.");
+            AddCommandPedestalTier(config, "Tier1", "white items", run => run.availableTier1DropList, 50, 10, 0.04f);
+            AddCommandPedestalTier(config, "Tier2", "green items", run => run.availableTier2DropList, 100, 20, 0.04f);
+            AddCommandPedestalTier(config, "Tier3", "red items", run => run.availableTier3DropList, 800, 30, 0.01f);
+            AddCommandPedestalTier(config, "Boss", "boss items", run => run.availableBossDropList, 400, 20, 0.01f);
+            AddCommandPedestalTier(config, "Equipment", "equipment", run => run.availableEquipmentDropList, 100, 10, 0.04f);
+            AddCommandPedestalTier(config, "Lunar", "lunar items", run => run.availableLunarItemDropList, 100, 20, 0f);
+            AddCommandPedestalTier(config, "VoidTier1", "void white items", run => run.availableVoidTier1DropList, 50, 10, 0.02f);
+            AddCommandPedestalTier(config, "VoidTier2", "void green items", run => run.availableVoidTier2DropList, 100, 20, 0.02f);
+            AddCommandPedestalTier(config, "VoidTier3", "void red items", run => run.availableVoidTier3DropList, 800, 30, 0.01f);
+            AddCommandPedestalTier(config, "VoidBoss", "void boss items", run => run.availableVoidBossDropList, 400, 20, 0.01f);
+            CommandPedestalCostType = config.Bind("14 CommandPedestal", "CostType", CostTypeIndex.Money, "What opening the Command Pedestal costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
+            CommandPedestalInstancedPurchases = config.Bind("14 CommandPedestal", "InstancedPurchases", true, "Each player can buy from the Command Pedestal once, independently of the others. It stays ready for the others, and each buyer gets their own Command Essence.");
+            CommandPedestalBuyToInventory = config.Bind("14 CommandPedestal", "BuyToInventory", true, "Using the Command Pedestal shows its item picker right away, and the price is only charged once you pick an item, which goes directly into your inventory. Equipment needs an empty equipment slot. No essence appears; closing the picker costs nothing, and using the Command Pedestal again reopens it. Otherwise buying drops a Command Essence that anyone can use.");
 
             RefreshDerivedData(config);
             LunarShopAmountDependingOnCharacter.SettingChanged += LunarShopCharacterAmountsChanged;
@@ -371,8 +371,8 @@ namespace BazaarIsMyHaven
             RefreshDerivedData(config);
         }
 
-        // One tier of Command Chest: the director picks among the tiers it can afford by their DirectorWeight
-        public class CommandChestTier
+        // One tier of Command Pedestal: the director picks among the tiers it can afford by their DirectorWeight
+        public class CommandPedestalTier
         {
             public string name;
             public Func<Run, List<PickupIndex>> dropList;
@@ -381,15 +381,15 @@ namespace BazaarIsMyHaven
             public ConfigEntry<int> cost;
         }
 
-        private static void AddCommandChestTier(ConfigFile config, string name, string offers, Func<Run, List<PickupIndex>> dropList, int cost, int directorCost, float directorWeight)
+        private static void AddCommandPedestalTier(ConfigFile config, string name, string offers, Func<Run, List<PickupIndex>> dropList, int cost, int directorCost, float directorWeight)
         {
-            CommandChestTiers.Add(new CommandChestTier
+            CommandPedestalTiers.Add(new CommandPedestalTier
             {
                 name = name,
                 dropList = dropList,
-                directorCost = config.Bind("14 CommandChest", $"{name}DirectorCost", directorCost, $"Director credits a Command Chest offering {offers} costs."),
-                directorWeight = config.Bind("14 CommandChest", $"{name}DirectorWeight", directorWeight, $"How likely the director picks a Command Chest offering {offers}, compared to the DirectorWeight of the other interactables. 0 = never."),
-                cost = config.Bind("14 CommandChest", $"{name}Cost", cost, $"Cost of a Command Chest offering {offers}, paid in CostType."),
+                directorCost = config.Bind("14 CommandPedestal", $"{name}DirectorCost", directorCost, $"Director credits a Command Pedestal offering {offers} costs."),
+                directorWeight = config.Bind("14 CommandPedestal", $"{name}DirectorWeight", directorWeight, $"How likely the director picks a Command Pedestal offering {offers}, compared to the DirectorWeight of the other interactables. 0 = never."),
+                cost = config.Bind("14 CommandPedestal", $"{name}Cost", cost, $"Cost of a Command Pedestal offering {offers}, paid in CostType."),
             });
         }
 
@@ -401,7 +401,7 @@ namespace BazaarIsMyHaven
             if (EquipmentCostType.Value >= CostTypeIndex.Count) EquipmentCostType.Value = CostTypeIndex.Money;
             if (LunarShopCostType.Value >= CostTypeIndex.Count) LunarShopCostType.Value = CostTypeIndex.LunarCoin;
             if (DonateCostType.Value >= CostTypeIndex.Count) DonateCostType.Value = CostTypeIndex.LunarCoin;
-            if (CommandChestCostType.Value >= CostTypeIndex.Count) CommandChestCostType.Value = CostTypeIndex.Money;
+            if (CommandPedestalCostType.Value >= CostTypeIndex.Count) CommandPedestalCostType.Value = CostTypeIndex.Money;
             RefreshLunarShopCharacterAmounts();
             RefreshDonationRewardLists(config);
         }
