@@ -119,12 +119,20 @@ namespace BazaarIsMyHaven
 
             if (ModConfig.CommandChestBuyToInventory.Value)
             {
-                // only opens the picker; the price is charged once an item is picked
+                // only opens the picker; the price is charged once an item is picked.
+                // An equipment essence offers only equipment, which needs an empty slot.
                 if (TryGetWaitingEssence(body.master, out var waitingEssence))
                 {
-                    waitingEssence.OnInteractionBegin(activator);
+                    if (Helper.HasRoomFor(body, waitingEssence.pickupThatGeneratedOptions?.pickupIndex ?? PickupIndex.none))
+                    {
+                        waitingEssence.OnInteractionBegin(activator);
+                    }
+                    else
+                    {
+                        Refuse(self);
+                    }
                 }
-                else if (TryRollPickup(out var hiddenPickup))
+                else if (TryRollPickup(out var hiddenPickup) && Helper.HasRoomFor(body, hiddenPickup.pickupIndex))
                 {
                     SpawnHiddenEssence(self, hiddenPickup, activator);
                 }
@@ -344,7 +352,8 @@ namespace BazaarIsMyHaven
             int cost = Helper.GetCost(ModConfig.CommandChestCost.Value, costType);
             if (!vault || !body || !body.inventory || !activator || !player || sold
                 || (ModConfig.CommandChestInstancedPurchases.Value && buyers.Contains(player))
-                || !Helper.CanAfford(costType, cost, activator, body))
+                || !Helper.CanAfford(costType, cost, activator, body)
+                || !Helper.HasRoomFor(body, pickupState.pickupIndex))
             {
                 // nothing is charged or given; the vault can be used again
                 if (vault)

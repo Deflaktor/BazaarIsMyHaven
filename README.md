@@ -99,6 +99,8 @@ Controls how Newt acts after being killed:
 
 With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too. `CostType` sets what the price is paid in, such as money (the default), Lunar Coins or items of a tier. With `ScaleMoneyCosts`, money prices scale with difficulty like the game's own shops.
 
+With `BuyToInventory`, bought equipment goes straight into your inventory, so it can only be bought with an empty equipment slot. The same goes for the Command Chest and the Wandering Chef's recipes.
+
 ### LunarShop
 
 The Lunar Shop swaps the Bazaar's Lunar Buds for up to `MaxAmount` Lunar Buds (at most 20), each with its price. `CostType` sets what the price is paid in, such as Lunar Coins (the default), money or items of a tier. Clients without the mod also see them at the right size. The Lunar Recycler rerolls them, except buds a player already bought from. If the director spawns no buds, the Lunar Recycler is removed too.
@@ -150,7 +152,7 @@ The CommandChest section lets the director spawn a Command Chest. Buying from it
 
 Unmodded clients can't spawn the game's own Command Chest, so it is an Ocular Vault from the Alloyed Collective. Its hover text still says "Place Ocular Battery", since only the host has the mod. Buying opens the vault; if a player can't afford it, the vault plays its refusal.
 
-With `InstancedPurchases`, each player can buy from it once: the vault stays ready for the others, and each buyer gets their own essence. With `BuyToInventory`, using the vault shows the item picker right away, without an essence appearing. The price is only charged once you pick an item, which goes straight into your inventory; closing the picker costs nothing, and using the vault again reopens it. Without `InstancedPurchases`, the first player to pick an item buys the vault. Without `BuyToInventory`, buying drops a Command Essence that anyone can use.
+With `InstancedPurchases`, each player can buy from it once: the vault stays ready for the others, and each buyer gets their own essence. With `BuyToInventory`, using the vault shows the item picker right away, without an essence appearing. The price is only charged once you pick an item, which goes straight into your inventory. Equipment needs an empty equipment slot; closing the picker costs nothing, and using the vault again reopens it. Without `InstancedPurchases`, the first player to pick an item buys the vault. Without `BuyToInventory`, buying drops a Command Essence that anyone can use.
 
 ## RewardListAvailableCharacters - Valid Keywords
 

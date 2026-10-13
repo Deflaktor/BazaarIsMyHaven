@@ -238,7 +238,7 @@ namespace BazaarIsMyHaven
             EquipmentCost = config.Bind("05 Equipment", "Cost", 50, "Cost of an equipment purchase, paid in CostType.");
             EquipmentCostType = config.Bind("05 Equipment", "CostType", CostTypeIndex.Money, "What equipment purchases cost, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price sign shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             EquipmentInstancedPurchases = config.Bind("05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
-            EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground.");
+            EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground. It can then only be bought with an empty equipment slot.");
 
             // 06 LunarShop
             LunarShopSectionEnabled = config.Bind("06 LunarShop", "SectionEnabled", true, "Enables or disables the Lunar Shop section.");
@@ -306,7 +306,7 @@ namespace BazaarIsMyHaven
             WanderingChefDirectorWeight = config.Bind("12 WanderingChef", "DirectorWeight", 0.5f, "How likely the director picks the Wandering Chef, compared to the DirectorWeight of the other interactables.");
             WanderingChefUnrestrictedCrafting = config.Bind("12 WanderingChef", "UnrestrictedCrafting", false, "Allows you to craft anything. Otherwise crafting is restricted to a single randomly selected target pickup.");
             WanderingChefCraftableRecipesOnly = config.Bind("12 WanderingChef", "CraftableRecipesOnly", true, "Only if UnrestrictedCrafting is false: The Wandering Chef only offers a recipe that a player can cook from their inventory and what the Bazaar offers (items in printers, Lunar Buds, Equipment Terminals and cauldrons, and scrap if there are Scrappers). If there is none, he leaves and the director spends his credits on something else.");
-            WanderingChefBuyToInventory = config.Bind("12 WanderingChef", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground.");
+            WanderingChefBuyToInventory = config.Bind("12 WanderingChef", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground. A recipe that results in equipment can then only be cooked with an empty equipment slot, unless it uses up equipment.");
 
             // 13 Drones
             DronesSectionEnabled = config.Bind("13 Drones", "SectionEnabled", true, "Enables or disables the Drones section. Only works if the Alloyed Collective is enabled for the run. Enabling lets the director spawn the drone stations below, and the players' drones come along into the Bazaar like on any other stage.");
@@ -327,7 +327,7 @@ namespace BazaarIsMyHaven
             CommandChestCost = config.Bind("14 CommandChest", "Cost", 100, "Cost of opening the Command Chest, paid in CostType.");
             CommandChestCostType = config.Bind("14 CommandChest", "CostType", CostTypeIndex.Money, "What opening the Command Chest costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             CommandChestInstancedPurchases = config.Bind("14 CommandChest", "InstancedPurchases", true, "Each player can buy from the Command Chest once, independently of the others. It stays ready for the others, and each buyer gets their own Command Essence.");
-            CommandChestBuyToInventory = config.Bind("14 CommandChest", "BuyToInventory", true, "Using the Command Chest shows its item picker right away, and the price is only charged once you pick an item, which goes directly into your inventory. No essence appears; closing the picker costs nothing, and using the Command Chest again reopens it. Otherwise buying drops a Command Essence that anyone can use.");
+            CommandChestBuyToInventory = config.Bind("14 CommandChest", "BuyToInventory", true, "Using the Command Chest shows its item picker right away, and the price is only charged once you pick an item, which goes directly into your inventory. Equipment needs an empty equipment slot. No essence appears; closing the picker costs nothing, and using the Command Chest again reopens it. Otherwise buying drops a Command Essence that anyone can use.");
 
             RefreshDerivedData(config);
             LunarShopAmountDependingOnCharacter.SettingChanged += LunarShopCharacterAmountsChanged;

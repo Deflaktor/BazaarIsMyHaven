@@ -252,6 +252,12 @@ namespace BazaarIsMyHaven
                 {
                     CharacterBody characterBody = activator.GetComponent<CharacterBody>();
                     Inventory inventory = characterBody.inventory;
+                    // like the game's own cooking; equipment needs an empty slot, unless the recipe takes equipment
+                    bool takesEquipment = itemsToTake.Any(pickup => PickupCatalog.GetPickupDef(pickup)?.equipmentIndex != EquipmentIndex.None);
+                    if (!self.IsAffordable(itemsToTake, characterBody) || (!takesEquipment && !Helper.HasRoomFor(characterBody, reward)))
+                    {
+                        return;
+                    }
                     // take items
                     for (int i = 0; i < itemsToTake.Length; i++)
                     {
