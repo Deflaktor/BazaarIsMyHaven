@@ -84,7 +84,7 @@ Controls how Newt acts after being killed:
 
 ### Equipment
 
-With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too. `CostType` sets what the price is paid in, such as money (the default), Lunar Coins or items of a tier.
+With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too. `CostType` sets what the price is paid in, such as money (the default), Lunar Coins or items of a tier. With `ScaleMoneyCosts`, money prices scale with difficulty like the game's own shops.
 
 ### LunarShop
 

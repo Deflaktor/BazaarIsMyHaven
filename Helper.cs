@@ -16,6 +16,16 @@ namespace BazaarIsMyHaven
 {
     public class Helper
     {
+        // Money scales with difficulty like the game's own shops, if ScaleMoneyCosts is on
+        public static int GetCost(int cost, CostTypeIndex costType)
+        {
+            if (ModConfig.ScaleMoneyCosts.Value && costType == CostTypeIndex.Money && Run.instance)
+            {
+                return Run.instance.GetDifficultyScaledCost(cost);
+            }
+            return cost;
+        }
+
         public static void CreateItemTakenOrb(Vector3 effectOrigin, GameObject targetObject, PickupIndex pickupIndex)
         {
             if (!NetworkServer.active)

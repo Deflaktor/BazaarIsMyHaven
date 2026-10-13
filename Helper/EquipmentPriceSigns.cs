@@ -99,7 +99,7 @@ namespace BazaarIsMyHaven
                 }
 
                 seer.name = "EquipmentPriceSign";
-                purchaseInteraction.Networkcost = ModConfig.EquipmentCost.Value;
+                purchaseInteraction.Networkcost = Helper.GetCost(ModConfig.EquipmentCost.Value, ModConfig.EquipmentCostType.Value);
                 purchaseInteraction.NetworkcostType = ModConfig.EquipmentCostType.Value;
 
                 // readable from the terminal's front, like the Seer's own sign in front of its table

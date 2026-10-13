@@ -73,8 +73,9 @@ namespace BazaarIsMyHaven
                 {
                     if (self.name.StartsWith("MultiShopEquipmentTerminal"))
                     {
-                        self.cost = ModConfig.EquipmentCost.Value;
-                        self.Networkcost = ModConfig.EquipmentCost.Value;
+                        var cost = Helper.GetCost(ModConfig.EquipmentCost.Value, ModConfig.EquipmentCostType.Value);
+                        self.cost = cost;
+                        self.Networkcost = cost;
                         self.NetworkcostType = ModConfig.EquipmentCostType.Value;
                     }
                 }
