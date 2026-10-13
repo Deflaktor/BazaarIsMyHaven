@@ -458,7 +458,7 @@ namespace BazaarIsMyHaven
                 slot.pickups.Any(pickup => player.bazaarStock.Contains(pickup) || InventoryContainsPickup(player.inventory, pickup))));
         }
 
-        // What each player can get in the Bazaar: the shops' items they can still buy, and scrap if a Scrapper is there
+        // What each player can get in the Bazaar: the shops' items they can still buy, the Command Pedestal's choices, and scrap if a Scrapper is there
         private List<(Inventory inventory, HashSet<PickupIndex> bazaarStock)> GetPlayerIngredients()
         {
             var terminals = UnityEngine.Object.FindObjectsOfType<ShopTerminalBehavior>();
@@ -480,6 +480,10 @@ namespace BazaarIsMyHaven
                     {
                         bazaarStock.Add(pickup);
                     }
+                }
+                if (BazaarCommandPedestal.instance != null)
+                {
+                    bazaarStock.UnionWith(BazaarCommandPedestal.instance.GetChoicesFor(pc));
                 }
                 if (hasScrapper)
                 {
