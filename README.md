@@ -17,7 +17,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
   - Cleansing Pool
   - Shrine of Order
   - Donation Altar
-  - Wandering Chef
+  - Wandering Chef (with the Alloyed Collective)
   - Drone stations from the Alloyed Collective
 
 - **Newt Behavior Options**:
