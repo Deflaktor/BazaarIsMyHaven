@@ -128,6 +128,9 @@ namespace BazaarIsMyHaven
             }
         }
 
+        // A pickup past the catalog's end: the bud stays open but shows nothing, and plays no closing sound
+        private static UniquePickup EmptyOpenBud => new UniquePickup(new PickupIndex(PickupCatalog.pickupCount));
+
         public void ShowNextReward(PlayerCharacterMasterController pc)
         {
             var reward = rollReward(pc);
@@ -146,6 +149,8 @@ namespace BazaarIsMyHaven
             }
 
             var budsForReward = BudsForRewardSize[Math.Min(pickups.Count, BudsForRewardSize.Length - 1)];
+            // all buds close for a player who can get nothing; buds a reward does not need stay open but empty
+            var unusedBud = pickups.Count > 0 ? EmptyOpenBud : UniquePickup.none;
             for (int i = 0; i < buds.Count; i++)
             {
                 if (!buds[i])
@@ -154,7 +159,7 @@ namespace BazaarIsMyHaven
                 }
                 var state = buds[i].GetOrCreate(pc);
                 int pickupNumber = Array.IndexOf(budsForReward, i);
-                var pickup = pickupNumber >= 0 && pickupNumber < pickups.Count ? new UniquePickup(pickups[pickupNumber]) : UniquePickup.none;
+                var pickup = pickupNumber >= 0 && pickupNumber < pickups.Count ? new UniquePickup(pickups[pickupNumber]) : unusedBud;
                 if (!state.pickup.Equals(pickup))
                 {
                     state.pickup = pickup;
