@@ -97,6 +97,7 @@ namespace BazaarIsMyHaven
             RoR2.SceneDirector.onPrePopulateSceneServer += SceneDirector_onPrePopulateSceneServer;
             On.RoR2.TeleporterInteraction.Start += TeleporterInteraction_Start;
             On.RoR2.DrifterBagController.AssignPassenger += DrifterBagController_AssignPassenger;
+            On.RoR2.Util.KarmaEventTrigger += Util_KarmaEventTrigger;
             On.EntityStates.NewtMonster.KickFromShop.FixedUpdate += KickFromShop_FixedUpdate;
             On.RoR2.GlobalEventManager.OnHitAll += GlobalEventManager_OnHitAll;
             On.RoR2.CharacterMaster.OnBodyDeath += CharacterMaster_OnBodyDeath;
@@ -241,6 +242,33 @@ namespace BazaarIsMyHaven
             orig(self, passengerObject);
         }
 
+        // The game's karma trigger for angering Newt; it fires when his kick state ends, also when NoKickFromShop cancels the kick
+        private const string NewtKarmaTriggerName = "KickedOutOfBazaar";
+        private bool raisingNewtKarmaOnKill;
+
+        private bool Util_KarmaEventTrigger(On.RoR2.Util.orig_KarmaEventTrigger orig, string identifier)
+        {
+            if (identifier == NewtKarmaTriggerName && !raisingNewtKarmaOnKill && ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value
+                && ModConfig.NewtKarmaTrigger.Value == ShopKeeper.KarmaTrigger.OnKill && IsCurrentMapInBazaar())
+            {
+                return false;
+            }
+            return orig(identifier);
+        }
+
+        private void RaiseNewtKarmaOnKill()
+        {
+            raisingNewtKarmaOnKill = true;
+            try
+            {
+                Util.KarmaEventTrigger(NewtKarmaTriggerName);
+            }
+            finally
+            {
+                raisingNewtKarmaOnKill = false;
+            }
+        }
+
         private void KickFromShop_FixedUpdate(On.EntityStates.NewtMonster.KickFromShop.orig_FixedUpdate orig, EntityStates.NewtMonster.KickFromShop self)
         {
             if (ModConfig.EnableMod.Value && ModConfig.NewtSectionEnabled.Value && ModConfig.NewtNoKickFromShop.Value && IsCurrentMapInBazaar() && IsShopkeeper(self.outer.gameObject) && NetworkServer.active)
@@ -285,6 +313,10 @@ namespace BazaarIsMyHaven
                 {
                     ShopKeeper.DiedAtLeastOnce = true;
                     ShopKeeper.DeathCount++;
+                    if (ModConfig.NewtKarmaTrigger.Value == ShopKeeper.KarmaTrigger.OnKill)
+                    {
+                        RaiseNewtKarmaOnKill();
+                    }
                     if (ModConfig.NewtDeathBehavior.Value == ShopKeeper.DeathState.Default)
                     {
                         if (ModConfig.NewtDialogue.Value == ShopKeeper.Dialogue.BazaarIsMyHome)
