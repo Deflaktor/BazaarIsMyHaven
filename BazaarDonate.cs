@@ -260,6 +260,8 @@ namespace BazaarIsMyHaven
 
             DonationRewardDisplay.Apply(altar, RollReward);
             NetworkServer.Spawn(altar);
+            // only the signal's model stays, without its beam
+            VoidSignalBeam.Remove(altar);
             // the Deep Void Signal has no price hologram of its own
             PriceSigns.Apply(new List<GameObject> { altar }, cost, ModConfig.DonateCostType.Value, AltarSignHeight);
         }
