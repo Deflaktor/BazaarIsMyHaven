@@ -83,7 +83,7 @@ namespace BazaarIsMyHaven
                 }
                 var body = master.GetBody();
                 // a seated drone belongs to a station, e.g. while the Drone Combiner Station upgrades it
-                if (!body || body.currentVehicle || (body.footPosition - Position).sqrMagnitude <= SpotRadius * SpotRadius)
+                if (!body || body.currentVehicle || IsBusy(body) || (body.footPosition - Position).sqrMagnitude <= SpotRadius * SpotRadius)
                 {
                     continue;
                 }
@@ -113,6 +113,14 @@ namespace BazaarIsMyHaven
             {
                 awaySince.Remove(body);
             }
+        }
+
+        // The Operator's skills put drones in other body states, e.g. following the Operator or carrying them.
+        // They return to the main state once the Operator is done with them.
+        private static bool IsBusy(CharacterBody body)
+        {
+            var bodyStateMachine = EntityStateMachine.FindByCustomName(body.gameObject, "Body");
+            return bodyStateMachine && !bodyStateMachine.IsInMainState();
         }
 
         private static void MoveToSpot(CharacterBody body)
