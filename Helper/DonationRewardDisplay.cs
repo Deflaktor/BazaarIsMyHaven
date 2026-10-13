@@ -20,14 +20,15 @@ namespace BazaarIsMyHaven
         private const float CostResendInterval = 1f;
         // every bud stands at this height
         private const float BudHeight = -19.6321f;
-        // in the altar's space: one bud below where Transcendence floated, the others around it
+        // in the altar's space: one bud below where Transcendence floated, the others around it.
+        // Rewards fill them in this order, so a reward of three items stands along the z axis.
         private static readonly Vector3[] BudOffsets =
         {
             new Vector3(0f, 0f, 0f),
-            new Vector3(1.2f, 0f, 0f),
-            new Vector3(-1.2f, 0f, 0f),
             new Vector3(0f, 0f, 1.2f),
             new Vector3(0f, 0f, -1.2f),
+            new Vector3(1.2f, 0f, 0f),
+            new Vector3(-1.2f, 0f, 0f),
         };
 
         private static AsyncOperationHandle<GameObject> budPrefab;
