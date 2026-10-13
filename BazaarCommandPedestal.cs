@@ -509,7 +509,7 @@ namespace BazaarIsMyHaven
         private void SpawnCommandPedestal()
         {
             rng = new Xoroshiro128Plus(Run.instance.treasureRng.nextUlong);
-            pedestal = Object.Instantiate(vaultPrefab.WaitForCompletion(), new Vector3(-63.9613f, -26.3518f, -73.8056f), Quaternion.identity);
+            pedestal = Object.Instantiate(vaultPrefab.WaitForCompletion(), new Vector3(-63.9613f, -26.3518f, -73.8056f), Quaternion.Euler(0f, 300f, 0f));
             NetworkServer.Spawn(pedestal);
 
             hasOffer = TryRollPickup(out offer);
