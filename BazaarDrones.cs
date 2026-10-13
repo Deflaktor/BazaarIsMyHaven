@@ -23,8 +23,10 @@ namespace BazaarIsMyHaven
             public AsyncOperationHandle<GameObject> prefab;
             public SpawnCardStruct slot;
             public bool spawned;
+            public GameObject instance;
         }
         private readonly List<Station> stations = new List<Station>();
+        private Station upgradeStation;
 
         public override void Preload()
         {
@@ -37,6 +39,8 @@ namespace BazaarIsMyHaven
         public override void Hook()
         {
             On.RoR2.Stage.RespawnAllNPCs += Stage_RespawnAllNPCs;
+            On.RoR2.PickupPickerController.GetInteractability += PickupPickerController_GetInteractability;
+            On.RoR2.PurchaseInteraction.GetInteractability += PurchaseInteraction_GetInteractability;
         }
 
         // clients only have the stations if the run has the Alloyed Collective
@@ -48,6 +52,7 @@ namespace BazaarIsMyHaven
         public override void AddDirectorCards(List<DirectorCard> cards)
         {
             stations.Clear();
+            upgradeStation = null;
             if (!IsSectionActive())
             {
                 return;
@@ -55,7 +60,7 @@ namespace BazaarIsMyHaven
 
             AddStation(cards, "Drone Combiner Station", ModConfig.DronesDroneCombinerStationDirectorCost, ModConfig.DronesDroneCombinerStationDirectorWeight,
                 DroneCombinerStation, new SpawnCardStruct(new Vector3(-89.4022f, -23.4619f, -5.0529f), new Vector3(0f, 150f, 350f)));
-            AddStation(cards, "Drone Upgrade Station", ModConfig.DronesDroneUpgradeStationDirectorCost, ModConfig.DronesDroneUpgradeStationDirectorWeight,
+            upgradeStation = AddStation(cards, "Drone Upgrade Station", ModConfig.DronesDroneUpgradeStationDirectorCost, ModConfig.DronesDroneUpgradeStationDirectorWeight,
                 DroneUpgradeStation, new SpawnCardStruct(new Vector3(-85.1751f, -22.264f, -3.539f), new Vector3(0f, 150f, 270f)));
             AddStation(cards, "Drone Scrapper", ModConfig.DronesDroneScrapperDirectorCost, ModConfig.DronesDroneScrapperDirectorWeight,
                 DroneScrapper, new SpawnCardStruct(new Vector3(-91.9756f, -26.0923f, -48.0897f), new Vector3(0f, 315f, 0f)));
@@ -63,12 +68,13 @@ namespace BazaarIsMyHaven
                 TripleDroneShop, new SpawnCardStruct(new Vector3(-64.3101f, -23.0074f, -19.7406f), new Vector3(0f, 300f, 6f)));
         }
 
-        private void AddStation(List<DirectorCard> cards, string name, ConfigEntry<int> cost, ConfigEntry<float> weight,
+        private Station AddStation(List<DirectorCard> cards, string name, ConfigEntry<int> cost, ConfigEntry<float> weight,
             AsyncOperationHandle<GameObject> prefab, SpawnCardStruct slot)
         {
             var station = new Station { card = new DirectorCard(name, cost, weight, () => 1), prefab = prefab, slot = slot };
             stations.Add(station);
             cards.Add(station.card);
+            return station;
         }
 
         public override void SetupBazaar()
@@ -84,7 +90,7 @@ namespace BazaarIsMyHaven
                 {
                     continue;
                 }
-                SpawnAt(station.prefab.WaitForCompletion(), station.slot);
+                station.instance = SpawnAt(station.prefab.WaitForCompletion(), station.slot);
                 station.spawned = true;
             }
         }
@@ -132,6 +138,49 @@ namespace BazaarIsMyHaven
                 }
                 master.Respawn(position, rotation, wasRevivedMidStage: true);
             }
+        }
+
+        // The Drone Upgrade Station takes the item even from players without drones, who get nothing for it.
+        // Refuse them like the Drone Combiner Station refuses players without drones to combine.
+        private Interactability PickupPickerController_GetInteractability(On.RoR2.PickupPickerController.orig_GetInteractability orig, PickupPickerController self, Interactor activator)
+        {
+            return RefusesUpgrade(self.gameObject, activator) ? Interactability.ConditionsNotMet : orig(self, activator);
+        }
+
+        // the station's free purchase would otherwise still go through, and the player would hear no refusal
+        private Interactability PurchaseInteraction_GetInteractability(On.RoR2.PurchaseInteraction.orig_GetInteractability orig, PurchaseInteraction self, Interactor activator)
+        {
+            return RefusesUpgrade(self.gameObject, activator) ? Interactability.ConditionsNotMet : orig(self, activator);
+        }
+
+        private bool RefusesUpgrade(GameObject interactable, Interactor activator)
+        {
+            if (upgradeStation == null || !upgradeStation.instance || interactable != upgradeStation.instance || !activator)
+            {
+                return false;
+            }
+            var body = activator.GetComponent<CharacterBody>();
+            return !body || !body.master || !HasDrones(body.master);
+        }
+
+        // The drones the station would upgrade, found the way the game finds them
+        private static bool HasDrones(CharacterMaster owner)
+        {
+            var group = MinionOwnership.MinionGroup.FindGroup(owner.netId);
+            if (group == null)
+            {
+                return false;
+            }
+            foreach (var member in group.members)
+            {
+                var master = member ? member.GetComponent<CharacterMaster>() : null;
+                var body = master ? master.GetBody() : null;
+                if (body && (body.bodyFlags & CharacterBody.BodyFlags.Drone) != 0)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static bool IsPlayerDrone(CharacterMaster master)
