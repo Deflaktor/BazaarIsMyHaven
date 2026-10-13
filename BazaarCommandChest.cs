@@ -2,6 +2,7 @@ using EntityStates.Missions.RepurposedCrater;
 using RoR2;
 using RoR2.Artifacts;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
@@ -29,8 +30,41 @@ namespace BazaarIsMyHaven
             public Vector3 vaultPosition;
         }
 
+        // The director picks the tier among those it can afford, by their DirectorWeight; the tier sets the essence and the price
+        private class CommandChestCard : DirectorCard
+        {
+            public ModConfig.CommandChestTier tier;
+
+            public CommandChestCard() : base("Command Chest", null, null, () => 1) { }
+
+            private static List<ModConfig.CommandChestTier> GetTiers()
+            {
+                return ModConfig.CommandChestTiers.Where(tier => tier.directorWeight.Value > 0f && tier.dropList(Run.instance).Count > 0).ToList();
+            }
+
+            public override float Weight => GetTiers().Sum(tier => tier.directorWeight.Value);
+
+            protected override int CheapestCost()
+            {
+                var tiers = GetTiers();
+                return tiers.Count == 0 ? int.MaxValue : tiers.Min(tier => System.Math.Max(0, tier.directorCost.Value));
+            }
+
+            protected override int PickCost(int credits)
+            {
+                var weightedSelection = new WeightedSelection<ModConfig.CommandChestTier>();
+                foreach (var choice in GetTiers())
+                {
+                    if (System.Math.Max(0, choice.directorCost.Value) <= credits)
+                        weightedSelection.AddChoice(choice, choice.directorWeight.Value);
+                }
+                tier = weightedSelection.Evaluate(UnityEngine.Random.value);
+                return System.Math.Max(0, tier.directorCost.Value);
+            }
+        }
+
         AsyncOperationHandle<GameObject> vaultPrefab;
-        DirectorCard card;
+        CommandChestCard card;
         bool spawned;
         GameObject chest;
         Xoroshiro128Plus rng;
@@ -64,7 +98,7 @@ namespace BazaarIsMyHaven
             card = null;
             if (ModConfig.CommandChestSectionEnabled.Value)
             {
-                card = new DirectorCard("Command Chest", ModConfig.CommandChestDirectorCost, ModConfig.CommandChestDirectorWeight, () => 1);
+                card = new CommandChestCard();
                 cards.Add(card);
             }
         }
@@ -118,7 +152,7 @@ namespace BazaarIsMyHaven
             }
 
             var costType = ModConfig.CommandChestCostType.Value;
-            int cost = Helper.GetCost(ModConfig.CommandChestCost.Value, costType);
+            int cost = GetPrice();
             if (!Helper.CanAfford(costType, cost, activator, body))
             {
                 Refuse(self);
@@ -279,22 +313,23 @@ namespace BazaarIsMyHaven
             }
         }
 
-        // Rolls the configured tier; the essence then offers every item of that tier
-        private static bool TryRollPickup(out UniquePickup pickup)
+        // The tier's price, scaled with difficulty if it is paid in money
+        private int GetPrice()
         {
-            var resolvedItems = new Dictionary<PickupIndex, int>();
-            ItemStringParser.ItemStringParser.ParseItemString(ModConfig.CommandChestTier.Value, resolvedItems, Log.GetSource(), false);
-            foreach (var (pickupIndex, amount) in resolvedItems)
+            return card != null && card.tier != null ? Helper.GetCost(card.tier.cost.Value, ModConfig.CommandChestCostType.Value) : 0;
+        }
+
+        // Rolls an item of the director's tier; the essence then offers every item of that tier
+        private bool TryRollPickup(out UniquePickup pickup)
+        {
+            var dropList = card != null && card.tier != null ? card.tier.dropList(Run.instance) : null;
+            if (dropList == null || dropList.Count == 0)
             {
-                if (amount > 0 && PickupCatalog.GetPickupDef(pickupIndex) != null)
-                {
-                    pickup = new UniquePickup(pickupIndex);
-                    return true;
-                }
+                pickup = UniquePickup.none;
+                return false;
             }
-            Log.LogError($"Could not get a pickup from the Command Chest Tier: {ModConfig.CommandChestTier.Value}");
-            pickup = UniquePickup.none;
-            return false;
+            pickup = new UniquePickup(rng.NextElementUniform(dropList));
+            return true;
         }
 
         private static Vector3 GetEssencePosition(PowerOrbPedestalManager vault)
@@ -366,7 +401,7 @@ namespace BazaarIsMyHaven
             var player = master ? master.playerCharacterMasterController : null;
             var vault = chest ? chest.GetComponent<PowerOrbPedestalManager>() : null;
             var costType = ModConfig.CommandChestCostType.Value;
-            int cost = Helper.GetCost(ModConfig.CommandChestCost.Value, costType);
+            int cost = GetPrice();
             if (!vault || !body || !body.inventory || !activator || !player || sold
                 || (ModConfig.CommandChestInstancedPurchases.Value && buyers.Contains(player))
                 || !Helper.CanAfford(costType, cost, activator, body)
@@ -434,8 +469,8 @@ namespace BazaarIsMyHaven
                 SpawnDisplayEssence();
             }
 
-            var costType = ModConfig.CommandChestCostType.Value;
-            PriceSigns.Apply(new List<GameObject> { chest }, Helper.GetCost(ModConfig.CommandChestCost.Value, costType), costType, SignHeight);
+            Log.LogDebug($"The Command Chest offers {card.tier.name}.");
+            PriceSigns.Apply(new List<GameObject> { chest }, GetPrice(), ModConfig.CommandChestCostType.Value, SignHeight);
         }
     }
 }

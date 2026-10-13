@@ -33,7 +33,7 @@ namespace BazaarIsMyHaven
             this.allowLatePicks = allowLatePicks;
         }
 
-        public float Weight => Mathf.Max(0f, weight.Value);
+        public virtual float Weight => Mathf.Max(0f, weight.Value);
 
         public bool CanPick(int credits)
         {

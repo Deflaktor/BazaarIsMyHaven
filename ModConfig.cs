@@ -158,10 +158,7 @@ namespace BazaarIsMyHaven
 
         // command chest
         public static ConfigEntry<bool> CommandChestSectionEnabled;
-        public static ConfigEntry<string> CommandChestTier;
-        public static ConfigEntry<int> CommandChestDirectorCost;
-        public static ConfigEntry<float> CommandChestDirectorWeight;
-        public static ConfigEntry<int> CommandChestCost;
+        public static readonly List<CommandChestTier> CommandChestTiers = new List<CommandChestTier>();
         public static ConfigEntry<CostTypeIndex> CommandChestCostType;
         public static ConfigEntry<bool> CommandChestInstancedPurchases;
         public static ConfigEntry<bool> CommandChestBuyToInventory;
@@ -321,10 +318,18 @@ namespace BazaarIsMyHaven
 
             // 14 CommandChest
             CommandChestSectionEnabled = config.Bind("14 CommandChest", "SectionEnabled", true, "Enables or disables the Command Chest section. Enabling lets the director spawn a Command Chest, which drops a Command Essence that lets you choose any item of its tier. Unmodded clients can't spawn the game's own Command Chest, so it is an Ocular Vault, with its price shown above it; clients see the vault's own \"Place Ocular Battery\" text.");
-            CommandChestDirectorCost = config.Bind("14 CommandChest", "DirectorCost", 20, "Director credits the Command Chest costs.");
-            CommandChestDirectorWeight = config.Bind("14 CommandChest", "DirectorWeight", 0.2f, "How likely the director picks the Command Chest, compared to the DirectorWeight of the other interactables.");
-            CommandChestTier = config.Bind("14 CommandChest", "Tier", "Tier2", $"The tier the Command Essence offers, e.g. Tier1, Tier2, Tier3, Boss or Lunar. A drop table like dtCommandChest (the game's own mix) rolls the tier by its weights, once per visit. The essence it gives is shown above the Command Chest. {itemKeyWordsExplanation}");
-            CommandChestCost = config.Bind("14 CommandChest", "Cost", 100, "Cost of opening the Command Chest, paid in CostType.");
+            CommandChestTiers.Clear();
+            // like the game's own Command Chest mix, without lunar items; together as likely as one interactable with DirectorWeight 0.2
+            AddCommandChestTier(config, "Tier1", "white items", run => run.availableTier1DropList, 50, 10, 0.04f);
+            AddCommandChestTier(config, "Tier2", "green items", run => run.availableTier2DropList, 100, 20, 0.04f);
+            AddCommandChestTier(config, "Tier3", "red items", run => run.availableTier3DropList, 800, 30, 0.01f);
+            AddCommandChestTier(config, "Boss", "boss items", run => run.availableBossDropList, 400, 20, 0.01f);
+            AddCommandChestTier(config, "Equipment", "equipment", run => run.availableEquipmentDropList, 100, 10, 0.04f);
+            AddCommandChestTier(config, "Lunar", "lunar items", run => run.availableLunarItemDropList, 100, 20, 0f);
+            AddCommandChestTier(config, "VoidTier1", "void white items", run => run.availableVoidTier1DropList, 50, 10, 0.02f);
+            AddCommandChestTier(config, "VoidTier2", "void green items", run => run.availableVoidTier2DropList, 100, 20, 0.02f);
+            AddCommandChestTier(config, "VoidTier3", "void red items", run => run.availableVoidTier3DropList, 800, 30, 0.01f);
+            AddCommandChestTier(config, "VoidBoss", "void boss items", run => run.availableVoidBossDropList, 400, 20, 0.01f);
             CommandChestCostType = config.Bind("14 CommandChest", "CostType", CostTypeIndex.Money, "What opening the Command Chest costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             CommandChestInstancedPurchases = config.Bind("14 CommandChest", "InstancedPurchases", true, "Each player can buy from the Command Chest once, independently of the others. It stays ready for the others, and each buyer gets their own Command Essence.");
             CommandChestBuyToInventory = config.Bind("14 CommandChest", "BuyToInventory", true, "Using the Command Chest shows its item picker right away, and the price is only charged once you pick an item, which goes directly into your inventory. Equipment needs an empty equipment slot. No essence appears; closing the picker costs nothing, and using the Command Chest again reopens it. Otherwise buying drops a Command Essence that anyone can use.");
@@ -360,6 +365,28 @@ namespace BazaarIsMyHaven
                 reloading = false;
             }
             RefreshDerivedData(config);
+        }
+
+        // One tier of Command Chest: the director picks among the tiers it can afford by their DirectorWeight
+        public class CommandChestTier
+        {
+            public string name;
+            public Func<Run, List<PickupIndex>> dropList;
+            public ConfigEntry<int> directorCost;
+            public ConfigEntry<float> directorWeight;
+            public ConfigEntry<int> cost;
+        }
+
+        private static void AddCommandChestTier(ConfigFile config, string name, string offers, Func<Run, List<PickupIndex>> dropList, int cost, int directorCost, float directorWeight)
+        {
+            CommandChestTiers.Add(new CommandChestTier
+            {
+                name = name,
+                dropList = dropList,
+                directorCost = config.Bind("14 CommandChest", $"{name}DirectorCost", directorCost, $"Director credits a Command Chest offering {offers} costs."),
+                directorWeight = config.Bind("14 CommandChest", $"{name}DirectorWeight", directorWeight, $"How likely the director picks a Command Chest offering {offers}, compared to the DirectorWeight of the other interactables. 0 = never."),
+                cost = config.Bind("14 CommandChest", $"{name}Cost", cost, $"Cost of a Command Chest offering {offers}, paid in CostType."),
+            });
         }
 
         private static void RefreshDerivedData(ConfigFile config)
