@@ -12,6 +12,7 @@ namespace BazaarIsMyHaven
     // A Command Chest gives a Command Essence, which offers every item of the tier it rolled.
     // Unmodded clients can't spawn the game's own Command Chest, so it is built from the Alloyed Collective's Ocular Vault:
     // the host takes its interaction, charges the price and plays the vault's own opening or refusal.
+    // With BuyToInventory the vault only opens a private item picker, and the price is charged once an item is picked.
     public class BazaarCommandChest : BazaarBase
     {
         // a price sign shows this high above the vault
@@ -31,6 +32,8 @@ namespace BazaarIsMyHaven
         bool spawned;
         GameObject chest;
         Xoroshiro128Plus rng;
+        // bought without instanced purchases; nobody can buy it any more
+        bool sold;
         // players who bought from the chest with instanced purchases
         readonly HashSet<PlayerCharacterMasterController> buyers = new HashSet<PlayerCharacterMasterController>();
         // hidden essences waiting for their owner's choice; interacting with the vault again opens them
@@ -64,6 +67,7 @@ namespace BazaarIsMyHaven
         {
             spawned = false;
             chest = null;
+            sold = false;
             buyers.Clear();
             essences.Clear();
             SpawnLatePicks();
@@ -100,58 +104,80 @@ namespace BazaarIsMyHaven
             var activator = interactorObject ? interactorObject.GetComponent<Interactor>() : null;
             var body = interactorObject ? interactorObject.GetComponent<CharacterBody>() : null;
             var player = GetPlayer(interactorObject);
-            bool instanced = ModConfig.CommandChestInstancedPurchases.Value;
-            if (!activator || !body || !player)
-            {
-                return;
-            }
-            if (TryGetWaitingEssence(body.master, out var waitingEssence))
-            {
-                // reopens the picker its owner closed
-                waitingEssence.OnInteractionBegin(activator);
-                return;
-            }
-            if (instanced && buyers.Contains(player))
+            if (!activator || !body || !player || sold || (ModConfig.CommandChestInstancedPurchases.Value && buyers.Contains(player)))
             {
                 return;
             }
 
             var costType = ModConfig.CommandChestCostType.Value;
             int cost = Helper.GetCost(ModConfig.CommandChestCost.Value, costType);
-            if (!Helper.CanAfford(costType, cost, activator, body) || !TryRollPickup(out var pickup))
+            if (!Helper.CanAfford(costType, cost, activator, body))
             {
-                // the vault's own refusal
-                self.DoInteractResult(false);
-                self.CallRpcInteractResult(false);
+                Refuse(self);
                 return;
             }
 
+            if (ModConfig.CommandChestBuyToInventory.Value)
+            {
+                // only opens the picker; the price is charged once an item is picked
+                if (TryGetWaitingEssence(body.master, out var waitingEssence))
+                {
+                    waitingEssence.OnInteractionBegin(activator);
+                }
+                else if (TryRollPickup(out var hiddenPickup))
+                {
+                    SpawnHiddenEssence(self, hiddenPickup, activator);
+                }
+                else
+                {
+                    Refuse(self);
+                }
+                return;
+            }
+
+            if (!TryRollPickup(out var pickup))
+            {
+                Refuse(self);
+                return;
+            }
             Helper.PayCost(costType, cost, activator, body, chest, rng);
-            if (instanced)
+            CompletePurchase(self, player);
+            DropEssence(self, pickup);
+        }
+
+        // The vault's own refusal
+        private static void Refuse(PowerOrbPedestalManager vault)
+        {
+            vault.DoInteractResult(false);
+            vault.CallRpcInteractResult(false);
+        }
+
+        // Counts a paid purchase: an instanced chest stays ready for the others, otherwise the vault opens for everyone
+        private void CompletePurchase(PowerOrbPedestalManager vault, PlayerCharacterMasterController player)
+        {
+            if (ModConfig.CommandChestInstancedPurchases.Value)
             {
-                // the vault stays ready for the others
                 buyers.Add(player);
-                if (!ModConfig.CommandChestBuyToInventory.Value)
+                SetInteractabilityForClient(player, Interactability.Disabled);
+                if (vault.activationEffectPrefab && vault.activationEffectAttach)
                 {
-                    SetInteractabilityForClient(player, Interactability.Disabled);
+                    EffectManager.SpawnEffect(vault.activationEffectPrefab, new EffectData { origin = vault.activationEffectAttach.position }, transmit: true);
                 }
-                if (self.activationEffectPrefab && self.activationEffectAttach)
-                {
-                    EffectManager.SpawnEffect(self.activationEffectPrefab, new EffectData { origin = self.activationEffectAttach.position }, transmit: true);
-                }
+                return;
             }
-            else
+
+            sold = true;
+            vault.DoInteractResult(true);
+            vault.CallRpcInteractResult(true);
+            // nobody else can buy it now, so their open pickers close
+            foreach (var picker in essences.Keys)
             {
-                // opens the vault for everyone and disables it
-                self.DoInteractResult(true);
-                self.CallRpcInteractResult(true);
-                if (ModConfig.CommandChestBuyToInventory.Value)
+                if (picker)
                 {
-                    // the buyer can still reopen their essence's picker at the vault
-                    SetInteractabilityForClient(player, Interactability.Available);
+                    NetworkServer.Destroy(picker.gameObject);
                 }
             }
-            GiveEssence(self, pickup, activator);
+            essences.Clear();
         }
 
         private bool TryGetWaitingEssence(CharacterMaster master, out PickupPickerController picker)
@@ -257,14 +283,10 @@ namespace BazaarIsMyHaven
             return origin.position + Vector3.up;
         }
 
-        private void GiveEssence(PowerOrbPedestalManager vault, UniquePickup pickup, Interactor activator)
+        // A Command Essence drops out of the vault; anyone can use it, and the chosen item drops
+        private static void DropEssence(PowerOrbPedestalManager vault, UniquePickup pickup)
         {
             var position = GetEssencePosition(vault);
-            if (ModConfig.CommandChestBuyToInventory.Value)
-            {
-                SpawnEssenceFor(vault, pickup, activator);
-                return;
-            }
             var pickupInfo = new GenericPickupController.CreatePickupInfo
             {
                 pickup = pickup,
@@ -274,8 +296,8 @@ namespace BazaarIsMyHaven
             PickupDropletController.CreatePickupDroplet(pickupInfo, position, Vector3.up * 20f + vault.transform.forward * 2f);
         }
 
-        // Spawns the essence a dropped pickup would turn into, hidden below the vault for good, and opens its picker for the buyer
-        private void SpawnEssenceFor(PowerOrbPedestalManager vault, UniquePickup pickup, Interactor activator)
+        // Spawns the essence a dropped pickup would turn into, hidden below the vault for good, and opens its picker for the player
+        private void SpawnHiddenEssence(PowerOrbPedestalManager vault, UniquePickup pickup, Interactor activator)
         {
             var essence = Object.Instantiate(CommandArtifactManager.commandCubePrefab, vault.transform.position + Vector3.down * HiddenEssenceDepth, Quaternion.identity);
             essence.GetComponent<PickupIndexNetworker>().NetworkpickupState = pickup;
@@ -302,26 +324,40 @@ namespace BazaarIsMyHaven
             return orig(self, activator);
         }
 
-        // The item chosen from an essence the chest gave goes to the player who chose it
+        // Picking an item from a hidden essence buys it: the price is charged and the item goes to the player who picked it
         private void PickupPickerController_CreatePickup(On.RoR2.PickupPickerController.orig_CreatePickup_UniquePickup orig, PickupPickerController self, UniquePickup pickupState)
         {
-            var master = self.networkUIPromptController ? self.networkUIPromptController.currentParticipantMaster : null;
-            var body = master ? master.GetBody() : null;
-            if (!NetworkServer.active || !essences.TryGetValue(self, out var essence) || !body || !body.inventory)
+            if (!NetworkServer.active || !essences.TryGetValue(self, out var essence))
             {
                 orig(self, pickupState);
                 return;
             }
+            // any choice uses the essence up
+            essences.Remove(self);
+
+            var master = self.networkUIPromptController ? self.networkUIPromptController.currentParticipantMaster : null;
+            var body = master ? master.GetBody() : null;
+            var activator = body ? body.GetComponent<Interactor>() : null;
+            var player = master ? master.playerCharacterMasterController : null;
+            var vault = chest ? chest.GetComponent<PowerOrbPedestalManager>() : null;
+            var costType = ModConfig.CommandChestCostType.Value;
+            int cost = Helper.GetCost(ModConfig.CommandChestCost.Value, costType);
+            if (!vault || !body || !body.inventory || !activator || !player || sold
+                || (ModConfig.CommandChestInstancedPurchases.Value && buyers.Contains(player))
+                || !Helper.CanAfford(costType, cost, activator, body))
+            {
+                // nothing is charged or given; the vault can be used again
+                if (vault)
+                {
+                    Refuse(vault);
+                }
+                return;
+            }
+
+            Helper.PayCost(costType, cost, activator, body, chest, rng);
             // the item flies from the vault, not from where the essence hides
             Helper.GivePickup(body, pickupState.pickupIndex, essence.vaultPosition, true);
-
-            // the essence is used up; the vault no longer opens it
-            essences.Remove(self);
-            var player = master.playerCharacterMasterController;
-            if (player && chest)
-            {
-                SetInteractabilityForClient(player, Interactability.Disabled);
-            }
+            CompletePurchase(vault, player);
         }
 
         private void SpawnCommandChest()

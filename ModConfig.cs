@@ -327,7 +327,7 @@ namespace BazaarIsMyHaven
             CommandChestCost = config.Bind("14 CommandChest", "Cost", 100, "Cost of opening the Command Chest, paid in CostType.");
             CommandChestCostType = config.Bind("14 CommandChest", "CostType", CostTypeIndex.Money, "What opening the Command Chest costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             CommandChestInstancedPurchases = config.Bind("14 CommandChest", "InstancedPurchases", true, "Each player can buy from the Command Chest once, independently of the others. It stays ready for the others, and each buyer gets their own Command Essence.");
-            CommandChestBuyToInventory = config.Bind("14 CommandChest", "BuyToInventory", true, "Buying from the Command Chest shows its item picker right away, and the chosen item goes directly into your inventory. No essence appears; if you close the picker, use the Command Chest again to reopen it.");
+            CommandChestBuyToInventory = config.Bind("14 CommandChest", "BuyToInventory", true, "Using the Command Chest shows its item picker right away, and the price is only charged once you pick an item, which goes directly into your inventory. No essence appears; closing the picker costs nothing, and using the Command Chest again reopens it. Otherwise buying drops a Command Essence that anyone can use.");
 
             RefreshDerivedData(config);
             LunarShopAmountDependingOnCharacter.SettingChanged += LunarShopCharacterAmountsChanged;
