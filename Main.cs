@@ -97,6 +97,8 @@ namespace BazaarIsMyHaven
             RoR2.SceneDirector.onPrePopulateSceneServer += SceneDirector_onPrePopulateSceneServer;
             On.RoR2.TeleporterInteraction.Start += TeleporterInteraction_Start;
             On.RoR2.DrifterBagController.AssignPassenger += DrifterBagController_AssignPassenger;
+            On.RoR2.JunkController.GenerateJunk += JunkController_GenerateJunk;
+            Inventory.onServerItemGiven += Inventory_onServerItemGiven;
             On.RoR2.Util.KarmaEventTrigger += Util_KarmaEventTrigger;
             On.EntityStates.NewtMonster.KickFromShop.FixedUpdate += KickFromShop_FixedUpdate;
             On.RoR2.GlobalEventManager.OnHitAll += GlobalEventManager_OnHitAll;
@@ -225,6 +227,30 @@ namespace BazaarIsMyHaven
             }
         }
         // The host decides what goes into the bag, so refusing here empties it on every client
+        private bool IsDrifterJunkPrevented()
+        {
+            return ModConfig.EnableMod.Value && ModConfig.PreventDrifterJunk.Value && IsCurrentMapInBazaar() && NetworkServer.active;
+        }
+
+        // The Junk that Drifter's attacks and thrown objects drop
+        private void JunkController_GenerateJunk(On.RoR2.JunkController.orig_GenerateJunk orig, JunkController self, Vector3 dropLocation, int quantity)
+        {
+            if (IsDrifterJunkPrevented())
+            {
+                return;
+            }
+            orig(self, dropLocation, quantity);
+        }
+
+        // Junk given straight to the inventory, e.g. by Suffocate
+        private void Inventory_onServerItemGiven(Inventory inventory, ItemIndex itemIndex, int count)
+        {
+            if (DLC3Content.Items.Junk && itemIndex == DLC3Content.Items.Junk.itemIndex && IsDrifterJunkPrevented())
+            {
+                inventory.RemoveItemPermanent(itemIndex, count);
+            }
+        }
+
         private void DrifterBagController_AssignPassenger(On.RoR2.DrifterBagController.orig_AssignPassenger orig, DrifterBagController self, GameObject passengerObject)
         {
             if (ModConfig.EnableMod.Value && ModConfig.PreventDrifterBagging.Value && IsCurrentMapInBazaar() && NetworkServer.active && passengerObject)
