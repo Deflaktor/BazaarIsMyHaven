@@ -208,25 +208,21 @@ namespace BazaarIsMyHaven
             switch (tier)
             {
                 case 1:
-                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList1.Value, resolvedItems, rewardLog, false);
+                    ParseRewards(ModConfig.DonateRewardList1.Value, resolvedItems);
                     break;
                 case 2:
-                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList2.Value, resolvedItems, rewardLog, false);
+                    ParseRewards(ModConfig.DonateRewardList2.Value, resolvedItems);
                     break;
                 case 3:
-                    ItemStringParser.ItemStringParser.ParseItemString(ModConfig.DonateRewardList3.Value, resolvedItems, rewardLog, false);
+                    ParseRewards(ModConfig.DonateRewardList3.Value, resolvedItems);
                     break;
                 case 4:
-                    var rewardList = ModConfig.DonateRewardListCharacters.GetValueOrDefault(bodyIndex, ModConfig.DonateRewardListCharacterDefault).Value;
-                    ItemStringParser.ItemStringParser.ParseItemString(rewardList, resolvedItems, rewardLog, false);
+                    // characters without a list of their own, or whose list gives nothing, get the default list
+                    if (!ModConfig.DonateRewardListCharacters.TryGetValue(bodyIndex, out var characterList) || !ParseRewards(characterList.Value, resolvedItems))
+                    {
+                        ParseRewards(ModConfig.DonateRewardListCharacterDefault.Value, resolvedItems);
+                    }
                     break;
-            }
-            foreach (var entry in resolvedItems.ToArray())
-            {
-                var pickupDef = PickupCatalog.GetPickupDef(entry.Key);
-                if (entry.Value <= 0 || pickupDef == null ||
-                    (pickupDef.itemIndex == ItemIndex.None && pickupDef.equipmentIndex == EquipmentIndex.None))
-                    resolvedItems.Remove(entry.Key);
             }
 
             if (resolvedItems.Count == 0)
@@ -235,6 +231,21 @@ namespace BazaarIsMyHaven
                 return false;
             }
             return true;
+        }
+
+        // Leaves only the items and equipment that can be given; returns whether there are any
+        private bool ParseRewards(string rewardList, Dictionary<PickupIndex, int> resolvedItems)
+        {
+            resolvedItems.Clear();
+            ItemStringParser.ItemStringParser.ParseItemString(rewardList, resolvedItems, rewardLog, false);
+            foreach (var entry in resolvedItems.ToArray())
+            {
+                var pickupDef = PickupCatalog.GetPickupDef(entry.Key);
+                if (entry.Value <= 0 || pickupDef == null ||
+                    (pickupDef.itemIndex == ItemIndex.None && pickupDef.equipmentIndex == EquipmentIndex.None))
+                    resolvedItems.Remove(entry.Key);
+            }
+            return resolvedItems.Count > 0;
         }
 
         private void ShowRewardEffects(PurchaseInteraction self, CharacterBody characterBody, Dictionary<PickupIndex, int> resolvedItems, int tier)
