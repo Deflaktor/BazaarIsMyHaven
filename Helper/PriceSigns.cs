@@ -4,6 +4,7 @@ using RoR2.Networking;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
@@ -43,22 +44,33 @@ namespace BazaarIsMyHaven
             }
         }
 
-        // Shows cost in costType this high above each of the terminals, from their front
+        // Shows cost in costType this high above each of the terminals, readable from their front, like the Seer's own sign in front of its table
         public static void Apply(List<GameObject> terminals, int cost, CostTypeIndex costType, float signHeight)
         {
-            if (!NetworkServer.active || terminals.Count == 0 || cost <= 0 || signsUnavailable)
+            Apply(terminals.Select(terminal => (terminal, terminal.transform.position + Vector3.up * signHeight, terminal.transform.rotation * Quaternion.Euler(0f, 180f, 0f))).ToList(), cost, costType);
+        }
+
+        // Shows cost in costType at the given place; the sign goes away once the terminal can no longer be bought
+        public static void Apply(GameObject terminal, Vector3 signPosition, Quaternion signRotation, int cost, CostTypeIndex costType)
+        {
+            Apply(new List<(GameObject, Vector3, Quaternion)> { (terminal, signPosition, signRotation) }, cost, costType);
+        }
+
+        private static void Apply(List<(GameObject terminal, Vector3 position, Quaternion rotation)> placements, int cost, CostTypeIndex costType)
+        {
+            if (!NetworkServer.active || placements.Count == 0 || cost <= 0 || signsUnavailable)
             {
                 return;
             }
 
             var syncObject = new GameObject("PriceSigns");
-            SceneManager.MoveGameObjectToScene(syncObject, terminals[0].scene);
+            SceneManager.MoveGameObjectToScene(syncObject, placements[0].terminal.scene);
             var priceSigns = syncObject.AddComponent<PriceSigns>();
             try
             {
-                foreach (var terminal in terminals)
+                foreach (var (terminal, position, rotation) in placements)
                 {
-                    priceSigns.signs.Add(CreateSign(terminal, cost, costType, signHeight));
+                    priceSigns.signs.Add(CreateSign(terminal, position, rotation, cost, costType));
                 }
             }
             catch (Exception exception)
@@ -75,7 +87,7 @@ namespace BazaarIsMyHaven
             priceSigns.StartCoroutine(priceSigns.SynchronizeClients());
         }
 
-        private static Sign CreateSign(GameObject terminal, int cost, CostTypeIndex costType, float signHeight)
+        private static Sign CreateSign(GameObject terminal, Vector3 signPosition, Quaternion signRotation, int cost, CostTypeIndex costType)
         {
             var seer = Instantiate(seerPrefab.WaitForCompletion(), SetupPosition, Quaternion.identity);
             SceneManager.MoveGameObjectToScene(seer, terminal.scene);
@@ -105,10 +117,7 @@ namespace BazaarIsMyHaven
                 purchaseInteraction.Networkcost = cost;
                 purchaseInteraction.NetworkcostType = costType;
 
-                // readable from the terminal's front, like the Seer's own sign in front of its table
                 var pivot = projector.hologramPivot;
-                var signPosition = terminal.transform.position + Vector3.up * signHeight;
-                var signRotation = terminal.transform.rotation * Quaternion.Euler(0f, 180f, 0f);
                 var sign = new Sign { terminal = terminal, seer = seer.GetComponent<NetworkIdentity>() };
                 sign.clientRotation = signRotation * Quaternion.Inverse(pivot.localRotation);
                 sign.clientPosition = signPosition - sign.clientRotation * pivot.localPosition;
