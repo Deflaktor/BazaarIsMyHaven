@@ -466,6 +466,12 @@ namespace BazaarIsMyHaven
                     case "Drifter":
                         defaultReward = "SpeedOnPickup";
                         break;
+                    case "Acolyte":
+                        defaultReward = "2xSeed";
+                        break;
+                    case "Enforcer2":
+                        defaultReward = "3xBarrierOnKill";
+                        break;
                     default:
                         defaultReward = "3xScrapGreen";
                         break;
