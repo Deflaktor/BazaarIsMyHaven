@@ -115,7 +115,7 @@ namespace BazaarIsMyHaven
                             return;
 
                         // pay first, so items paid with can't be the reward
-                        PayCost(self, activator, characterBody);
+                        Helper.PayCost(self.costType, self.cost, activator, characterBody, self.gameObject, self.rng);
                         Helper.GivePickups(characterBody, resolvedItems, self.transform.position + Vector3.up * 6.0f, true);
                         playerStruct.RewardCount += 1;
                         donationsDuringRun[pc] = donationsDuringRun.GetValueOrDefault(pc) + 1;
@@ -133,20 +133,6 @@ namespace BazaarIsMyHaven
         }
 
         // Pays like the game's purchase does, in any cost type, but without its purchase events
-        private static void PayCost(PurchaseInteraction self, Interactor activator, CharacterBody characterBody)
-        {
-            var costTypeDef = CostTypeCatalog.GetCostTypeDef(self.costType);
-            int cost = TeamManager.AdjustCostForLongstandingSolitude(self.costType, self.cost, characterBody);
-            var results = costTypeDef.PayCost(cost, activator, self.gameObject, self.rng, ItemIndex.None);
-            foreach (var item in results.itemStacksTaken)
-            {
-                for (int i = 0; i < item.stackValues.totalStacks; i++)
-                {
-                    PurchaseInteraction.CreateItemTakenOrb(characterBody.corePosition, self.gameObject, item.itemIndex);
-                }
-            }
-        }
-
         private bool CanGetReward(PlayerCharacterMasterController pc)
         {
             return Main.instance.GetPlayerStruct(pc).RewardCount < ModConfig.DonateRewardLimitPerVisit.Value
