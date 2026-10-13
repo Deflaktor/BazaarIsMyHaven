@@ -312,6 +312,11 @@ namespace BazaarIsMyHaven
             var picker = essence.GetComponent<PickupPickerController>();
             picker.SetOptionsFromPickupForCommandArtifact(pickup);
             picker.pickupThatGeneratedOptions = pickup;
+            // the host closes the picker once its player is 10 m from this copy, so it must not fall; clients' copies fall unseen
+            if (essence.TryGetComponent(out Rigidbody rigidbody))
+            {
+                rigidbody.isKinematic = true;
+            }
             NetworkServer.Spawn(essence);
 
             var body = activator.GetComponent<CharacterBody>();
