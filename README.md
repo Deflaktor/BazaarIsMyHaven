@@ -19,6 +19,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
   - Donation Altar
   - Wandering Chef (with the Alloyed Collective)
   - Drone stations from the Alloyed Collective
+  - Command Chest
 
 - **Newt Behavior Options**:
   - Stop him from throwing you out.
@@ -130,6 +131,12 @@ Examples:
 If the Alloyed Collective is enabled for the run, the Drones section lets the director spawn a Drone Combiner Station, a Drone Upgrade Station, a Drone Scrapper and a Triple Drone Shop. Each one has its own settings.
 
 Drones normally stay behind when you enter the Bazaar, but the Drone Combiner Station, the Drone Upgrade Station and the Drone Scrapper only work with drones that are there. So with the Drones section enabled, the players' drones come along like on any other stage and behave as usual. Other allies still stay behind.
+
+### Command Chest
+
+The CommandChest section lets the director spawn the game's Command Chest. Opening it drops a Command Essence, from which you choose any item of the chest's `Tier`, such as `Tier2` (the default) or `Tier3`. A drop table like `dtCommandChest`, the game's own mix, rolls the tier by its weights. `Cost` and `CostType` set its price, which the price tag shows.
+
+With `InstancedPurchases`, each player can open it once: it stays closed and drops each buyer their own essence. With `BuyToInventory`, the chosen item goes straight into the inventory of the player who chose it.
 
 ## RewardListAvailableCharacters - Valid Keywords
 
