@@ -24,8 +24,8 @@ namespace BazaarIsMyHaven
         private DirectorCard card;
         private bool spawned;
         private GameObject altar;
-        // above the reward buds
-        private const float AltarSignHeight = 6.5f;
+        // just above the reward buds, which stand on top of the altar and hold their items about 2 m up
+        private const float AltarSignHeight = 3f;
 
         // Rewards are rolled several times a second, so each warning is logged once per run
         private readonly ManualLogSource rewardLog = new ManualLogSource(Main.PluginName);
