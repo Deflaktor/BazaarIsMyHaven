@@ -193,6 +193,10 @@ namespace BazaarIsMyHaven
                 }
                 return false;
             }
+            if (terminal.TryGetComponent(out GenericInteraction genericInteraction))
+            {
+                return genericInteraction.interactability != Interactability.Disabled;
+            }
             var purchaseInteraction = terminal.GetComponent<PurchaseInteraction>();
             return purchaseInteraction && purchaseInteraction.available;
         }
