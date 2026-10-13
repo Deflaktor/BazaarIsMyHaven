@@ -451,19 +451,25 @@ namespace BazaarIsMyHaven
             return false;
         }
 
-        // Needing two of the same ingredient is not checked
-        private bool IsCraftable(CraftableCatalog.RecipeEntry recipe, List<(Inventory inventory, HashSet<PickupIndex> bazaarStock)> players)
+        // Needing two of the same ingredient is not checked, except that the Command Pedestal gives only one item
+        private bool IsCraftable(CraftableCatalog.RecipeEntry recipe, List<(Inventory inventory, HashSet<PickupIndex> bazaarStock, HashSet<PickupIndex> pedestalChoices)> players)
         {
-            return players.Any(player => recipe.possibleIngredients.All(slot => slot.pickups != null &&
-                slot.pickups.Any(pickup => player.bazaarStock.Contains(pickup) || InventoryContainsPickup(player.inventory, pickup))));
+            return players.Any(player =>
+            {
+                // ingredients the player can't get from their inventory or the shops
+                var missing = recipe.possibleIngredients.Where(slot => slot.pickups == null ||
+                    !slot.pickups.Any(pickup => player.bazaarStock.Contains(pickup) || InventoryContainsPickup(player.inventory, pickup))).ToList();
+                // the Command Pedestal can give one of them
+                return missing.Count == 0 || (missing.Count == 1 && missing[0].pickups != null && missing[0].pickups.Any(player.pedestalChoices.Contains));
+            });
         }
 
-        // What each player can get in the Bazaar: the shops' items they can still buy, the Command Pedestal's choices, and scrap if a Scrapper is there
-        private List<(Inventory inventory, HashSet<PickupIndex> bazaarStock)> GetPlayerIngredients()
+        // What each player can get in the Bazaar: the shops' items they can still buy, scrap if a Scrapper is there, and one of the Command Pedestal's choices
+        private List<(Inventory inventory, HashSet<PickupIndex> bazaarStock, HashSet<PickupIndex> pedestalChoices)> GetPlayerIngredients()
         {
             var terminals = UnityEngine.Object.FindObjectsOfType<ShopTerminalBehavior>();
             bool hasScrapper = UnityEngine.Object.FindObjectOfType<ScrapperController>();
-            var players = new List<(Inventory inventory, HashSet<PickupIndex> bazaarStock)>();
+            var players = new List<(Inventory inventory, HashSet<PickupIndex> bazaarStock, HashSet<PickupIndex> pedestalChoices)>();
             foreach (var pc in PlayerCharacterMasterController.instances)
             {
                 var inventory = pc && pc.master ? pc.master.inventory : null;
@@ -481,9 +487,10 @@ namespace BazaarIsMyHaven
                         bazaarStock.Add(pickup);
                     }
                 }
+                var pedestalChoices = new HashSet<PickupIndex>();
                 if (BazaarCommandPedestal.instance != null)
                 {
-                    bazaarStock.UnionWith(BazaarCommandPedestal.instance.GetChoicesFor(pc));
+                    pedestalChoices.UnionWith(BazaarCommandPedestal.instance.GetChoicesFor(pc));
                 }
                 if (hasScrapper)
                 {
@@ -492,7 +499,7 @@ namespace BazaarIsMyHaven
                     AddScrap(bazaarStock, inventory, ItemTier.Tier3, RoR2Content.Items.ScrapRed);
                     AddScrap(bazaarStock, inventory, ItemTier.Boss, RoR2Content.Items.ScrapYellow);
                 }
-                players.Add((inventory, bazaarStock));
+                players.Add((inventory, bazaarStock, pedestalChoices));
             }
             return players;
         }
