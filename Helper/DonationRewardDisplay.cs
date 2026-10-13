@@ -8,19 +8,15 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace BazaarIsMyHaven
 {
-    // Clients build the Donation Altar's display from their prefab, which only holds Transcendence, so the altar hides it.
-    // Each player sees rewards they could get on Lunar Buds around the altar instead, sent as instanced bud states.
+    // Each player sees rewards they could get from the Donation Altar on Lunar Buds above it, sent as instanced bud states.
     // The shown rewards are only examples; a donation rolls its own reward.
     public class DonationRewardDisplay : MonoBehaviour
     {
         private const string BudObjectName = "DonationRewardBud";
         private const float CycleInterval = 2f;
-        // PurchaseInteraction's cost SyncVar
-        private const uint CostDirtyBit = 16u;
-        private const float CostResendInterval = 1f;
         // every bud stands at this height
         private const float BudHeight = -19.6321f;
-        // in the altar's space: one bud below where Transcendence floated, the others around it
+        // in the altar's space: one bud above the altar, the others around it
         private static readonly Vector3[] BudOffsets =
         {
             new Vector3(0f, 0f, 0f),
@@ -45,9 +41,7 @@ namespace BazaarIsMyHaven
 
         private readonly List<InstancedPurchase> buds = new List<InstancedPurchase>();
         private Func<PlayerCharacterMasterController, Dictionary<PickupIndex, int>> rollReward;
-        private PurchaseInteraction purchaseInteraction;
         private float nextCycleTime;
-        private float nextCostResendTime;
 
         public static void Preload()
         {
@@ -57,14 +51,9 @@ namespace BazaarIsMyHaven
         // Call before spawning the altar. rollReward returns null for players who cannot get a reward.
         public static void Apply(GameObject altar, Func<PlayerCharacterMasterController, Dictionary<PickupIndex, int>> rollReward)
         {
-            var terminal = altar.GetComponent<BlueprintTerminal>();
-            // clients only hide their display when it is purchased; spawning with the flag set means they never build it
-            terminal.hasBeenPurchased = true;
-
             var display = altar.AddComponent<DonationRewardDisplay>();
             display.rollReward = rollReward;
-            display.purchaseInteraction = altar.GetComponent<PurchaseInteraction>();
-            display.SpawnBuds(terminal.displayBaseTransform.position);
+            display.SpawnBuds(altar.transform.position);
         }
 
         private void SpawnBuds(Vector3 displayPosition)
@@ -106,13 +95,6 @@ namespace BazaarIsMyHaven
             }
 
             float now = Time.unscaledTime;
-            if (now >= nextCostResendTime)
-            {
-                nextCostResendTime = now + CostResendInterval;
-                // clients set the prefab's price when they build the altar, which late joiners do at any time
-                purchaseInteraction.SetDirtyBit(CostDirtyBit);
-            }
-
             if (now < nextCycleTime)
             {
                 return;
