@@ -321,7 +321,7 @@ namespace BazaarIsMyHaven
             DronesTripleDroneShopDirectorWeight = config.Bind("13 Drones", "TripleDroneShopDirectorWeight", 1f, "How likely the director picks the Triple Drone Shop, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
 
             // 14 CommandPedestal
-            CommandPedestalSectionEnabled = config.Bind("14 CommandPedestal", "SectionEnabled", true, "Enables or disables the Command Pedestal section. Enabling lets the director spawn a Command Pedestal, which drops a Command Essence that lets you choose any item of its tier. Unmodded clients can't spawn the game's own Command Chest, so it is an Ocular Vault, with its price shown above it; clients see the vault's own \"Place Ocular Battery\" text.");
+            CommandPedestalSectionEnabled = config.Bind("14 CommandPedestal", "SectionEnabled", true, "Enables or disables the Command Pedestal section. It lets you pick an item for a price.");
             CommandPedestalTiers.Clear();
             // like the game's own Command Chest mix, without lunar items; together as likely as one interactable with DirectorWeight 0.2
             AddCommandPedestalTier(config, "Tier1", "white items", run => run.availableTier1DropList, 50, 10, 0.04f);
