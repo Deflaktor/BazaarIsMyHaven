@@ -49,7 +49,7 @@ Thanks to WeeabooGod for the Lunar Shop rework and many of the fixes in this ver
 ### Other changes
 
 - Config changes now apply from the next run, without restarting the game.
-- The Wandering CHEF only appears with the Alloyed Collective. With `CraftableRecipesOnly`, he only offers a recipe that someone can cook, and otherwise doesn't appear.
+- The Wandering CHEF only appears with the Alloyed Collective. With `CraftableRecipesOnly`, he only offers a recipe that someone can cook from their inventory and what the Bazaar offers, including the Command Pedestal's choices, and otherwise doesn't appear.
 - At most 2 Scrappers spawn, instead of 4.
 - Add Transcendent Cauldrons from Hallowed Concepts as a cauldron type, with weight 0 by default.
 - With `BuyToInventory`, Equipment Terminals, the Command Pedestal and the Wandering CHEF only sell equipment into an empty equipment slot.
