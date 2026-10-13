@@ -1,3 +1,4 @@
+using EntityStates.Missions.RepurposedCrater;
 using RoR2;
 using RoR2.Artifacts;
 using System.Collections.Generic;
@@ -8,31 +9,34 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace BazaarIsMyHaven
 {
-    // The game's Command Chest drops a Command Essence, which offers every item of the tier the chest rolled
+    // A Command Chest gives a Command Essence, which offers every item of the tier it rolled.
+    // Unmodded clients can't spawn the game's own Command Chest, so it is built from the Alloyed Collective's Ocular Vault:
+    // the host takes its interaction, charges the price and plays the vault's own opening or refusal.
     public class BazaarCommandChest : BazaarBase
     {
-        AsyncOperationHandle<GameObject> commandChest;
+        // a price sign shows this high above the vault
+        private const float SignHeight = 4.5f;
+
+        AsyncOperationHandle<GameObject> vaultPrefab;
         DirectorCard card;
         bool spawned;
         GameObject chest;
-        // the player opening the chest, while the purchase runs
-        Interactor buyer;
-        // who opened the chest without instanced purchases, until it gives its essence
-        Interactor openedBy;
+        Xoroshiro128Plus rng;
+        // players who bought from the chest with instanced purchases
+        readonly HashSet<PlayerCharacterMasterController> buyers = new HashSet<PlayerCharacterMasterController>();
         // essences given to one player; only they can use it
         readonly Dictionary<PickupPickerController, CharacterMaster> essenceOwners = new Dictionary<PickupPickerController, CharacterMaster>();
 
         public override void Preload()
         {
-            commandChest = Addressables.LoadAssetAsync<GameObject>("RoR2/CommandChest/CommandChest.prefab");
+            vaultPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/PowerOrbPedestal/PowerOrbVault.prefab");
+            PriceSigns.Preload();
         }
 
         public override void Hook()
         {
-            On.RoR2.ChestBehavior.Roll += ChestBehavior_Roll;
-            On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
-            On.RoR2.ChestBehavior.Open += ChestBehavior_Open;
-            On.RoR2.ChestBehavior.ItemDrop += ChestBehavior_ItemDrop;
+            On.EntityStates.Missions.RepurposedCrater.PowerOrbPedestalManager.DoOnInteract += PowerOrbPedestalManager_DoOnInteract;
+            On.RoR2.GenericInteraction.RoR2_IInteractable_GetInteractability += GenericInteraction_GetInteractability;
             On.RoR2.PickupPickerController.GetInteractability += PickupPickerController_GetInteractability;
             On.RoR2.PickupPickerController.CreatePickup_UniquePickup += PickupPickerController_CreatePickup;
         }
@@ -51,8 +55,7 @@ namespace BazaarIsMyHaven
         {
             spawned = false;
             chest = null;
-            buyer = null;
-            openedBy = null;
+            buyers.Clear();
             essenceOwners.Clear();
             SpawnLatePicks();
         }
@@ -70,116 +73,164 @@ namespace BazaarIsMyHaven
             return chest && component && component.gameObject == chest && NetworkServer.active;
         }
 
-        // Rolls the configured tier; the essence then offers every item of that tier
-        private void ChestBehavior_Roll(On.RoR2.ChestBehavior.orig_Roll orig, ChestBehavior self)
+        private static PlayerCharacterMasterController GetPlayer(GameObject bodyObject)
         {
-            orig(self);
-            if (!IsBazaarChest(self))
-                return;
+            var body = bodyObject ? bodyObject.GetComponent<CharacterBody>() : null;
+            return body && body.master ? body.master.playerCharacterMasterController : null;
+        }
 
+        // Replaces the vault's check for an Ocular Battery
+        private void PowerOrbPedestalManager_DoOnInteract(On.EntityStates.Missions.RepurposedCrater.PowerOrbPedestalManager.orig_DoOnInteract orig, PowerOrbPedestalManager self, GameObject interactorObject)
+        {
+            if (!IsBazaarChest(self))
+            {
+                orig(self, interactorObject);
+                return;
+            }
+
+            var activator = interactorObject ? interactorObject.GetComponent<Interactor>() : null;
+            var body = interactorObject ? interactorObject.GetComponent<CharacterBody>() : null;
+            var player = GetPlayer(interactorObject);
+            bool instanced = ModConfig.CommandChestInstancedPurchases.Value;
+            if (!activator || !body || !player || (instanced && buyers.Contains(player)))
+            {
+                return;
+            }
+
+            var costType = ModConfig.CommandChestCostType.Value;
+            int cost = Helper.GetCost(ModConfig.CommandChestCost.Value, costType);
+            if (!Helper.CanAfford(costType, cost, activator, body) || !TryRollPickup(out var pickup))
+            {
+                // the vault's own refusal
+                self.DoInteractResult(false);
+                self.CallRpcInteractResult(false);
+                return;
+            }
+
+            Helper.PayCost(costType, cost, activator, body, chest, rng);
+            if (instanced)
+            {
+                // the vault stays ready for the others
+                buyers.Add(player);
+                DisableForClient(player);
+                if (self.activationEffectPrefab && self.activationEffectAttach)
+                {
+                    EffectManager.SpawnEffect(self.activationEffectPrefab, new EffectData { origin = self.activationEffectAttach.position }, transmit: true);
+                }
+            }
+            else
+            {
+                // opens the vault for everyone and disables it
+                self.DoInteractResult(true);
+                self.CallRpcInteractResult(true);
+            }
+            GiveEssence(self, pickup, activator);
+        }
+
+        // Buyers can't use an instanced chest again; this covers the host's own player and the server's checks
+        private Interactability GenericInteraction_GetInteractability(On.RoR2.GenericInteraction.orig_RoR2_IInteractable_GetInteractability orig, GenericInteraction self, Interactor activator)
+        {
+            if (IsBazaarChest(self) && activator && buyers.Contains(GetPlayer(activator.gameObject)))
+            {
+                return Interactability.Disabled;
+            }
+            return orig(self, activator);
+        }
+
+        // Shows the chest as used to this player's client only, with the vault's own interactability field
+        private void DisableForClient(PlayerCharacterMasterController player)
+        {
+            var connection = player.networkUser ? player.networkUser.connectionToClient : null;
+            var identity = chest.GetComponent<NetworkIdentity>();
+            var interaction = chest.GetComponent<GenericInteraction>();
+            if (connection == null || !connection.isReady || Util.ConnectionIsLocal(connection) || !identity || !interaction)
+            {
+                return;
+            }
+
+            int channel = interaction.GetNetworkChannel();
+            var writer = new NetworkWriter();
+            writer.StartMessage(MsgType.UpdateVars);
+            writer.Write(identity.netId);
+            var previousInteractability = interaction.interactability;
+            try
+            {
+                interaction.interactability = Interactability.Disabled;
+                // every component must be serialized in the order the client reads them
+                foreach (var behaviour in identity.GetBehavioursOfSameChannel(channel, false))
+                {
+                    uint dirtyBits = behaviour.m_SyncVarDirtyBits;
+                    try
+                    {
+                        // dirty bit 1 is GenericInteraction.interactability
+                        behaviour.m_SyncVarDirtyBits = behaviour == interaction ? 1u : 0u;
+                        behaviour.OnSerialize(writer, false);
+                    }
+                    finally
+                    {
+                        behaviour.m_SyncVarDirtyBits = dirtyBits;
+                    }
+                }
+            }
+            finally
+            {
+                interaction.interactability = previousInteractability;
+            }
+            writer.FinishMessage();
+            if (!connection.SendWriter(writer, channel))
+            {
+                Log.LogWarning("Could not hide the used Command Chest for a client.");
+            }
+        }
+
+        // Rolls the configured tier; the essence then offers every item of that tier
+        private static bool TryRollPickup(out UniquePickup pickup)
+        {
             var resolvedItems = new Dictionary<PickupIndex, int>();
             ItemStringParser.ItemStringParser.ParseItemString(ModConfig.CommandChestTier.Value, resolvedItems, Log.GetSource(), false);
-            bool rolled = false;
             foreach (var (pickupIndex, amount) in resolvedItems)
             {
                 if (amount > 0 && PickupCatalog.GetPickupDef(pickupIndex) != null)
                 {
-                    self.currentPickup = new UniquePickup(pickupIndex);
-                    rolled = true;
-                    break;
+                    pickup = new UniquePickup(pickupIndex);
+                    return true;
                 }
             }
-            if (!rolled)
-            {
-                Log.LogError($"Could not get a pickup from the Command Chest Tier: {ModConfig.CommandChestTier.Value}; it keeps the game's own roll");
-            }
-
-            // the chest's own name token is missing from the game's language files
-            if (self.TryGetComponent(out PurchaseInteraction purchaseInteraction))
-            {
-                purchaseInteraction.NetworkdisplayNameToken = GetEssenceNameToken(self.currentPickup.pickupIndex);
-            }
+            Log.LogError($"Could not get a pickup from the Command Chest Tier: {ModConfig.CommandChestTier.Value}");
+            pickup = UniquePickup.none;
+            return false;
         }
 
-        private void PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
+        private static Vector3 GetEssencePosition(PowerOrbPedestalManager vault)
         {
-            if (!IsBazaarChest(self))
-            {
-                orig(self, activator);
-                return;
-            }
-            var previousBuyer = buyer;
-            buyer = activator;
-            try
-            {
-                orig(self, activator);
-            }
-            finally
-            {
-                buyer = previousBuyer;
-            }
+            var origin = vault.activationEffectAttach ? vault.activationEffectAttach : vault.transform;
+            return origin.position + Vector3.up;
         }
 
-        // An instanced chest stays closed for the others and gives each buyer their own essence
-        private void ChestBehavior_Open(On.RoR2.ChestBehavior.orig_Open orig, ChestBehavior self)
+        private void GiveEssence(PowerOrbPedestalManager vault, UniquePickup pickup, Interactor activator)
         {
-            if (!IsBazaarChest(self))
+            var position = GetEssencePosition(vault);
+            if (ModConfig.CommandChestBuyToInventory.Value)
             {
-                orig(self);
+                SpawnEssenceFor(position, pickup, activator);
                 return;
             }
-            if (!self.GetComponent<InstancedPurchase>())
-            {
-                // the opening chest gives its essence in ItemDrop
-                openedBy = buyer;
-                orig(self);
-                return;
-            }
-            GiveEssence(self, buyer);
-            self.Roll();
-        }
-
-        private void ChestBehavior_ItemDrop(On.RoR2.ChestBehavior.orig_ItemDrop orig, ChestBehavior self)
-        {
-            if (!IsBazaarChest(self) || !ModConfig.CommandChestBuyToInventory.Value || !openedBy)
-            {
-                orig(self);
-                return;
-            }
-            SpawnEssenceFor(self, openedBy);
-            openedBy = null;
-            self.currentPickup = UniquePickup.none;
-            self.NetworkisChestOpened = true;
-        }
-
-        private void GiveEssence(ChestBehavior chestBehavior, Interactor activator)
-        {
-            if (ModConfig.CommandChestBuyToInventory.Value && activator)
-            {
-                SpawnEssenceFor(chestBehavior, activator);
-                return;
-            }
-            var dropTransform = chestBehavior.dropTransform ? chestBehavior.dropTransform : chestBehavior.transform;
             var pickupInfo = new GenericPickupController.CreatePickupInfo
             {
-                pickup = chestBehavior.currentPickup,
-                position = dropTransform.position + Vector3.up * 1.5f,
-                chest = chestBehavior,
+                pickup = pickup,
+                position = position,
                 artifactFlag = GenericPickupController.PickupArtifactFlag.Command
             };
-            PickupDropletController.CreatePickupDroplet(pickupInfo, pickupInfo.position, Vector3.up * chestBehavior.dropUpVelocityStrength + dropTransform.forward * chestBehavior.dropForwardVelocityStrength);
+            PickupDropletController.CreatePickupDroplet(pickupInfo, position, Vector3.up * 20f + vault.transform.forward * 2f);
         }
 
-        // Spawns the essence a dropped pickup would turn into, but right away at the chest, and opens its picker for the buyer
-        private void SpawnEssenceFor(ChestBehavior chestBehavior, Interactor activator)
+        // Spawns the essence a dropped pickup would turn into, but right away at the vault, and opens its picker for the buyer
+        private void SpawnEssenceFor(Vector3 position, UniquePickup pickup, Interactor activator)
         {
-            var pickup = chestBehavior.currentPickup;
-            var dropTransform = chestBehavior.dropTransform ? chestBehavior.dropTransform : chestBehavior.transform;
-            var essence = Object.Instantiate(CommandArtifactManager.commandCubePrefab, dropTransform.position + Vector3.up * 1.5f, Quaternion.identity);
+            var essence = Object.Instantiate(CommandArtifactManager.commandCubePrefab, position, Quaternion.identity);
             essence.GetComponent<PickupIndexNetworker>().NetworkpickupState = pickup;
             var picker = essence.GetComponent<PickupPickerController>();
             picker.SetOptionsFromPickupForCommandArtifact(pickup);
-            picker.chestGeneratedFrom = chestBehavior;
             picker.pickupThatGeneratedOptions = pickup;
             NetworkServer.Spawn(essence);
 
@@ -204,12 +255,12 @@ namespace BazaarIsMyHaven
             return orig(self, activator);
         }
 
-        // The item chosen from the chest's essence goes to the player who chose it
+        // The item chosen from an essence the chest gave goes to the player who chose it
         private void PickupPickerController_CreatePickup(On.RoR2.PickupPickerController.orig_CreatePickup_UniquePickup orig, PickupPickerController self, UniquePickup pickupState)
         {
             var master = self.networkUIPromptController ? self.networkUIPromptController.currentParticipantMaster : null;
             var body = master ? master.GetBody() : null;
-            if (!ModConfig.CommandChestBuyToInventory.Value || !IsBazaarChest(self.chestGeneratedFrom) || !body || !body.inventory)
+            if (!NetworkServer.active || !essenceOwners.ContainsKey(self) || !body || !body.inventory)
             {
                 orig(self, pickupState);
                 return;
@@ -217,46 +268,16 @@ namespace BazaarIsMyHaven
             Helper.GivePickup(body, pickupState.pickupIndex, self.transform.position, true);
         }
 
-        private static string GetEssenceNameToken(PickupIndex pickupIndex)
-        {
-            var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
-            if (pickupDef == null)
-                return "ARTIFACT_COMMAND_CUBE_UNKNOWN_NAME";
-            if (pickupDef.equipmentIndex != EquipmentIndex.None)
-                return pickupDef.isLunar ? "ARTIFACT_COMMAND_CUBE_BLUE_NAME" : "ARTIFACT_COMMAND_CUBE_ORANGE_NAME";
-            switch (pickupDef.itemTier)
-            {
-                case ItemTier.Tier1:
-                    return "ARTIFACT_COMMAND_CUBE_WHITE_NAME";
-                case ItemTier.Tier2:
-                    return "ARTIFACT_COMMAND_CUBE_GREEN_NAME";
-                case ItemTier.Tier3:
-                    return "ARTIFACT_COMMAND_CUBE_RED_NAME";
-                case ItemTier.Boss:
-                    return "ARTIFACT_COMMAND_CUBE_YELLOW_NAME";
-                case ItemTier.Lunar:
-                    return "ARTIFACT_COMMAND_CUBE_BLUE_NAME";
-                default:
-                    return "ARTIFACT_COMMAND_CUBE_UNKNOWN_NAME";
-            }
-        }
-
         private void SpawnCommandChest()
         {
-            chest = SpawnAt(commandChest.WaitForCompletion(), new SpawnCardStruct(new Vector3(-63.4376f, -27.1783f, -73.8056f), new Vector3(0f, 305f, 10f)));
-            var purchaseInteraction = chest.GetComponent<PurchaseInteraction>();
-            var cost = Helper.GetCost(ModConfig.CommandChestCost.Value, ModConfig.CommandChestCostType.Value);
-            purchaseInteraction.cost = cost;
-            purchaseInteraction.Networkcost = cost;
-            purchaseInteraction.NetworkcostType = ModConfig.CommandChestCostType.Value;
-            // the chest's own context token is missing from the game's language files
-            purchaseInteraction.NetworkcontextToken = "CHEST1_CONTEXT";
+            rng = new Xoroshiro128Plus(Run.instance.treasureRng.nextUlong);
+            chest = Object.Instantiate(vaultPrefab.WaitForCompletion(), new Vector3(-63.4376f, -27.1783f, -73.8056f), Quaternion.Euler(0f, 305f, 10f));
+            // outside its mission the vault stays retracted; spawning it extended raises its container for every client
+            chest.GetComponent<PowerOrbPedestalManager>().Network_hasExtended = true;
+            NetworkServer.Spawn(chest);
 
-            if (ModConfig.CommandChestInstancedPurchases.Value)
-            {
-                var instancedPurchase = chest.AddComponent<InstancedPurchase>();
-                instancedPurchase.original.available = purchaseInteraction.available;
-            }
+            var costType = ModConfig.CommandChestCostType.Value;
+            PriceSigns.Apply(new List<GameObject> { chest }, Helper.GetCost(ModConfig.CommandChestCost.Value, costType), costType, SignHeight);
         }
     }
 }
