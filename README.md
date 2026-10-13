@@ -148,7 +148,7 @@ Drones normally stay behind when you enter the Bazaar, but the Drone Combiner St
 
 ### Command Chest
 
-The CommandChest section lets the director spawn a Command Chest. Buying from it drops a Command Essence, from which you choose any item of the chest's `Tier`, such as `Tier2` (the default) or `Tier3`. A drop table like `dtCommandChest`, the game's own mix, rolls the tier by its weights. `Cost` and `CostType` set its price, which a price sign above it shows.
+The CommandChest section lets the director spawn a Command Chest. Buying from it drops a Command Essence, from which you choose any item of the chest's `Tier`, such as `Tier2` (the default) or `Tier3`. A drop table like `dtCommandChest`, the game's own mix, rolls the tier by its weights, once per visit. The essence it gives is shown above the vault. `Cost` and `CostType` set its price, which a price sign above it shows.
 
 Unmodded clients can't spawn the game's own Command Chest, so it is an Ocular Vault from the Alloyed Collective. Its hover text still says "Place Ocular Battery", since only the host has the mod. Buying opens the vault; if a player can't afford it, the vault plays its refusal.
 
