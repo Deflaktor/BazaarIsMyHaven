@@ -98,8 +98,9 @@ namespace BazaarIsMyHaven
                 PurchaseInteraction purchaseInteraction = self.GetComponent<PurchaseInteraction>();
                 if (purchaseInteraction != null)
                 {
-                    purchaseInteraction.cost = ModConfig.DonateCost.Value;
-                    purchaseInteraction.Networkcost = ModConfig.DonateCost.Value;
+                    var cost = Helper.GetCost(ModConfig.DonateCost.Value, ModConfig.DonateCostType.Value);
+                    purchaseInteraction.cost = cost;
+                    purchaseInteraction.Networkcost = cost;
                 }
             }
         }
@@ -114,12 +115,10 @@ namespace BazaarIsMyHaven
                     if (!characterBody || !characterBody.master || !characterBody.inventory)
                         return;
 
-                    NetworkUser networkUser = Util.LookUpBodyNetworkUser(activator.gameObject);
                     CharacterMaster characterMaster = characterBody.master;
                     var pc = characterMaster.playerCharacterMasterController;
-                    // This handler takes lunar coins directly, so check the exact amount.
-                    if (!pc || !networkUser || !self.available || self.Networkcost < 0 ||
-                        networkUser.lunarCoins < (uint)self.Networkcost)
+                    // This handler takes the cost itself, since the game's purchase would unlock a blueprint
+                    if (!pc || !self.available || self.cost < 0 || !self.CanBeAffordedByInteractor(activator))
                         return;
 
                     var playerStruct = Main.instance.GetPlayerStruct(pc);
@@ -128,10 +127,11 @@ namespace BazaarIsMyHaven
                         if (!TryGetReward(characterBody.bodyIndex, donationsDuringRun.GetValueOrDefault(pc), out var resolvedItems, out int tier))
                             return;
 
+                        // pay first, so items paid with can't be the reward
+                        PayCost(self, activator, characterBody);
                         Helper.GivePickups(characterBody, resolvedItems, self.transform.position + Vector3.up * 6.0f, true);
                         playerStruct.RewardCount += 1;
                         donationsDuringRun[pc] = donationsDuringRun.GetValueOrDefault(pc) + 1;
-                        networkUser.DeductLunarCoins((uint)self.Networkcost);
                         ShowRewardEffects(self, characterBody, resolvedItems, tier);
                         SpawnEffect(ShrineUseEffect, self.transform.position, new Color32(64, 127, 255, 255), 5f);
                         // empty the buds right away if the limit is reached
@@ -143,6 +143,21 @@ namespace BazaarIsMyHaven
                 }
             }
             orig(self, activator);
+        }
+
+        // Pays like the game's purchase does, in any cost type, but without its purchase events
+        private static void PayCost(PurchaseInteraction self, Interactor activator, CharacterBody characterBody)
+        {
+            var costTypeDef = CostTypeCatalog.GetCostTypeDef(self.costType);
+            int cost = TeamManager.AdjustCostForLongstandingSolitude(self.costType, self.cost, characterBody);
+            var results = costTypeDef.PayCost(cost, activator, self.gameObject, self.rng, ItemIndex.None);
+            foreach (var item in results.itemStacksTaken)
+            {
+                for (int i = 0; i < item.stackValues.totalStacks; i++)
+                {
+                    PurchaseInteraction.CreateItemTakenOrb(characterBody.corePosition, self.gameObject, item.itemIndex);
+                }
+            }
         }
 
         private bool CanGetReward(PlayerCharacterMasterController pc)
@@ -263,8 +278,11 @@ namespace BazaarIsMyHaven
             // RoR2/Base/WarCryOnMultiKill/WarCryEffect.prefab: -17.2625f
 
             gameObject.transform.eulerAngles = new Vector3(0.0f, 300f, 0.0f);
-            gameObject.GetComponent<PurchaseInteraction>().cost = ModConfig.DonateCost.Value;
-            gameObject.GetComponent<PurchaseInteraction>().Networkcost = ModConfig.DonateCost.Value;
+            var cost = Helper.GetCost(ModConfig.DonateCost.Value, ModConfig.DonateCostType.Value);
+            gameObject.GetComponent<PurchaseInteraction>().cost = cost;
+            gameObject.GetComponent<PurchaseInteraction>().Networkcost = cost;
+            // the price tag shows the cost type too
+            gameObject.GetComponent<PurchaseInteraction>().NetworkcostType = ModConfig.DonateCostType.Value;
             gameObject.GetComponent<PurchaseInteraction>().contextToken = "NEWT_STATUE_CONTEXT";
             gameObject.GetComponent<PurchaseInteraction>().NetworkcontextToken = "NEWT_STATUE_CONTEXT";
 

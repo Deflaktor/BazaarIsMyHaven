@@ -120,6 +120,7 @@ namespace BazaarIsMyHaven
         // donate
         public static ConfigEntry<bool> DonateSectionEnabled;
         public static ConfigEntry<int> DonateCost;
+        public static ConfigEntry<CostTypeIndex> DonateCostType;
         public static ConfigEntry<int> DonateDirectorCost;
         public static ConfigEntry<float> DonateDirectorWeight;
         public static ConfigEntry<int> DonateRewardLimitPerVisit;
@@ -273,7 +274,8 @@ namespace BazaarIsMyHaven
             DonateSectionEnabled = config.Bind("11 Donate", "SectionEnabled", true, "Enables or disables the Donate section. Enabling lets the director spawn a Donation Altar near the Newt.");
             DonateRewardLimitPerVisit = config.Bind("11 Donate", "RewardLimitPerVisit", 1, "Limit the number of rewards each player can get per visit to the Bazaar.");
             DonateRewardLimitPerRun = config.Bind("11 Donate", "RewardLimitPerRun", 1, "Limit the number of rewards each player can get in total over the course of the complete run. Must be equal or higher than RewardLimitPerVisit.");
-            DonateCost = config.Bind("11 Donate", "Cost", 5, "Lunar coin cost for reward.");
+            DonateCost = config.Bind("11 Donate", "Cost", 5, "Cost of a donation, paid in CostType.");
+            DonateCostType = config.Bind("11 Donate", "CostType", CostTypeIndex.LunarCoin, "What a donation costs, e.g. LunarCoin, Money, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             DonateDirectorCost = config.Bind("11 Donate", "DirectorCost", 10, "Director credits the Donation Altar costs.");
             DonateDirectorWeight = config.Bind("11 Donate", "DirectorWeight", 1f, "How likely the director picks the Donation Altar, compared to the DirectorWeight of the other interactables.");
             DonateSequentialRewardLists = config.Bind("11 Donate", "SequentialRewardLists", false, "If enabled, the reward lists will be choosen sequentially, ordered from heighest weight to lowest weight. The current reward list is stored for each player per run and swaps around. Reward lists with weight = 0 will be ignored.");
@@ -348,6 +350,7 @@ namespace BazaarIsMyHaven
             // Count is not a cost type
             if (EquipmentCostType.Value >= CostTypeIndex.Count) EquipmentCostType.Value = CostTypeIndex.Money;
             if (LunarShopCostType.Value >= CostTypeIndex.Count) LunarShopCostType.Value = CostTypeIndex.LunarCoin;
+            if (DonateCostType.Value >= CostTypeIndex.Count) DonateCostType.Value = CostTypeIndex.LunarCoin;
             RefreshLunarShopCharacterAmounts();
             RefreshDonationRewardLists(config);
         }
