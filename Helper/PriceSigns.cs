@@ -105,10 +105,10 @@ namespace BazaarIsMyHaven
                 purchaseInteraction.Networkcost = cost;
                 purchaseInteraction.NetworkcostType = costType;
 
-                // readable from the terminal's front, like the Seer's own sign in front of its table, and level even if the terminal is tilted
+                // readable from the terminal's front, like the Seer's own sign in front of its table
                 var pivot = projector.hologramPivot;
                 var signPosition = terminal.transform.position + Vector3.up * signHeight;
-                var signRotation = Quaternion.Euler(0f, terminal.transform.eulerAngles.y + 180f, 0f);
+                var signRotation = terminal.transform.rotation * Quaternion.Euler(0f, 180f, 0f);
                 var sign = new Sign { terminal = terminal, seer = seer.GetComponent<NetworkIdentity>() };
                 sign.clientRotation = signRotation * Quaternion.Inverse(pivot.localRotation);
                 sign.clientPosition = signPosition - sign.clientRotation * pivot.localPosition;
