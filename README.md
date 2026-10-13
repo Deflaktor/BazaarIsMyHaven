@@ -110,7 +110,7 @@ You can freely configure which items can be bought at the LunarShop. There are t
 
 The Donate section lets the director spawn a Donation Altar near the Newt. Donating gives you a reward. A donation costs Lunar Coins by default; `CostType` can change that, e.g. to money or items of a tier, and the price tag shows it.
 
-Every 2 seconds, each player sees a reward they could get on up to five Lunar Buds above the altar, one bud per item. These are only examples: the reward for a donation is rolled when you donate. Clients need no mod for this.
+Every 2 seconds, each player sees a reward they could get on up to five Lunar Buds above the altar, one bud per item. Buds the reward doesn't need stay open but empty, and all of them close once a player can't get a reward anymore. These are only examples: the reward for a donation is rolled when you donate. Clients need no mod for this.
 
 There are 3 item lists which are selected at random:
 
