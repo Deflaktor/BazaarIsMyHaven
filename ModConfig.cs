@@ -155,6 +155,16 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> DronesTripleDroneShopDirectorCost;
         public static ConfigEntry<float> DronesTripleDroneShopDirectorWeight;
 
+        // command chest
+        public static ConfigEntry<bool> CommandChestSectionEnabled;
+        public static ConfigEntry<string> CommandChestTier;
+        public static ConfigEntry<int> CommandChestDirectorCost;
+        public static ConfigEntry<float> CommandChestDirectorWeight;
+        public static ConfigEntry<int> CommandChestCost;
+        public static ConfigEntry<CostTypeIndex> CommandChestCostType;
+        public static ConfigEntry<bool> CommandChestInstancedPurchases;
+        public static ConfigEntry<bool> CommandChestBuyToInventory;
+
         private const string itemTiersString = "Tier1 | Tier2 | Tier3 | Lunar | Boss | VoidTier1 | VoidTier2 | VoidTier3 | VoidBoss | FoodTier";
         private const string itemKeyWordsExplanation = $"Can use:\n - internal item names(see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\n- item tier keywords ({itemTiersString})\n- droptable names (see README.md)\nFollows ItemStringParser format.";
         private static bool reloading;
@@ -308,6 +318,16 @@ namespace BazaarIsMyHaven
             DronesTripleDroneShopDirectorCost = config.Bind("13 Drones", "TripleDroneShopDirectorCost", 8, "Director credits the Triple Drone Shop costs.");
             DronesTripleDroneShopDirectorWeight = config.Bind("13 Drones", "TripleDroneShopDirectorWeight", 1f, "How likely the director picks the Triple Drone Shop, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
 
+            // 14 CommandChest
+            CommandChestSectionEnabled = config.Bind("14 CommandChest", "SectionEnabled", true, "Enables or disables the Command Chest section. Enabling lets the director spawn a Command Chest, which drops a Command Essence that lets you choose any item of its tier.");
+            CommandChestTier = config.Bind("14 CommandChest", "Tier", "Tier2", $"The tier the Command Essence offers, e.g. Tier1, Tier2, Tier3, Boss or Lunar. A drop table like dtCommandChest (the game's own mix) rolls the tier by its weights. {itemKeyWordsExplanation}");
+            CommandChestDirectorCost = config.Bind("14 CommandChest", "DirectorCost", 10, "Director credits the Command Chest costs.");
+            CommandChestDirectorWeight = config.Bind("14 CommandChest", "DirectorWeight", 1f, "How likely the director picks the Command Chest, compared to the DirectorWeight of the other interactables.");
+            CommandChestCost = config.Bind("14 CommandChest", "Cost", 50, "Cost of opening the Command Chest, paid in CostType.");
+            CommandChestCostType = config.Bind("14 CommandChest", "CostType", CostTypeIndex.Money, "What opening the Command Chest costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
+            CommandChestInstancedPurchases = config.Bind("14 CommandChest", "InstancedPurchases", true, "Each player can open the Command Chest once, independently of the others. It then stays closed and drops each buyer their own Command Essence.");
+            CommandChestBuyToInventory = config.Bind("14 CommandChest", "BuyToInventory", true, "The item chosen from the Command Essence goes directly into the inventory of the player who chose it, instead of dropping on the ground.");
+
             RefreshDerivedData(config);
             LunarShopAmountDependingOnCharacter.SettingChanged += LunarShopCharacterAmountsChanged;
             DonateRewardListAvailableCharacters.SettingChanged += DonationCharactersChanged;
@@ -349,6 +369,7 @@ namespace BazaarIsMyHaven
             if (EquipmentCostType.Value >= CostTypeIndex.Count) EquipmentCostType.Value = CostTypeIndex.Money;
             if (LunarShopCostType.Value >= CostTypeIndex.Count) LunarShopCostType.Value = CostTypeIndex.LunarCoin;
             if (DonateCostType.Value >= CostTypeIndex.Count) DonateCostType.Value = CostTypeIndex.LunarCoin;
+            if (CommandChestCostType.Value >= CostTypeIndex.Count) CommandChestCostType.Value = CostTypeIndex.Money;
             RefreshLunarShopCharacterAmounts();
             RefreshDonationRewardLists(config);
         }
