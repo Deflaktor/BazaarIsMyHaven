@@ -460,7 +460,7 @@ namespace BazaarIsMyHaven
         private void SpawnCommandChest()
         {
             rng = new Xoroshiro128Plus(Run.instance.treasureRng.nextUlong);
-            chest = Object.Instantiate(vaultPrefab.WaitForCompletion(), new Vector3(-63.4376f, -27.1783f, -73.8056f), Quaternion.Euler(0f, 305f, 10f));
+            chest = Object.Instantiate(vaultPrefab.WaitForCompletion(), new Vector3(-63.9613f, -26.3518f, -73.8056f), Quaternion.identity);
             NetworkServer.Spawn(chest);
 
             hasOffer = TryRollPickup(out offer);
