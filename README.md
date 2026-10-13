@@ -127,7 +127,7 @@ Examples:
 
 If the Alloyed Collective is enabled for the run, the Drones section lets the director spawn a Drone Combiner Station, a Drone Upgrade Station, a Drone Scrapper and a Triple Drone Shop. Each one has its own settings.
 
-Drones normally stay behind when you enter the Bazaar, but the Drone Combiner Station, the Drone Upgrade Station and the Drone Scrapper only work with drones that are there. So when one of them spawns, the players' drones come along. They wait at one spot without moving or attacking. Drones that show up elsewhere, such as bought or upgraded ones, are moved there after 2 seconds. The Operator can still use their drones, and a drone returns to the spot 2 seconds after the Operator is done with it. On the next stage, drones behave as usual again.
+Drones normally stay behind when you enter the Bazaar, but the Drone Combiner Station, the Drone Upgrade Station and the Drone Scrapper only work with drones that are there. So with the Drones section enabled, the players' drones come along like on any other stage and behave as usual. Other allies still stay behind.
 
 ## RewardListAvailableCharacters - Valid Keywords
 

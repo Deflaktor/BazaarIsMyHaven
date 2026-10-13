@@ -1,7 +1,7 @@
 using BepInEx.Configuration;
 using RoR2;
 using RoR2.CharacterAI;
-using RoR2.Items;
+using RoR2.Navigation;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -22,7 +22,6 @@ namespace BazaarIsMyHaven
             public DirectorCard card;
             public AsyncOperationHandle<GameObject> prefab;
             public SpawnCardStruct slot;
-            public bool needsDrones;
             public bool spawned;
         }
         private readonly List<Station> stations = new List<Station>();
@@ -37,33 +36,37 @@ namespace BazaarIsMyHaven
 
         public override void Hook()
         {
-            On.RoR2.CharacterAI.BaseAI.ManagedFixedUpdate += BaseAI_ManagedFixedUpdate;
-            On.RoR2.Items.MinionLeashBodyBehavior.FixedUpdate += MinionLeashBodyBehavior_FixedUpdate;
+            On.RoR2.Stage.RespawnAllNPCs += Stage_RespawnAllNPCs;
+        }
+
+        // clients only have the stations if the run has the Alloyed Collective
+        private static bool IsSectionActive()
+        {
+            return ModConfig.DronesSectionEnabled.Value && DLC3Content.DLC3 && Run.instance && Run.instance.IsExpansionEnabled(DLC3Content.DLC3);
         }
 
         public override void AddDirectorCards(List<DirectorCard> cards)
         {
             stations.Clear();
-            // clients only have the stations if the run has the Alloyed Collective
-            if (!ModConfig.DronesSectionEnabled.Value || !DLC3Content.DLC3 || !Run.instance.IsExpansionEnabled(DLC3Content.DLC3))
+            if (!IsSectionActive())
             {
                 return;
             }
 
             AddStation(cards, "Drone Combiner Station", ModConfig.DronesDroneCombinerStationDirectorCost, ModConfig.DronesDroneCombinerStationDirectorWeight,
-                DroneCombinerStation, new SpawnCardStruct(new Vector3(-89.4022f, -23.4619f, -5.0529f), new Vector3(0f, 150f, 350f)), needsDrones: true);
+                DroneCombinerStation, new SpawnCardStruct(new Vector3(-89.4022f, -23.4619f, -5.0529f), new Vector3(0f, 150f, 350f)));
             AddStation(cards, "Drone Upgrade Station", ModConfig.DronesDroneUpgradeStationDirectorCost, ModConfig.DronesDroneUpgradeStationDirectorWeight,
-                DroneUpgradeStation, new SpawnCardStruct(new Vector3(-85.1751f, -22.264f, -3.539f), new Vector3(0f, 150f, 270f)), needsDrones: true);
+                DroneUpgradeStation, new SpawnCardStruct(new Vector3(-85.1751f, -22.264f, -3.539f), new Vector3(0f, 150f, 270f)));
             AddStation(cards, "Drone Scrapper", ModConfig.DronesDroneScrapperDirectorCost, ModConfig.DronesDroneScrapperDirectorWeight,
-                DroneScrapper, new SpawnCardStruct(new Vector3(-91.9756f, -26.0923f, -48.0897f), new Vector3(0f, 315f, 0f)), needsDrones: true);
+                DroneScrapper, new SpawnCardStruct(new Vector3(-91.9756f, -26.0923f, -48.0897f), new Vector3(0f, 315f, 0f)));
             AddStation(cards, "Triple Drone Shop", ModConfig.DronesTripleDroneShopDirectorCost, ModConfig.DronesTripleDroneShopDirectorWeight,
-                TripleDroneShop, new SpawnCardStruct(new Vector3(-64.3101f, -23.0074f, -19.7406f), new Vector3(0f, 300f, 6f)), needsDrones: false);
+                TripleDroneShop, new SpawnCardStruct(new Vector3(-64.3101f, -23.0074f, -19.7406f), new Vector3(0f, 300f, 6f)));
         }
 
         private void AddStation(List<DirectorCard> cards, string name, ConfigEntry<int> cost, ConfigEntry<float> weight,
-            AsyncOperationHandle<GameObject> prefab, SpawnCardStruct slot, bool needsDrones)
+            AsyncOperationHandle<GameObject> prefab, SpawnCardStruct slot)
         {
-            var station = new Station { card = new DirectorCard(name, cost, weight, () => 1), prefab = prefab, slot = slot, needsDrones = needsDrones };
+            var station = new Station { card = new DirectorCard(name, cost, weight, () => 1), prefab = prefab, slot = slot };
             stations.Add(station);
             cards.Add(station.card);
         }
@@ -83,46 +86,63 @@ namespace BazaarIsMyHaven
                 }
                 SpawnAt(station.prefab.WaitForCompletion(), station.slot);
                 station.spawned = true;
-                // only these stations use the players' drones
-                if (station.needsDrones && !DroneSpot.instance)
-                {
-                    DroneSpot.Create();
-                }
             }
         }
 
-        private void BaseAI_ManagedFixedUpdate(On.RoR2.CharacterAI.BaseAI.orig_ManagedFixedUpdate orig, BaseAI self, float deltaTime)
+        // The Bazaar keeps all allies out, but the drone stations need the players' drones.
+        // Bring the drones in the way other stages bring allies in.
+        private void Stage_RespawnAllNPCs(On.RoR2.Stage.orig_RespawnAllNPCs orig, Stage self)
         {
-            if (!DroneSpot.instance || !DroneSpot.IsPlayerDrone(self.master))
-            {
-                orig(self, deltaTime);
-                return;
-            }
-
-            // without inputs, a drone hovers where it is
-            var inputBank = self.bodyInputBank;
-            if (inputBank)
-            {
-                inputBank.skill1.PushState(false);
-                inputBank.skill2.PushState(false);
-                inputBank.skill3.PushState(false);
-                inputBank.skill4.PushState(false);
-                inputBank.jump.PushState(false);
-                inputBank.sprint.PushState(false);
-                inputBank.rawSprintInput.PushState(false);
-                inputBank.activateEquipment.PushState(false);
-                inputBank.moveVector = Vector3.zero;
-            }
-        }
-
-        private void MinionLeashBodyBehavior_FixedUpdate(On.RoR2.Items.MinionLeashBodyBehavior.orig_FixedUpdate orig, MinionLeashBodyBehavior self)
-        {
-            // the leash would teleport waiting drones to their player
-            if (DroneSpot.instance && self.body && DroneSpot.IsPlayerDrone(self.body.master))
-            {
-                return;
-            }
             orig(self);
+            if (!ModConfig.EnableMod.Value || !IsCurrentMapInBazaar() || !IsSectionActive() || !self.sceneDef || !self.sceneDef.suppressNpcEntry)
+            {
+                return;
+            }
+
+            var spawnTransform = self.GetPlayerSpawnTransform();
+            var masters = CharacterMaster.readOnlyInstancesList;
+            for (int i = 0; i < masters.Count; i++)
+            {
+                var master = masters[i];
+                // only drones that come from the last stage
+                if (!IsPlayerDrone(master) || master.GetBodyObject() || !Util.IsDontDestroyOnLoad(master.gameObject))
+                {
+                    continue;
+                }
+
+                var position = Vector3.zero;
+                var rotation = Quaternion.identity;
+                if (spawnTransform)
+                {
+                    position = spawnTransform.position;
+                    rotation = spawnTransform.rotation;
+                    // a random node near the players' spawn, like the game does
+                    var ai = master.GetComponent<BaseAI>();
+                    var body = master.bodyPrefab.GetComponent<CharacterBody>();
+                    var nodeGraph = ai && body ? ai.GetDesiredSpawnNodeGraph() : null;
+                    if (nodeGraph)
+                    {
+                        var nodes = new List<NodeGraph.NodeIndex>();
+                        nodeGraph.FindNodesInRange(position, 10f, 100f, (HullMask)(1 << (int)body.hullClassification), nodes);
+                        if (nodes.Count > 0)
+                        {
+                            nodeGraph.GetNodePosition(nodes[Random.Range(0, nodes.Count)], out position);
+                        }
+                    }
+                }
+                master.Respawn(position, rotation, wasRevivedMidStage: true);
+            }
+        }
+
+        private static bool IsPlayerDrone(CharacterMaster master)
+        {
+            if (!master || !master.bodyPrefab || !master.minionOwnership)
+            {
+                return false;
+            }
+            var owner = master.minionOwnership.ownerMaster;
+            return owner && owner.playerCharacterMasterController
+                && master.bodyPrefab.TryGetComponent(out CharacterBody body) && (body.bodyFlags & CharacterBody.BodyFlags.Drone) != 0;
         }
     }
 }
