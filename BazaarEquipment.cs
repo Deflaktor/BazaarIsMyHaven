@@ -90,11 +90,6 @@ namespace BazaarIsMyHaven
                 {
                     var body = activator ? activator.GetComponent<CharacterBody>() : null;
                     var playerCharacterMasterController = body && body.master ? body.master.playerCharacterMasterController : null;
-                    if (ModConfig.EquipmentBuyToInventory.Value && body && !Helper.HasRoomFor(body, GetOffer(self, playerCharacterMasterController)))
-                    {
-                        // no empty equipment slot: nothing is charged
-                        return;
-                    }
                     var previousActivator = currentActivator;
                     try { 
                         currentActivator = playerCharacterMasterController;
@@ -108,17 +103,6 @@ namespace BazaarIsMyHaven
                 }
             }
             orig(self, activator);
-        }
-
-        // What this player would get from the terminal; instanced terminals offer each player their own
-        private static PickupIndex GetOffer(PurchaseInteraction purchaseInteraction, PlayerCharacterMasterController player)
-        {
-            if (purchaseInteraction.TryGetComponent(out InstancedPurchase instance))
-            {
-                return instance.GetOrOriginal(player).pickup.pickupIndex;
-            }
-            var terminal = purchaseInteraction.GetComponent<ShopTerminalBehavior>();
-            return terminal ? terminal.pickup.pickupIndex : PickupIndex.none;
         }
 
         private void ShopTerminalBehavior_DropPickup(On.RoR2.ShopTerminalBehavior.orig_DropPickup orig, ShopTerminalBehavior self)

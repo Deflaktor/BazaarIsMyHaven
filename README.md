@@ -100,7 +100,7 @@ Controls how Newt acts after being killed:
 
 With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too. `CostType` sets what the price is paid in, such as money (the default), Lunar Coins or items of a tier. With `ScaleMoneyCosts`, money prices scale with difficulty like the game's own shops.
 
-With `BuyToInventory`, bought equipment goes straight into your inventory, so it can only be bought with an empty equipment slot. The same goes for the Command Pedestal and the Wandering Chef's recipes.
+With `BuyToInventory`, bought equipment goes straight into your inventory, and the equipment it replaces goes into the terminal, where it can be bought back. The Command Pedestal and the Wandering Chef's recipes have nowhere to put replaced equipment, so with `BuyToInventory` they only give equipment into an empty equipment slot.
 
 ### LunarShop
 
