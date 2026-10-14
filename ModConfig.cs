@@ -414,6 +414,7 @@ namespace BazaarIsMyHaven
             if (LunarShopCostType.Value >= CostTypeIndex.Count) LunarShopCostType.Value = CostTypeIndex.LunarCoin;
             if (DonateCostType.Value >= CostTypeIndex.Count) DonateCostType.Value = CostTypeIndex.LunarCoin;
             if (CommandPedestalCostType.Value >= CostTypeIndex.Count) CommandPedestalCostType.Value = CostTypeIndex.Money;
+            if (DronesTripleDroneShopCostType.Value >= CostTypeIndex.Count) DronesTripleDroneShopCostType.Value = CostTypeIndex.Money;
             RefreshLunarShopCharacterAmounts();
             RefreshDonationRewardLists(config);
         }
