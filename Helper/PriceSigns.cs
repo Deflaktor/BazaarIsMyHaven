@@ -316,7 +316,9 @@ namespace BazaarIsMyHaven
             }
             if (terminal.TryGetComponent(out DroneVendorMultiShopController droneShop))
             {
-                return droneShop._terminals != null && droneShop._terminals.Any(droneTerminal => droneTerminal && droneTerminal.purchaseInteraction && droneTerminal.purchaseInteraction.available);
+                // after a purchase with an Executive Card, the unbought terminals keep their drones and reopen
+                return droneShop._terminals != null && droneShop._terminals.Any(droneTerminal => droneTerminal && droneTerminal.purchaseInteraction
+                    && (droneTerminal.purchaseInteraction.available || (!droneTerminal.GetHasBeenPurchased() && droneTerminal.CurrentPickupIndex != PickupIndex.none)));
             }
             var purchaseInteraction = terminal.GetComponent<PurchaseInteraction>();
             return purchaseInteraction && purchaseInteraction.available && purchaseInteraction.cost > 0;
