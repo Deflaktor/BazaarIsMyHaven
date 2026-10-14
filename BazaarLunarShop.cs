@@ -197,6 +197,8 @@ namespace BazaarIsMyHaven
                     {
                         buyers.Add(player);
                         playerStruct.LunarShopUseCount++;
+                        // Newt comments on purchases, not on swaps. The scene wires the game's own comment only to the original buds, and it shows an empty chat line.
+                        ChatHelper.LunarPurchase();
                         if (self.TryGetComponent(out InstancedPurchase instance))
                         {
                             instance.GetOrCreate(player).hasBeenPurchasedOnce = true;
@@ -686,8 +688,6 @@ namespace BazaarIsMyHaven
                 var purchaseInteraction = gameObject.GetComponent<PurchaseInteraction>();
                 var shopTerminalBehavior = gameObject.GetComponent<ShopTerminalBehavior>();
                 DisableLunarBudPickupClearing(purchaseInteraction, shopTerminalBehavior);
-                // the scene wires the game's own comment only to the original buds, and it shows an empty chat line
-                purchaseInteraction.onDetailedPurchaseServer.AddListener((context, results) => ChatHelper.LunarPurchase());
                 if (ModConfig.LunarShopInstancedPurchases.Value)
                 {
                     var instancedPurchase = gameObject.AddComponent<InstancedPurchase>();
