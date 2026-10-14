@@ -128,6 +128,8 @@ namespace BazaarIsMyHaven
                     var droppedEquipment = Helper.GivePickup(body, self.CurrentPickup().pickupIndex, self.transform.position, false);
                     if(droppedEquipment != EquipmentIndex.None)
                     {
+                        // the old equipment flies into the terminal, as the bought one flew out of it
+                        Helper.CreateItemTakenOrb(body.corePosition, self.gameObject, PickupCatalog.FindPickupIndex(droppedEquipment));
                         self.SetPickup(new UniquePickup(PickupCatalog.FindPickupIndex(droppedEquipment)));
                         var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
                         purchaseInteraction.SetAvailable(true);
