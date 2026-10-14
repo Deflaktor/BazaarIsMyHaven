@@ -330,6 +330,83 @@ namespace BazaarIsMyHaven
             return writer.ToArray();
         }
 
+        // Plays the shop's buy sound when a purchase leaves an item in it, e.g. when equipment swapped in replaces the bought one.
+        // Clients play it only when the shop's pickup clears, so they get it cleared and back; instanced shops play it for the buyer only.
+        public static void PlayBuySound(ShopTerminalBehavior shop, PlayerCharacterMasterController buyer)
+        {
+            var identity = shop ? shop.GetComponent<NetworkIdentity>() : null;
+            if (!NetworkServer.active || !identity)
+            {
+                return;
+            }
+            shop.TryGetComponent(out InstancedPurchase instance);
+            int channel = shop.GetNetworkChannel();
+            foreach (var pc in PlayerCharacterMasterController.instances)
+            {
+                if (!pc || (instance && pc != buyer))
+                {
+                    continue;
+                }
+                if (pc.hasAuthority)
+                {
+                    // the host's own view
+                    Util.PlaySound("Play_UI_tripleChestShutter", shop.gameObject);
+                    continue;
+                }
+                var connection = pc.networkUser ? pc.networkUser.connectionToClient : null;
+                if (connection == null || !connection.isReady || identity.observers == null || !identity.observers.Contains(connection))
+                {
+                    continue;
+                }
+
+                var state = instance ? instance.GetOrOriginal(pc) : null;
+                var pickup = state != null ? state.pickup : shop.pickup;
+                var previousRecipient = instance ? instance.pcClient : null;
+                try
+                {
+                    if (instance)
+                    {
+                        instance.pcClient = pc;
+                        state.pickup = UniquePickup.none;
+                    }
+                    else
+                    {
+                        shop.pickup = UniquePickup.none;
+                    }
+                    var clearMessage = CreateUpdateMessage(identity, channel, PickupMask, 0u);
+                    if (instance)
+                    {
+                        state.pickup = pickup;
+                    }
+                    else
+                    {
+                        shop.pickup = pickup;
+                    }
+                    var restoreMessage = CreateUpdateMessage(identity, channel, PickupMask, 0u);
+
+                    var messages = new byte[clearMessage.Length + restoreMessage.Length];
+                    Buffer.BlockCopy(clearMessage, 0, messages, 0, clearMessage.Length);
+                    Buffer.BlockCopy(restoreMessage, 0, messages, clearMessage.Length, restoreMessage.Length);
+                    if (!connection.SendBytes(messages, messages.Length, channel))
+                    {
+                        Log.LogWarning("Could not play a shop's buy sound for a client.");
+                    }
+                }
+                finally
+                {
+                    if (instance)
+                    {
+                        state.pickup = pickup;
+                        instance.pcClient = previousRecipient;
+                    }
+                    else
+                    {
+                        shop.pickup = pickup;
+                    }
+                }
+            }
+        }
+
         // Rebuilds a shop's model on one client (e.g. after fixing its scale) without changing stock or purchase state
         internal static byte[] CreatePickupDisplayRefresh(NetworkIdentity identity, NetworkConnection connection, int channel)
         {
