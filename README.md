@@ -100,7 +100,7 @@ Controls how Newt acts after being killed:
 
 With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too. `CostType` sets what the price is paid in, such as money (the default), Lunar Coins or items of a tier. With `ScaleMoneyCosts`, money prices scale with difficulty like the game's own shops.
 
-With `BuyToInventory`, bought equipment goes straight into your inventory, and the equipment it replaces goes into the terminal. That purchase buys the slot: swapping there again is free for you, and your price sign disappears. Other players still pay, so no one gets equipment someone else paid for. The Command Pedestal and the Wandering Chef's recipes have nowhere to put replaced equipment, so with `BuyToInventory` they only give equipment into an empty equipment slot.
+With `BuyToInventory`, bought equipment goes straight into your inventory, and the equipment it replaces goes into the terminal. That purchase buys the slot: swapping there again is free for you, and your price sign disappears. Other players still pay, so no one gets equipment someone else paid for. The Command Pedestal keeps equipment its pick replaces for you to swap back, and the Wandering Chef's equipment replaces yours, which is discarded.
 
 ### LunarShop
 
@@ -157,7 +157,7 @@ The CommandPedestal section lets the director spawn a Command Pedestal. Buying f
 
 Unmodded clients can't spawn the game's own Command Chest, so it is an Ocular Vault from the Alloyed Collective. Its hover text still says "Place Ocular Battery", since only the host has the mod. Buying opens the pedestal; if a player can't afford it, the pedestal plays the pedestal's refusal.
 
-With `InstancedPurchases`, each player can buy from it once: the pedestal stays ready for the others, and each buyer gets their own essence. With `BuyToInventory`, using the pedestal shows the item picker right away, without an essence appearing. The price is only charged once you pick an item, which goes straight into your inventory. Equipment needs an empty equipment slot; closing the picker costs nothing, and using the pedestal again reopens it. Without `InstancedPurchases`, the first player to pick an item buys the pedestal. Without `BuyToInventory`, buying drops a Command Essence that anyone can use.
+With `InstancedPurchases`, each player can buy from it once: the pedestal stays ready for the others, and each buyer gets their own essence. With `BuyToInventory`, using the pedestal shows the item picker right away, without an essence appearing. The price is only charged once you pick an item, which goes straight into your inventory. Equipment you pick replaces yours, which goes into the vault: using the vault again swaps it back for free, as often as you like, and only you can do so. Closing the picker costs nothing, and using the pedestal again reopens it. Without `InstancedPurchases`, the first player to pick an item buys the pedestal. Without `BuyToInventory`, buying drops a Command Essence that anyone can use.
 
 ## RewardListAvailableCharacters - Valid Keywords
 

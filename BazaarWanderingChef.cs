@@ -252,9 +252,8 @@ namespace BazaarIsMyHaven
                 {
                     CharacterBody characterBody = activator.GetComponent<CharacterBody>();
                     Inventory inventory = characterBody.inventory;
-                    // like the game's own cooking; equipment needs an empty slot, unless the recipe takes equipment
-                    bool takesEquipment = itemsToTake.Any(pickup => PickupCatalog.GetPickupDef(pickup)?.equipmentIndex != EquipmentIndex.None);
-                    if (!self.IsAffordable(itemsToTake, characterBody) || (!takesEquipment && !Helper.HasRoomFor(characterBody, reward)))
+                    // like the game's own cooking
+                    if (!self.IsAffordable(itemsToTake, characterBody))
                     {
                         return;
                     }
@@ -277,7 +276,8 @@ namespace BazaarIsMyHaven
                     // give items
                     Dictionary<PickupIndex, int> itemsToGive = new Dictionary<PickupIndex, int>();
                     itemsToGive[reward] = count;
-                    Helper.GivePickups(characterBody, itemsToGive, null, true);
+                    // cooked equipment replaces the player's; the old one is discarded, so it can't go to another player
+                    Helper.GivePickups(characterBody, itemsToGive, null, false);
                     // skip original method
                     return;
                 }
