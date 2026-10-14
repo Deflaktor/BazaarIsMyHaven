@@ -334,16 +334,16 @@ namespace BazaarIsMyHaven
             CommandPedestalSectionEnabled = config.Bind("14 CommandPedestal", "SectionEnabled", true, "Enables or disables the Command Pedestal section. It lets you pick an item for a price.");
             CommandPedestalTiers.Clear();
             // by how many items of each tier a typical stage gives, without lunar items; together about as likely as one interactable with DirectorWeight 0.2
-            AddCommandPedestalTier(config, "Tier1", "white items", run => run.availableTier1DropList, 50, 10, 0.1f);
-            AddCommandPedestalTier(config, "Tier2", "green items", run => run.availableTier2DropList, 100, 20, 0.05f);
-            AddCommandPedestalTier(config, "Tier3", "red items", run => run.availableTier3DropList, 800, 30, 0.01f);
-            AddCommandPedestalTier(config, "Boss", "boss items", run => run.availableBossDropList, 400, 20, 0.01f);
-            AddCommandPedestalTier(config, "Equipment", "equipment", run => run.availableEquipmentDropList, 100, 10, 0.025f);
+            AddCommandPedestalTier(config, "Tier1", "white items", run => run.availableTier1DropList, 50, 10, 0.0941f);
+            AddCommandPedestalTier(config, "Tier2", "green items", run => run.availableTier2DropList, 100, 20, 0.04706f);
+            AddCommandPedestalTier(config, "Tier3", "red items", run => run.availableTier3DropList, 800, 30, 0.00942f);
+            AddCommandPedestalTier(config, "Boss", "boss items", run => run.availableBossDropList, 400, 20, 0.00942f);
+            AddCommandPedestalTier(config, "Equipment", "equipment", run => run.availableEquipmentDropList, 100, 10, 0.02352f);
             AddCommandPedestalTier(config, "Lunar", "lunar items", run => run.availableLunarItemDropList, 100, 20, 0f);
-            AddCommandPedestalTier(config, "VoidTier1", "void white items", run => run.availableVoidTier1DropList, 50, 10, 0.005f);
-            AddCommandPedestalTier(config, "VoidTier2", "void green items", run => run.availableVoidTier2DropList, 100, 20, 0.0025f);
-            AddCommandPedestalTier(config, "VoidTier3", "void red items", run => run.availableVoidTier3DropList, 800, 30, 0.001f);
-            AddCommandPedestalTier(config, "VoidBoss", "void boss items", run => run.availableVoidBossDropList, 400, 20, 0.0005f);
+            AddCommandPedestalTier(config, "VoidTier1", "void white items", run => run.availableVoidTier1DropList, 50, 10, 0.00942f);
+            AddCommandPedestalTier(config, "VoidTier2", "void green items", run => run.availableVoidTier2DropList, 100, 20, 0.0047f);
+            AddCommandPedestalTier(config, "VoidTier3", "void red items", run => run.availableVoidTier3DropList, 800, 30, 0.00236f);
+            AddCommandPedestalTier(config, "VoidBoss", "void boss items", run => run.availableVoidBossDropList, 400, 20, 0f);
             CommandPedestalCostType = config.Bind("14 CommandPedestal", "CostType", CostTypeIndex.Money, "What opening the Command Pedestal costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             CommandPedestalInstancedPurchases = config.Bind("14 CommandPedestal", "InstancedPurchases", true, "Each player can buy from the Command Pedestal once, independently of the others. It stays ready for the others, and each buyer gets their own Command Essence.");
             CommandPedestalBuyToInventory = config.Bind("14 CommandPedestal", "BuyToInventory", true, "Using the Command Pedestal shows its item picker right away, and the price is only charged once you pick an item, which goes directly into your inventory. Equipment it replaces goes into the vault, where only you can swap it back, for free. No essence appears; closing the picker costs nothing, and using the Command Pedestal again reopens it. Otherwise buying drops a Command Essence that anyone can use.");
