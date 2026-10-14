@@ -84,7 +84,7 @@ namespace BazaarIsMyHaven
         private static void PurchaseInteraction_UpdateHologramContent(On.RoR2.PurchaseInteraction.orig_UpdateHologramContent orig, PurchaseInteraction self, GameObject hologramContentObject, Transform viewer)
         {
             orig(self, hologramContentObject, viewer);
-            if (self.GetComponent<InstancedPurchase>() && viewer && viewer.TryGetComponent(out CharacterBody body) && body.master && IsFreeFor(self, body.master.playerCharacterMasterController)
+            if (self.GetComponent<InstancedPurchase>() && IsFreeFor(self, Helper.GetHostPlayer())
                 && hologramContentObject.TryGetComponent(out CostHologramContent content))
             {
                 content.displayValue = 0;
