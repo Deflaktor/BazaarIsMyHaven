@@ -147,6 +147,8 @@ If the Alloyed Collective is enabled for the run, the Drones section lets the di
 
 Drones normally stay behind when you enter the Bazaar, but the Drone Combiner Station, the Drone Upgrade Station and the Drone Scrapper only work with drones that are there. So with the Drones section enabled, the players' drones come along like on any other stage and behave as usual. Other allies still stay behind.
 
+The Triple Drone Shop offers either common or uncommon drones, by `TripleDroneShopCommonWeight` and `TripleDroneShopUncommonWeight`. On other stages the game offers only common drones before the third stage; in the Bazaar the weights apply on every visit. Each variant has its own cost, paid in `TripleDroneShopCostType`. With a cost type other than money, a price sign above the shop replaces its own price display, which would show money to players without the mod.
+
 ### Command Pedestal
 
 The CommandPedestal section lets the director spawn a Command Pedestal. Buying from it drops a Command Essence, from which you choose any item of the pedestal's tier. The tiers are white, green, red, boss and lunar items, equipment, and the four void tiers. Each has its own `DirectorCost`, `DirectorWeight` and `Cost`, e.g. `Tier2DirectorCost`: the director picks a tier it can afford by the tiers' weights, once per visit, and the essence it gives is shown above the pedestal. The price is paid in `CostType` and shown on a price sign above the pedestal. By default the tiers follow the game's own Command Chest mix, without lunar items.
