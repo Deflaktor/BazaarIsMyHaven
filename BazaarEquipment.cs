@@ -131,9 +131,15 @@ namespace BazaarIsMyHaven
                         self.SetPickup(new UniquePickup(PickupCatalog.FindPickupIndex(droppedEquipment)));
                         var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
                         purchaseInteraction.SetAvailable(true);
+                        // buying the slot sounds like a purchase; the free swaps after it are silent
+                        bool boughtSlot = !FreeSwaps.IsFreeFor(self, currentActivator);
                         // further swaps are free, so the price sign goes for those who swap for free
                         FreeSwaps.BuySlot(self.gameObject, currentActivator);
                         PriceSigns.HideFor(self.gameObject, currentActivator);
+                        if (boughtSlot)
+                        {
+                            InstancedPurchases.PlayBuySound(self, currentActivator);
+                        }
                     }
                     else
                     {
