@@ -15,6 +15,7 @@ namespace BazaarIsMyHaven
     // Unmodded clients can't spawn the game's own Command Chest, so it is built from the Alloyed Collective's Ocular Vault:
     // the host takes its interaction, charges the price and plays the vault's own opening or refusal.
     // With BuyToInventory the vault only opens a private item picker, and the price is charged once an item is picked.
+    // Equipment the pick replaces goes into the vault, where only the buyer can swap it back, for free.
     public class BazaarCommandPedestal : BazaarBase
     {
         // a price sign shows this high above the vault
@@ -80,6 +81,8 @@ namespace BazaarIsMyHaven
         readonly HashSet<PlayerCharacterMasterController> buyers = new HashSet<PlayerCharacterMasterController>();
         // hidden essences waiting for their owner's choice; interacting with the vault again opens them
         readonly Dictionary<PickupPickerController, Essence> essences = new Dictionary<PickupPickerController, Essence>();
+        // equipment a buyer's pick replaced; using the vault again swaps it back
+        readonly Dictionary<PlayerCharacterMasterController, EquipmentIndex> storedEquipment = new Dictionary<PlayerCharacterMasterController, EquipmentIndex>();
 
         public static BazaarCommandPedestal instance;
 
@@ -132,6 +135,7 @@ namespace BazaarIsMyHaven
             sold = false;
             buyers.Clear();
             essences.Clear();
+            storedEquipment.Clear();
             SpawnLatePicks();
         }
 
@@ -166,7 +170,16 @@ namespace BazaarIsMyHaven
             var activator = interactorObject ? interactorObject.GetComponent<Interactor>() : null;
             var body = interactorObject ? interactorObject.GetComponent<CharacterBody>() : null;
             var player = GetPlayer(interactorObject);
-            if (!activator || !body || !player || sold || (ModConfig.CommandPedestalInstancedPurchases.Value && buyers.Contains(player)))
+            if (!activator || !body || !player)
+            {
+                return;
+            }
+            if (storedEquipment.ContainsKey(player))
+            {
+                SwapStoredEquipment(self, player, body);
+                return;
+            }
+            if (sold || (ModConfig.CommandPedestalInstancedPurchases.Value && buyers.Contains(player)))
             {
                 return;
             }
@@ -181,20 +194,12 @@ namespace BazaarIsMyHaven
 
             if (ModConfig.CommandPedestalBuyToInventory.Value)
             {
-                // only opens the picker; the price is charged once an item is picked.
-                // An equipment essence offers only equipment, which needs an empty slot.
+                // only opens the picker; the price is charged once an item is picked
                 if (TryGetWaitingEssence(body.master, out var waitingEssence))
                 {
-                    if (Helper.HasRoomFor(body, waitingEssence.pickupThatGeneratedOptions?.pickupIndex ?? PickupIndex.none))
-                    {
-                        waitingEssence.OnInteractionBegin(activator);
-                    }
-                    else
-                    {
-                        Refuse(self);
-                    }
+                    waitingEssence.OnInteractionBegin(activator);
                 }
-                else if (hasOffer && Helper.HasRoomFor(body, offer.pickupIndex))
+                else if (hasOffer)
                 {
                     SpawnHiddenEssence(self, offer, activator);
                 }
@@ -228,7 +233,7 @@ namespace BazaarIsMyHaven
             if (ModConfig.CommandPedestalInstancedPurchases.Value)
             {
                 buyers.Add(player);
-                SetInteractabilityForClient(player, Interactability.Disabled);
+                UpdateSwapAvailability(player);
                 HideDisplayFor(player);
                 PriceSigns.HideFor(pedestal, player);
                 PlayBuyEffect(vault);
@@ -242,6 +247,11 @@ namespace BazaarIsMyHaven
             }
             vault.DoInteractResult(true);
             vault.CallRpcInteractResult(true);
+            // the opening disables the vault for everyone, the buyer's client included; a buyer with stored equipment gets it back afterwards
+            if (storedEquipment.ContainsKey(player))
+            {
+                Main.instance.StartCoroutine(UpdateSwapAvailabilityLater(player));
+            }
             // nobody else can buy it now, so their open pickers close
             foreach (var picker in essences.Keys)
             {
@@ -290,7 +300,12 @@ namespace BazaarIsMyHaven
                 {
                     return Interactability.Available;
                 }
-                if (buyers.Contains(GetPlayer(activator.gameObject)))
+                var player = GetPlayer(activator.gameObject);
+                if (player && storedEquipment.ContainsKey(player))
+                {
+                    return Interactability.Available;
+                }
+                if (buyers.Contains(player))
                 {
                     return Interactability.Disabled;
                 }
@@ -435,8 +450,7 @@ namespace BazaarIsMyHaven
             int cost = GetPrice();
             if (!vault || !body || !body.inventory || !activator || !player || sold
                 || (ModConfig.CommandPedestalInstancedPurchases.Value && buyers.Contains(player))
-                || !Helper.CanAfford(costType, cost, activator, body)
-                || !Helper.HasRoomFor(body, pickupState.pickupIndex))
+                || !Helper.CanAfford(costType, cost, activator, body))
             {
                 // nothing is charged or given; the vault can be used again
                 if (vault)
@@ -448,8 +462,46 @@ namespace BazaarIsMyHaven
 
             Helper.PayCost(costType, cost, activator, body, pedestal, rng);
             // the item flies from the vault, not from where the essence hides
-            Helper.GivePickup(body, pickupState.pickupIndex, essence.vaultPosition, true);
+            GiveAndStore(body, player, pickupState.pickupIndex, essence.vaultPosition);
             CompletePurchase(vault, player);
+        }
+
+        // Gives the pickup; equipment it pushes out flies into the vault, where only this player can swap it back
+        private void GiveAndStore(CharacterBody body, PlayerCharacterMasterController player, PickupIndex pickupIndex, Vector3 vaultPosition)
+        {
+            var replaced = Helper.GivePickup(body, pickupIndex, vaultPosition, false);
+            if (replaced == EquipmentIndex.None)
+            {
+                storedEquipment.Remove(player);
+                return;
+            }
+            storedEquipment[player] = replaced;
+            Helper.CreateItemTakenOrb(body.corePosition, pedestal, PickupCatalog.FindPickupIndex(replaced));
+        }
+
+        // Swaps the buyer's stored equipment back in, for free; the equipment it replaces goes into the vault in turn
+        private void SwapStoredEquipment(PowerOrbPedestalManager vault, PlayerCharacterMasterController player, CharacterBody body)
+        {
+            var stored = storedEquipment[player];
+            storedEquipment.Remove(player);
+            GiveAndStore(body, player, PickupCatalog.FindPickupIndex(stored), GetEssencePosition(vault));
+            UpdateSwapAvailability(player);
+        }
+
+        // A buyer can use the vault while it holds their equipment
+        private void UpdateSwapAvailability(PlayerCharacterMasterController player)
+        {
+            SetInteractabilityForClient(player, storedEquipment.ContainsKey(player) ? Interactability.Available : Interactability.Disabled);
+        }
+
+        private System.Collections.IEnumerator UpdateSwapAvailabilityLater(PlayerCharacterMasterController player)
+        {
+            // after the opening's own messages, which disable the vault on the client
+            yield return new WaitForSecondsRealtime(0.5f);
+            if (pedestal && player)
+            {
+                UpdateSwapAvailability(player);
+            }
         }
 
         // The buyer of an instanced pedestal no longer sees the essence it gives; the others still do
