@@ -1,0 +1,80 @@
+using RoR2;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace BazaarIsMyHaven
+{
+    // A player whose old equipment went into a Lunar Bud or an Equipment Terminal in exchange owns that slot:
+    // swapping there again is free. The game's purchase still runs, only without its payment.
+    public class FreeSwaps : MonoBehaviour
+    {
+        private static PurchaseInteraction freePurchase;
+
+        private readonly HashSet<PlayerCharacterMasterController> owners = new HashSet<PlayerCharacterMasterController>();
+
+        public static void Hook()
+        {
+            On.RoR2.CostTypeDef.PayCost_PayCostContext_PayCostResults += CostTypeDef_PayCost;
+            On.RoR2.PurchaseInteraction.UpdateHologramContent += PurchaseInteraction_UpdateHologramContent;
+        }
+
+        public static void AddOwner(GameObject slot, PlayerCharacterMasterController player)
+        {
+            if (!slot || !player)
+            {
+                return;
+            }
+            if (!slot.TryGetComponent(out FreeSwaps freeSwaps))
+            {
+                freeSwaps = slot.AddComponent<FreeSwaps>();
+            }
+            freeSwaps.owners.Add(player);
+        }
+
+        public static bool IsOwner(Component slot, PlayerCharacterMasterController player)
+        {
+            return slot && player && slot.TryGetComponent(out FreeSwaps freeSwaps) && freeSwaps.owners.Contains(player);
+        }
+
+        // Runs the game's purchase without charging anything
+        public static T RunFree<T>(PurchaseInteraction purchase, Func<T> purchaseAction)
+        {
+            var previousFreePurchase = freePurchase;
+            int cost = purchase.cost;
+            // the field only, so everyone else keeps the price; the game then sees the swap as affordable
+            purchase.cost = 0;
+            freePurchase = purchase;
+            try
+            {
+                return purchaseAction();
+            }
+            finally
+            {
+                purchase.cost = cost;
+                freePurchase = previousFreePurchase;
+            }
+        }
+
+        // A free swap charges nothing, not even a hit of zero damage for PercentHealth
+        private static void CostTypeDef_PayCost(On.RoR2.CostTypeDef.orig_PayCost_PayCostContext_PayCostResults orig, CostTypeDef self, CostTypeDef.PayCostContext context, CostTypeDef.PayCostResults result)
+        {
+            if (freePurchase && context.purchaseInteraction == freePurchase)
+            {
+                return;
+            }
+            orig(self, context, result);
+        }
+
+        // The host's own view of a bud's price; clients get theirs from InstancedPurchases
+        private static void PurchaseInteraction_UpdateHologramContent(On.RoR2.PurchaseInteraction.orig_UpdateHologramContent orig, PurchaseInteraction self, GameObject hologramContentObject, Transform viewer)
+        {
+            orig(self, hologramContentObject, viewer);
+            if (viewer && viewer.TryGetComponent(out CharacterBody body) && body.master && IsOwner(self, body.master.playerCharacterMasterController)
+                && hologramContentObject.TryGetComponent(out CostHologramContent content))
+            {
+                content.displayValue = 0;
+            }
+        }
+    }
+}

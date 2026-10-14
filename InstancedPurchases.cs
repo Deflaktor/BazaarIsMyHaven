@@ -14,6 +14,7 @@ namespace BazaarIsMyHaven
         private const uint HiddenMask = 2u;
         private const uint PurchasedMask = 4u;
         private const uint AvailableMask = 8u;
+        private const uint CostMask = 16u;
 
         public static void Hook()
         {
@@ -206,6 +207,7 @@ namespace BazaarIsMyHaven
             }
 
             bool previousAvailable = self.available;
+            int previousCost = self.cost;
             if (!initialState && !instance.pcClient)
             {
                 self.m_SyncVarDirtyBits &= ~AvailableMask;
@@ -214,12 +216,18 @@ namespace BazaarIsMyHaven
             try
             {
                 self.available = instance.GetOrOriginal(instance.pcClient).available;
+                // swaps are free for the slot's owner
+                if (instance.pcClient && FreeSwaps.IsOwner(self, instance.pcClient))
+                {
+                    self.cost = 0;
+                }
                 return orig(self, writer, initialState);
 
             }
             finally
             {
                 self.available = previousAvailable;
+                self.cost = previousCost;
             }
         }
 
@@ -434,7 +442,7 @@ namespace BazaarIsMyHaven
                     //The first message sets the flag without triggering the item animation
                     // the second updates stock/availability with that flag already set
                     var purchaseMessage = CreateUpdateMessage(identity, channel, PurchasedMask, 0u);
-                    var stockMessage = CreateUpdateMessage(identity, channel, PickupMask | HiddenMask, AvailableMask);
+                    var stockMessage = CreateUpdateMessage(identity, channel, PickupMask | HiddenMask, AvailableMask | CostMask);
                     messages = new byte[purchaseMessage.Length + stockMessage.Length];
 
                     Buffer.BlockCopy(purchaseMessage, 0, messages, 0, purchaseMessage.Length);
