@@ -27,6 +27,7 @@ namespace BazaarIsMyHaven
         }
         private readonly List<Station> stations = new List<Station>();
         private Station upgradeStation;
+        private Station tripleDroneShop;
 
         public override void Preload()
         {
@@ -34,6 +35,7 @@ namespace BazaarIsMyHaven
             DroneUpgradeStation = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/DroneAssemblyStation/DroneAssemblyStation.prefab");
             DroneScrapper = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/DroneScrapper/DroneScrapper.prefab");
             TripleDroneShop = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/TripleDroneShop/TripleDroneShop.prefab");
+            PriceSigns.Preload();
         }
 
         public override void Hook()
@@ -41,6 +43,7 @@ namespace BazaarIsMyHaven
             On.RoR2.Stage.RespawnAllNPCs += Stage_RespawnAllNPCs;
             On.RoR2.PickupPickerController.GetInteractability += PickupPickerController_GetInteractability;
             On.RoR2.PurchaseInteraction.GetInteractability += PurchaseInteraction_GetInteractability;
+            On.RoR2.DroneVendorMultiShopController.Start += DroneVendorMultiShopController_Start;
         }
 
         // clients only have the stations if the run has the Alloyed Collective
@@ -53,6 +56,7 @@ namespace BazaarIsMyHaven
         {
             stations.Clear();
             upgradeStation = null;
+            tripleDroneShop = null;
             if (!IsSectionActive())
             {
                 return;
@@ -64,7 +68,7 @@ namespace BazaarIsMyHaven
                 DroneUpgradeStation, new SpawnCardStruct(new Vector3(-85.1751f, -22.264f, -3.539f), new Vector3(0f, 150f, 270f)));
             AddStation(cards, "Drone Scrapper", ModConfig.DronesDroneScrapperDirectorCost, ModConfig.DronesDroneScrapperDirectorWeight,
                 DroneScrapper, new SpawnCardStruct(new Vector3(-91.9756f, -26.0923f, -48.0897f), new Vector3(0f, 315f, 0f)));
-            AddStation(cards, "Triple Drone Shop", ModConfig.DronesTripleDroneShopDirectorCost, ModConfig.DronesTripleDroneShopDirectorWeight,
+            tripleDroneShop = AddStation(cards, "Triple Drone Shop", ModConfig.DronesTripleDroneShopDirectorCost, ModConfig.DronesTripleDroneShopDirectorWeight,
                 TripleDroneShop, new SpawnCardStruct(new Vector3(-64.3101f, -23.0074f, -19.7406f), new Vector3(0f, 300f, 6f)));
         }
 
@@ -137,6 +141,64 @@ namespace BazaarIsMyHaven
                     }
                 }
                 master.Respawn(position, rotation, wasRevivedMidStage: true);
+            }
+        }
+
+        // The Triple Drone Shop picks its drones and price when it starts; this one uses the section's weights, costs and cost type
+        private void DroneVendorMultiShopController_Start(On.RoR2.DroneVendorMultiShopController.orig_Start orig, DroneVendorMultiShopController self)
+        {
+            if (!NetworkServer.active || tripleDroneShop == null || !tripleDroneShop.instance || self.gameObject != tripleDroneShop.instance || !Run.instance)
+            {
+                orig(self);
+                return;
+            }
+
+            float commonWeight = Mathf.Max(0f, ModConfig.DronesTripleDroneShopCommonWeight.Value);
+            float uncommonWeight = Mathf.Max(0f, ModConfig.DronesTripleDroneShopUncommonWeight.Value);
+            if (commonWeight + uncommonWeight <= 0f)
+            {
+                commonWeight = 1f;
+            }
+            self.tier1Chance = new RangeFloat { min = commonWeight, max = commonWeight };
+            self.tier2Chance = new RangeFloat { min = uncommonWeight, max = uncommonWeight };
+            self.tier3Chance = new RangeFloat { min = 0f, max = 0f };
+            self.baseCostTier1 = ModConfig.DronesTripleDroneShopCommonCost.Value;
+            self.baseCostTier2 = ModConfig.DronesTripleDroneShopUncommonCost.Value;
+            var costType = ModConfig.DronesTripleDroneShopCostType.Value;
+            self.costType = costType;
+
+            // the game offers only common drones before the third stage; the weights apply on every visit.
+            // The field is set without its network setter and restored right after, so clients never see it.
+            var run = Run.instance;
+            int stageClearCount = run.stageClearCount;
+            run.stageClearCount = Mathf.Max(stageClearCount, 3);
+            try
+            {
+                orig(self);
+            }
+            finally
+            {
+                run.stageClearCount = stageClearCount;
+            }
+
+            // the game always scales the price as money
+            int cost = Helper.GetCost(self.baseCost, costType);
+            self.Networkcost = cost;
+            foreach (var terminal in self._terminals ?? new DroneVendorTerminalBehavior[0])
+            {
+                if (terminal && terminal.purchaseInteraction)
+                {
+                    terminal.purchaseInteraction.Networkcost = cost;
+                }
+            }
+
+            // clients show the shop's price in the prefab's money, since its cost type is not synced, so a price sign replaces it
+            if (costType != CostTypeIndex.Money)
+            {
+                var projector = self.GetComponent<RoR2.Hologram.HologramProjector>();
+                var pivot = projector && projector.hologramPivot ? projector.hologramPivot : self.transform;
+                self.Networkavailable = false;
+                PriceSigns.Apply(self.gameObject, pivot.position, self.transform.rotation * Quaternion.Euler(0f, 180f, 0f), cost, costType);
             }
         }
 

@@ -157,6 +157,11 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<float> DronesDroneScrapperDirectorWeight;
         public static ConfigEntry<int> DronesTripleDroneShopDirectorCost;
         public static ConfigEntry<float> DronesTripleDroneShopDirectorWeight;
+        public static ConfigEntry<float> DronesTripleDroneShopCommonWeight;
+        public static ConfigEntry<float> DronesTripleDroneShopUncommonWeight;
+        public static ConfigEntry<int> DronesTripleDroneShopCommonCost;
+        public static ConfigEntry<int> DronesTripleDroneShopUncommonCost;
+        public static ConfigEntry<CostTypeIndex> DronesTripleDroneShopCostType;
 
         // command pedestal
         public static ConfigEntry<bool> CommandPedestalSectionEnabled;
@@ -319,6 +324,11 @@ namespace BazaarIsMyHaven
             DronesDroneScrapperDirectorWeight = config.Bind("13 Drones", "DroneScrapperDirectorWeight", 1f, "How likely the director picks the Drone Scrapper, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
             DronesTripleDroneShopDirectorCost = config.Bind("13 Drones", "TripleDroneShopDirectorCost", 8, "Director credits the Triple Drone Shop costs.");
             DronesTripleDroneShopDirectorWeight = config.Bind("13 Drones", "TripleDroneShopDirectorWeight", 1f, "How likely the director picks the Triple Drone Shop, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
+            DronesTripleDroneShopCommonWeight = config.Bind("13 Drones", "TripleDroneShopCommonWeight", 0.8f, "How likely the Triple Drone Shop offers common drones, compared to TripleDroneShopUncommonWeight. Unlike on other stages, where the game offers only common drones before the third stage, this applies on every visit.");
+            DronesTripleDroneShopUncommonWeight = config.Bind("13 Drones", "TripleDroneShopUncommonWeight", 0.2f, "How likely the Triple Drone Shop offers uncommon drones, compared to TripleDroneShopCommonWeight. 0 = never.");
+            DronesTripleDroneShopCommonCost = config.Bind("13 Drones", "TripleDroneShopCommonCost", 40, "Cost of a common drone from the Triple Drone Shop, paid in TripleDroneShopCostType.");
+            DronesTripleDroneShopUncommonCost = config.Bind("13 Drones", "TripleDroneShopUncommonCost", 60, "Cost of an uncommon drone from the Triple Drone Shop, paid in TripleDroneShopCostType.");
+            DronesTripleDroneShopCostType = config.Bind("13 Drones", "TripleDroneShopCostType", CostTypeIndex.Money, "What a drone from the Triple Drone Shop costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
 
             // 14 CommandPedestal
             CommandPedestalSectionEnabled = config.Bind("14 CommandPedestal", "SectionEnabled", true, "Enables or disables the Command Pedestal section. It lets you pick an item for a price.");

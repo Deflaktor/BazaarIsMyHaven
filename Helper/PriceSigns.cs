@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 namespace BazaarIsMyHaven
 {
     // Price signs for interactables that have none for clients, like Equipment Terminals, whose price display belongs
-    // to the multishop around them in vanilla, or the Donation Altar.
+    // to the multishop around them in vanilla, the Donation Altar, or a Triple Drone Shop whose cost type clients can't know.
     // Each one gets a Lunar Seer, whose price sign is not part of its model. Clients are set up with vanilla
     // messages only: a Wisp death state removes the Seer's model and collider, and a teleport moves the sign above it.
     public class PriceSigns : MonoBehaviour
@@ -205,6 +205,10 @@ namespace BazaarIsMyHaven
             if (terminal.TryGetComponent(out GenericInteraction genericInteraction))
             {
                 return genericInteraction.interactability != Interactability.Disabled;
+            }
+            if (terminal.TryGetComponent(out DroneVendorMultiShopController droneShop))
+            {
+                return droneShop._terminals != null && droneShop._terminals.Any(droneTerminal => droneTerminal && droneTerminal.purchaseInteraction && droneTerminal.purchaseInteraction.available);
             }
             var purchaseInteraction = terminal.GetComponent<PurchaseInteraction>();
             return purchaseInteraction && purchaseInteraction.available;
