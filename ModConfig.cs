@@ -165,6 +165,7 @@ namespace BazaarIsMyHaven
 
         // command pedestal
         public static ConfigEntry<bool> CommandPedestalSectionEnabled;
+        public static ConfigEntry<float> CommandPedestalDirectorWeight;
         public static readonly List<CommandPedestalTier> CommandPedestalTiers = new List<CommandPedestalTier>();
         public static ConfigEntry<CostTypeIndex> CommandPedestalCostType;
         public static ConfigEntry<bool> CommandPedestalInstancedPurchases;
@@ -332,17 +333,18 @@ namespace BazaarIsMyHaven
 
             // 14 CommandPedestal
             CommandPedestalSectionEnabled = config.Bind("14 CommandPedestal", "SectionEnabled", true, "Enables or disables the Command Pedestal section. It lets you pick an item for a price.");
+            CommandPedestalDirectorWeight = config.Bind("14 CommandPedestal", "DirectorWeight", 0.2f, "How likely the director picks the Command Pedestal, compared to the DirectorWeight of the other interactables. Which tier it offers is rolled by the tier weights below.");
             CommandPedestalTiers.Clear();
-            // by how many items of each tier a typical stage gives, without lunar items; together about as likely as one interactable with DirectorWeight 0.2
-            AddCommandPedestalTier(config, "Tier1", "white items", run => run.availableTier1DropList, 50, 10, 0.1f);
-            AddCommandPedestalTier(config, "Tier2", "green items", run => run.availableTier2DropList, 100, 20, 0.05f);
-            AddCommandPedestalTier(config, "Tier3", "red items", run => run.availableTier3DropList, 800, 30, 0.01f);
-            AddCommandPedestalTier(config, "Boss", "boss items", run => run.availableBossDropList, 400, 20, 0.01f);
-            AddCommandPedestalTier(config, "Equipment", "equipment", run => run.availableEquipmentDropList, 100, 10, 0.025f);
+            // by how many items of each tier a typical stage gives; lunar and void boss items are off
+            AddCommandPedestalTier(config, "Tier1", "white items", run => run.availableTier1DropList, 50, 10, 0.5f);
+            AddCommandPedestalTier(config, "Tier2", "green items", run => run.availableTier2DropList, 100, 20, 0.25f);
+            AddCommandPedestalTier(config, "Tier3", "red items", run => run.availableTier3DropList, 800, 30, 0.05f);
+            AddCommandPedestalTier(config, "Boss", "boss items", run => run.availableBossDropList, 400, 20, 0.05f);
+            AddCommandPedestalTier(config, "Equipment", "equipment", run => run.availableEquipmentDropList, 100, 10, 0.125f);
             AddCommandPedestalTier(config, "Lunar", "lunar items", run => run.availableLunarItemDropList, 100, 20, 0f);
-            AddCommandPedestalTier(config, "VoidTier1", "void white items", run => run.availableVoidTier1DropList, 50, 10, 0.01f);
-            AddCommandPedestalTier(config, "VoidTier2", "void green items", run => run.availableVoidTier2DropList, 100, 20, 0.005f);
-            AddCommandPedestalTier(config, "VoidTier3", "void red items", run => run.availableVoidTier3DropList, 800, 30, 0.0025f);
+            AddCommandPedestalTier(config, "VoidTier1", "void white items", run => run.availableVoidTier1DropList, 50, 10, 0.05f);
+            AddCommandPedestalTier(config, "VoidTier2", "void green items", run => run.availableVoidTier2DropList, 100, 20, 0.025f);
+            AddCommandPedestalTier(config, "VoidTier3", "void red items", run => run.availableVoidTier3DropList, 800, 30, 0.0125f);
             AddCommandPedestalTier(config, "VoidBoss", "void boss items", run => run.availableVoidBossDropList, 400, 20, 0f);
             CommandPedestalCostType = config.Bind("14 CommandPedestal", "CostType", CostTypeIndex.Money, "What opening the Command Pedestal costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             CommandPedestalInstancedPurchases = config.Bind("14 CommandPedestal", "InstancedPurchases", true, "Each player can buy from the Command Pedestal once, independently of the others. It stays ready for the others, and each buyer gets their own Command Essence.");
@@ -381,24 +383,24 @@ namespace BazaarIsMyHaven
             RefreshDerivedData(config);
         }
 
-        // One tier of Command Pedestal: the director picks among the tiers it can afford by their DirectorWeight
+        // One tier of Command Pedestal: once the director picks the pedestal, it rolls a tier it can afford by the tier weights
         public class CommandPedestalTier
         {
             public string name;
             public Func<Run, List<PickupIndex>> dropList;
             public ConfigEntry<int> directorCost;
-            public ConfigEntry<float> directorWeight;
+            public ConfigEntry<float> weight;
             public ConfigEntry<int> cost;
         }
 
-        private static void AddCommandPedestalTier(ConfigFile config, string name, string offers, Func<Run, List<PickupIndex>> dropList, int cost, int directorCost, float directorWeight)
+        private static void AddCommandPedestalTier(ConfigFile config, string name, string offers, Func<Run, List<PickupIndex>> dropList, int cost, int directorCost, float weight)
         {
             CommandPedestalTiers.Add(new CommandPedestalTier
             {
                 name = name,
                 dropList = dropList,
                 directorCost = config.Bind("14 CommandPedestal", $"{name}DirectorCost", directorCost, $"Director credits a Command Pedestal offering {offers} costs."),
-                directorWeight = config.Bind("14 CommandPedestal", $"{name}DirectorWeight", directorWeight, $"How likely the director picks a Command Pedestal offering {offers}, compared to the DirectorWeight of the other interactables. 0 = never."),
+                weight = config.Bind("14 CommandPedestal", $"{name}Weight", weight, $"Weight for a Command Pedestal offering {offers}, compared to the other tier weights. 0 = never."),
                 cost = config.Bind("14 CommandPedestal", $"{name}Cost", cost, $"Cost of a Command Pedestal offering {offers}, paid in CostType."),
             });
         }

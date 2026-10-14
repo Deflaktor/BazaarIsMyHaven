@@ -32,19 +32,20 @@ namespace BazaarIsMyHaven
             public Vector3 vaultPosition;
         }
 
-        // The director picks the tier among those it can afford, by their DirectorWeight; the tier sets the essence and the price
+        // The director picks the pedestal by its DirectorWeight, then a tier it can afford by the tier weights; the tier sets the essence and the price
         private class CommandPedestalCard : DirectorCard
         {
             public ModConfig.CommandPedestalTier tier;
 
-            public CommandPedestalCard() : base("Command Pedestal", null, null, () => 1) { }
+            public CommandPedestalCard() : base("Command Pedestal", null, ModConfig.CommandPedestalDirectorWeight, () => 1) { }
 
             private static List<ModConfig.CommandPedestalTier> GetTiers()
             {
-                return ModConfig.CommandPedestalTiers.Where(tier => tier.directorWeight.Value > 0f && tier.dropList(Run.instance).Count > 0).ToList();
+                return ModConfig.CommandPedestalTiers.Where(tier => tier.weight.Value > 0f && tier.dropList(Run.instance).Count > 0).ToList();
             }
 
-            public override float Weight => GetTiers().Sum(tier => tier.directorWeight.Value);
+            // without a tier to offer, there is no pedestal
+            public override float Weight => GetTiers().Count > 0 ? base.Weight : 0f;
 
             protected override int CheapestCost()
             {
@@ -58,7 +59,7 @@ namespace BazaarIsMyHaven
                 foreach (var choice in GetTiers())
                 {
                     if (System.Math.Max(0, choice.directorCost.Value) <= credits)
-                        weightedSelection.AddChoice(choice, choice.directorWeight.Value);
+                        weightedSelection.AddChoice(choice, choice.weight.Value);
                 }
                 tier = weightedSelection.Evaluate(UnityEngine.Random.value);
                 return System.Math.Max(0, tier.directorCost.Value);
