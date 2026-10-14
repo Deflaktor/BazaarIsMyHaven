@@ -117,7 +117,8 @@ namespace BazaarIsMyHaven
 
                         // pay first, so items paid with can't be the reward
                         Helper.PayCost(self.costType, self.cost, activator, characterBody, self.gameObject, self.rng);
-                        Helper.GivePickups(characterBody, resolvedItems, self.transform.position + Vector3.up * 6.0f, true);
+                        // equipment the reward pushes out is discarded, so it can't go to another player
+                        Helper.GivePickups(characterBody, resolvedItems, self.transform.position + Vector3.up * 6.0f, false);
                         playerStruct.RewardCount += 1;
                         donationsDuringRun[pc] = donationsDuringRun.GetValueOrDefault(pc) + 1;
                         ShowRewardEffects(self, characterBody, resolvedItems, tier);

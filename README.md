@@ -127,6 +127,8 @@ The Donate section lets the director spawn a Donation Altar near the Newt. Donat
 
 Every 2 seconds, each player sees a reward they could get on up to five Lunar Buds above the altar, one bud per item. Buds the reward doesn't need stay open but empty, and all of them close once a player can't get a reward anymore. These are only examples: the reward for a donation is rolled when you donate. Clients need no mod for this.
 
+Equipment in a reward goes into your empty equipment slots first, then replaces the equipment you have. Equipment pushed out this way, or that doesn't fit, is discarded, so a reward can't end up with another player.
+
 There are 3 item lists which are selected at random:
 
 - `RewardList1`: By default contains either 5 small chest items or 2 large chest items.
