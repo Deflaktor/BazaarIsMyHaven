@@ -187,7 +187,11 @@ namespace BazaarIsMyHaven
                         return;
                     }
 
-                    if (!TryCompletePurchase(orig, self, activator, player))
+                    // swapping again at a bud whose slot the player bought is free
+                    bool purchased = FreeSwaps.IsOwner(self, player)
+                        ? FreeSwaps.RunFree(self, () => TryCompletePurchase(orig, self, activator, player))
+                        : TryCompletePurchase(orig, self, activator, player);
+                    if (!purchased)
                     {
                         return;
                     }
@@ -306,6 +310,7 @@ namespace BazaarIsMyHaven
                         self.SetPickup(new UniquePickup(PickupCatalog.FindPickupIndex(droppedEquipment)));
                         var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
                         purchaseInteraction.SetAvailable(true);
+                        FreeSwaps.AddOwner(self.gameObject, currentActivator);
                     }
                     else
                     {
