@@ -270,7 +270,7 @@ namespace BazaarIsMyHaven
 
             // 08 CleansingPool
             CleansingPoolSectionEnabled = config.Bind("08 CleansingPool", "SectionEnabled", true, "Enables or disables the Cleansing Pool section.");
-            CleansingPoolDirectorCost = config.Bind("08 CleansingPool", "DirectorCost", 5, "Director credits the Cleansing Pool costs.");
+            CleansingPoolDirectorCost = config.Bind("08 CleansingPool", "DirectorCost", 0, "Director credits the Cleansing Pool costs. Free by default, since with RewardsLunarCoin it only gives back a Lunar Coin, so it always spawns unless its DirectorWeight is 0. Vanilla value: 5.");
             CleansingPoolDirectorWeight = config.Bind("08 CleansingPool", "DirectorWeight", 1f, "How likely the director picks the Cleansing Pool, compared to the DirectorWeight of the other interactables.");
             CleansingPoolRewardsLunarCoins = config.Bind("08 CleansingPool", "RewardsLunarCoin", true, "Cleansing Pools reward a Lunar Coin instead of a Pearl.");
 
