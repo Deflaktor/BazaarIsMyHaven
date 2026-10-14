@@ -100,11 +100,11 @@ Controls how Newt acts after being killed:
 
 With a `Cost` above 0, each Equipment Terminal shows its price above it. Clients without the mod see it too. `CostType` sets what the price is paid in, such as money (the default), Lunar Coins or items of a tier. With `ScaleMoneyCosts`, money prices scale with difficulty like the game's own shops.
 
-With `BuyToInventory`, bought equipment goes straight into your inventory, and the equipment it replaces goes into the terminal. That purchase buys the slot: swapping there again is free, and the price sign disappears. With `InstancedPurchases` this applies to the buyer only, otherwise to everyone. The Command Pedestal and the Wandering Chef's recipes have nowhere to put replaced equipment, so with `BuyToInventory` they only give equipment into an empty equipment slot.
+With `BuyToInventory`, bought equipment goes straight into your inventory, and the equipment it replaces goes into the terminal. That purchase buys the slot: swapping there again is free for you, and your price sign disappears. Other players still pay, so no one gets equipment someone else paid for. The Command Pedestal and the Wandering Chef's recipes have nowhere to put replaced equipment, so with `BuyToInventory` they only give equipment into an empty equipment slot.
 
 ### LunarShop
 
-The Lunar Shop swaps the Bazaar's Lunar Buds for up to `MaxAmount` Lunar Buds (at most 20), each with its price. `CostType` sets what the price is paid in, such as Lunar Coins (the default), money or items of a tier. Clients without the mod also see them at the right size. The Lunar Recycler rerolls them, except buds a player already bought from. With `BuyToInventory`, equipment you replace goes into the bud, and swapping there again is free: with `InstancedPurchases` for you, whose price tag then shows 0, otherwise for everyone. If the director spawns no buds, the Lunar Recycler is removed too.
+The Lunar Shop swaps the Bazaar's Lunar Buds for up to `MaxAmount` Lunar Buds (at most 20), each with its price. `CostType` sets what the price is paid in, such as Lunar Coins (the default), money or items of a tier. Clients without the mod also see them at the right size. The Lunar Recycler rerolls them, except buds a player already bought from. With `BuyToInventory`, equipment you replace goes into the bud, and swapping there again is free for you. Other players still pay. With `InstancedPurchases`, your price tag there shows 0. If the director spawns no buds, the Lunar Recycler is removed too.
 
 You can freely configure which items can be bought at the LunarShop. There are two settings to configure this:
 
