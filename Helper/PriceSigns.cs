@@ -319,7 +319,7 @@ namespace BazaarIsMyHaven
                 return droneShop._terminals != null && droneShop._terminals.Any(droneTerminal => droneTerminal && droneTerminal.purchaseInteraction && droneTerminal.purchaseInteraction.available);
             }
             var purchaseInteraction = terminal.GetComponent<PurchaseInteraction>();
-            return purchaseInteraction && purchaseInteraction.available;
+            return purchaseInteraction && purchaseInteraction.available && purchaseInteraction.cost > 0;
         }
 
         // The Seer's spawn message and these share the reliable channel, so they arrive in order.

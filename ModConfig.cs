@@ -244,7 +244,7 @@ namespace BazaarIsMyHaven
             EquipmentCost = config.Bind("05 Equipment", "Cost", 50, "Cost of an equipment purchase, paid in CostType.");
             EquipmentCostType = config.Bind("05 Equipment", "CostType", CostTypeIndex.Money, "What equipment purchases cost, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price sign shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             EquipmentInstancedPurchases = config.Bind("05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
-            EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground. Equipment replaced by a purchase goes into the terminal, where the buyer can swap again for free.");
+            EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground. Equipment replaced by a purchase goes into the terminal, where swapping again is free: for the buyer with InstancedPurchases, otherwise for everyone.");
 
             // 06 LunarShop
             LunarShopSectionEnabled = config.Bind("06 LunarShop", "SectionEnabled", true, "Enables or disables the Lunar Shop section.");
@@ -259,7 +259,7 @@ namespace BazaarIsMyHaven
             LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar. -1 = Unlimited.");
             LunarShopInstancedPurchases = config.Bind("06 LunarShop", "InstancedPurchases", true, "Each player can buy independently from Lunar Shop.");
             LunarShopAmountDependingOnCharacter = config.Bind("06 LunarShop", "AmountDependingOnCharacter", "", "Change the number of Lunar Buds by Character. Needs InstancedPurchases. Cannot exceed the number of spawned buds. Comma-separated <characterBody|survivorName>=<amount>.\nExample: Seeker=15, FalseSon=16");
-            LunarShopBuyToInventory = config.Bind("06 LunarShop", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground. Equipment replaced by a purchase goes into the bud, where the buyer can swap again for free.");
+            LunarShopBuyToInventory = config.Bind("06 LunarShop", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground. Equipment replaced by a purchase goes into the bud, where swapping again is free: for the buyer with InstancedPurchases, otherwise for everyone.");
 
             // 07 LunarRecycler
             LunarRecyclerSectionEnabled = config.Bind("07 LunarRecycler", "SectionEnabled", true, "Enables or disables the Lunar Recycler section.");

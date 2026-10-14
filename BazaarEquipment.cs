@@ -94,7 +94,7 @@ namespace BazaarIsMyHaven
                     try { 
                         currentActivator = playerCharacterMasterController;
                         // swapping again at a terminal whose slot the player bought is free
-                        if (FreeSwaps.IsOwner(self, playerCharacterMasterController))
+                        if (FreeSwaps.IsFreeFor(self, playerCharacterMasterController))
                         {
                             FreeSwaps.RunFree(self, () => { orig(self, activator); return true; });
                         }
@@ -131,8 +131,8 @@ namespace BazaarIsMyHaven
                         self.SetPickup(new UniquePickup(PickupCatalog.FindPickupIndex(droppedEquipment)));
                         var purchaseInteraction = self.GetComponent<PurchaseInteraction>();
                         purchaseInteraction.SetAvailable(true);
-                        // further swaps are free for the buyer, so their price sign goes
-                        FreeSwaps.AddOwner(self.gameObject, currentActivator);
+                        // further swaps are free, so the price sign goes for those who swap for free
+                        FreeSwaps.BuySlot(self.gameObject, currentActivator);
                         PriceSigns.HideFor(self.gameObject, currentActivator);
                     }
                     else

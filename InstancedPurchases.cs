@@ -217,7 +217,7 @@ namespace BazaarIsMyHaven
             {
                 self.available = instance.GetOrOriginal(instance.pcClient).available;
                 // swaps are free for the slot's owner
-                if (instance.pcClient && FreeSwaps.IsOwner(self, instance.pcClient))
+                if (instance.pcClient && FreeSwaps.IsFreeFor(self, instance.pcClient))
                 {
                     self.cost = 0;
                 }
