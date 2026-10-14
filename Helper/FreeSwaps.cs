@@ -17,6 +17,7 @@ namespace BazaarIsMyHaven
         public static void Hook()
         {
             On.RoR2.CostTypeDef.PayCost_PayCostContext_PayCostResults += CostTypeDef_PayCost;
+            On.RoR2.PurchaseInteraction.CanBeAffordedByInteractor += PurchaseInteraction_CanBeAffordedByInteractor;
             On.RoR2.PurchaseInteraction.UpdateHologramContent += PurchaseInteraction_UpdateHologramContent;
         }
 
@@ -55,6 +56,17 @@ namespace BazaarIsMyHaven
                 purchase.cost = cost;
                 freePurchase = previousFreePurchase;
             }
+        }
+
+        // The game checks the price before the purchase starts, too
+        private static bool PurchaseInteraction_CanBeAffordedByInteractor(On.RoR2.PurchaseInteraction.orig_CanBeAffordedByInteractor orig, PurchaseInteraction self, Interactor activator)
+        {
+            var body = activator ? activator.GetComponent<CharacterBody>() : null;
+            if (body && body.master && IsFreeFor(self, body.master.playerCharacterMasterController))
+            {
+                return true;
+            }
+            return orig(self, activator);
         }
 
         // A free swap charges nothing, not even a hit of zero damage for PercentHealth
