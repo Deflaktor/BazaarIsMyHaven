@@ -26,24 +26,6 @@ namespace BazaarIsMyHaven
             return cost;
         }
 
-        private static readonly Inventory.EquipmentLocationQueryArgs emptyEquipmentLocation = new Inventory.EquipmentLocationQueryArgs
-        {
-            searchAllSlots = true,
-            allowEmpty = true,
-            searchPriority = Inventory.EquipmentLocationQueryArgs.SearchPriority.EmptyFirst
-        };
-
-        // With BuyToInventory, equipment can only be bought into an empty equipment slot
-        public static bool HasRoomFor(CharacterBody body, PickupIndex pickupIndex)
-        {
-            var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
-            if (pickupDef == null || pickupDef.equipmentIndex == EquipmentIndex.None)
-            {
-                return true;
-            }
-            return body && body.inventory && body.inventory.TryFindBestEquipmentLocation(in emptyEquipmentLocation, out _);
-        }
-
         public static bool CanAfford(CostTypeIndex costType, int cost, Interactor activator, CharacterBody body)
         {
             var costTypeDef = CostTypeCatalog.GetCostTypeDef(costType);
