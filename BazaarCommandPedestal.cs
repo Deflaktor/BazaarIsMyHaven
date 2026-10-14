@@ -230,6 +230,7 @@ namespace BazaarIsMyHaven
                 buyers.Add(player);
                 SetInteractabilityForClient(player, Interactability.Disabled);
                 HideDisplayFor(player);
+                PriceSigns.HideFor(pedestal, player);
                 PlayBuyEffect(vault);
                 return;
             }
