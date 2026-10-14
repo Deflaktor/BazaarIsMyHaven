@@ -126,6 +126,8 @@ namespace BazaarIsMyHaven
                         var display = self.GetComponent<DonationRewardDisplay>();
                         if (display)
                             display.ShowNextReward(pc);
+                        if (!CanGetReward(pc))
+                            DisableFor(pc);
                     }
                     return;
                 }
@@ -133,7 +135,19 @@ namespace BazaarIsMyHaven
             orig(self, activator);
         }
 
-        // Pays like the game's purchase does, in any cost type, but without its purchase events
+        // A player who can't get another reward sees the altar as used, without its price sign; the others can still donate
+        private void DisableFor(PlayerCharacterMasterController pc)
+        {
+            if (!altar || !altar.TryGetComponent(out InstancedPurchase instance))
+                return;
+            var state = instance.GetOrCreate(pc);
+            if (!state.available)
+                return;
+            state.available = false;
+            InstancedPurchases.UpdatePlayer(altar, pc);
+            PriceSigns.HideFor(altar, pc);
+        }
+
         private bool CanGetReward(PlayerCharacterMasterController pc)
         {
             return Main.instance.GetPlayerStruct(pc).RewardCount < ModConfig.DonateRewardLimitPerVisit.Value
@@ -260,11 +274,19 @@ namespace BazaarIsMyHaven
             purchaseInteraction.NetworkcontextToken = "NEWT_STATUE_CONTEXT";
 
             DonationRewardDisplay.Apply(altar, RollReward);
+            // each player can use the altar until they reach a reward limit
+            altar.AddComponent<InstancedPurchase>().original.available = true;
             NetworkServer.Spawn(altar);
             // only the signal's model stays, without its beam
             VoidSignalBeam.Remove(altar);
             // the Deep Void Signal has no price hologram of its own
             PriceSigns.Apply(altar, altar.transform.TransformPoint(AltarSignOffset), altar.transform.rotation * AltarSignRotation, cost, ModConfig.DonateCostType.Value);
+            // players who reached the limit for the run on an earlier visit
+            foreach (var pc in PlayerCharacterMasterController.instances)
+            {
+                if (pc && !CanGetReward(pc))
+                    DisableFor(pc);
+            }
         }
     }
 }
