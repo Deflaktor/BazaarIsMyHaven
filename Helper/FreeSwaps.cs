@@ -6,14 +6,13 @@ using UnityEngine;
 namespace BazaarIsMyHaven
 {
     // A purchase that puts the buyer's old equipment into a Lunar Bud or an Equipment Terminal buys that slot:
-    // swapping there again is free, for the buyer at an instanced slot and for everyone otherwise.
+    // swapping there again is free for the buyer. Others still pay, so no one gets equipment someone else paid for.
     // The game's purchase still runs, only without its payment.
     public class FreeSwaps : MonoBehaviour
     {
         private static PurchaseInteraction freePurchase;
 
         private readonly HashSet<PlayerCharacterMasterController> owners = new HashSet<PlayerCharacterMasterController>();
-        private bool freeForEveryone;
 
         public static void Hook()
         {
@@ -31,23 +30,12 @@ namespace BazaarIsMyHaven
             {
                 freeSwaps = slot.AddComponent<FreeSwaps>();
             }
-            // each player has their own instanced slot
-            if (slot.GetComponent<InstancedPurchase>())
-            {
-                freeSwaps.owners.Add(buyer);
-                return;
-            }
-            freeSwaps.freeForEveryone = true;
-            // everyone sees the price drop to nothing; price signs go away at 0
-            if (slot.TryGetComponent(out PurchaseInteraction purchase))
-            {
-                purchase.Networkcost = 0;
-            }
+            freeSwaps.owners.Add(buyer);
         }
 
         public static bool IsFreeFor(Component slot, PlayerCharacterMasterController player)
         {
-            return slot && slot.TryGetComponent(out FreeSwaps freeSwaps) && (freeSwaps.freeForEveryone || (player && freeSwaps.owners.Contains(player)));
+            return slot && player && slot.TryGetComponent(out FreeSwaps freeSwaps) && freeSwaps.owners.Contains(player);
         }
 
         // Runs the game's purchase without charging anything
@@ -79,11 +67,12 @@ namespace BazaarIsMyHaven
             orig(self, context, result);
         }
 
-        // The host's own view of a bud's price; clients get theirs from InstancedPurchases
+        // The host's own view of an instanced bud's price; clients get theirs from InstancedPurchases.
+        // Shared buds show everyone the same price.
         private static void PurchaseInteraction_UpdateHologramContent(On.RoR2.PurchaseInteraction.orig_UpdateHologramContent orig, PurchaseInteraction self, GameObject hologramContentObject, Transform viewer)
         {
             orig(self, hologramContentObject, viewer);
-            if (viewer && viewer.TryGetComponent(out CharacterBody body) && body.master && IsFreeFor(self, body.master.playerCharacterMasterController)
+            if (self.GetComponent<InstancedPurchase>() && viewer && viewer.TryGetComponent(out CharacterBody body) && body.master && IsFreeFor(self, body.master.playerCharacterMasterController)
                 && hologramContentObject.TryGetComponent(out CostHologramContent content))
             {
                 content.displayValue = 0;
