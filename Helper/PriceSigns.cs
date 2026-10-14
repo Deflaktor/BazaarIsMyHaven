@@ -24,6 +24,7 @@ namespace BazaarIsMyHaven
 
         private static AsyncOperationHandle<GameObject> seerPrefab;
         private static bool signsUnavailable;
+        private static readonly List<PriceSigns> instances = new List<PriceSigns>();
 
         private readonly List<Sign> signs = new List<Sign>();
 
@@ -34,6 +35,9 @@ namespace BazaarIsMyHaven
             public Vector3 clientPosition;
             public Quaternion clientRotation;
             public readonly HashSet<NetworkConnection> synchronizedClients = new HashSet<NetworkConnection>();
+            // players who no longer see the sign, e.g. after buying from an instanced terminal
+            public readonly HashSet<PlayerCharacterMasterController> hiddenFor = new HashSet<PlayerCharacterMasterController>();
+            public readonly HashSet<NetworkConnection> hiddenClients = new HashSet<NetworkConnection>();
         }
 
         public static void Preload()
@@ -42,6 +46,100 @@ namespace BazaarIsMyHaven
             {
                 seerPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/bazaar/SeerStation.prefab");
             }
+        }
+
+        public static void Hook()
+        {
+            On.RoR2.PurchaseInteraction.ShouldDisplayHologram += PurchaseInteraction_ShouldDisplayHologram;
+        }
+
+        private void Awake()
+        {
+            instances.Add(this);
+        }
+
+        private void OnDestroy()
+        {
+            instances.Remove(this);
+        }
+
+        // Hides the terminal's price sign from this player only; the others still see it
+        public static void HideFor(GameObject terminal, PlayerCharacterMasterController player)
+        {
+            if (!NetworkServer.active || !terminal || !player)
+            {
+                return;
+            }
+            foreach (var priceSigns in instances)
+            {
+                foreach (var sign in priceSigns.signs)
+                {
+                    if (sign.terminal == terminal && sign.hiddenFor.Add(player))
+                    {
+                        var connection = player.networkUser ? player.networkUser.connectionToClient : null;
+                        if (connection != null && !Util.ConnectionIsLocal(connection))
+                        {
+                            TryHideFromClient(sign, connection);
+                        }
+                    }
+                }
+            }
+        }
+
+        // The host's own view; clients lose the Seer instead
+        private static bool PurchaseInteraction_ShouldDisplayHologram(On.RoR2.PurchaseInteraction.orig_ShouldDisplayHologram orig, PurchaseInteraction self, GameObject viewer)
+        {
+            if (instances.Count > 0 && viewer && viewer.TryGetComponent(out CharacterBody body) && body.master && body.master.playerCharacterMasterController)
+            {
+                var player = body.master.playerCharacterMasterController;
+                foreach (var priceSigns in instances)
+                {
+                    foreach (var sign in priceSigns.signs)
+                    {
+                        if (sign.seer && sign.seer.gameObject == self.gameObject && sign.hiddenFor.Contains(player))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return orig(self, viewer);
+        }
+
+        private static PlayerCharacterMasterController GetPlayer(NetworkConnection connection)
+        {
+            foreach (var player in PlayerCharacterMasterController.instances)
+            {
+                if (player && player.networkUser && player.networkUser.connectionToClient == connection)
+                {
+                    return player;
+                }
+            }
+            return null;
+        }
+
+        // The vanilla message that removes a spawned object, sent to this client only
+        private static bool TryHideFromClient(Sign sign, NetworkConnection connection)
+        {
+            if (sign.hiddenClients.Contains(connection))
+            {
+                return true;
+            }
+            // the client needs the Seer spawned before it can lose it
+            if (!sign.seer || sign.seer.observers == null || !sign.seer.observers.Contains(connection))
+            {
+                return false;
+            }
+            var writer = new NetworkWriter();
+            writer.StartMessage(MsgType.ObjectDestroy);
+            writer.Write(sign.seer.netId);
+            writer.FinishMessage();
+            if (!connection.SendWriter(writer, QosChannelIndex.defaultReliable.intVal))
+            {
+                return false;
+            }
+            sign.hiddenClients.Add(connection);
+            return true;
         }
 
         // Shows cost in costType this high above each of the terminals, readable from their front, like the Seer's own sign in front of its table
@@ -156,10 +254,20 @@ namespace BazaarIsMyHaven
                     }
 
                     sign.synchronizedClients.RemoveWhere(connection => !connection.isReady || !NetworkServer.connections.Contains(connection));
+                    sign.hiddenClients.RemoveWhere(connection => !connection.isReady || !NetworkServer.connections.Contains(connection));
                     foreach (var connection in NetworkServer.connections)
                     {
                         // the host already shows the sign, and on the server the death state would destroy the Seer
-                        if (connection == null || !connection.isReady || Util.ConnectionIsLocal(connection) || sign.synchronizedClients.Contains(connection))
+                        if (connection == null || !connection.isReady || Util.ConnectionIsLocal(connection))
+                        {
+                            continue;
+                        }
+                        if (sign.hiddenFor.Count > 0 && sign.hiddenFor.Contains(GetPlayer(connection)))
+                        {
+                            TryHideFromClient(sign, connection);
+                            continue;
+                        }
+                        if (sign.synchronizedClients.Contains(connection))
                         {
                             continue;
                         }
