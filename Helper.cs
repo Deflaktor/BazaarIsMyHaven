@@ -17,6 +17,19 @@ namespace BazaarIsMyHaven
     public class Helper
     {
         // Money scales with difficulty like the game's own shops, if ScaleMoneyCosts is on
+        // The host's own player, whose view the host shows; a hologram's viewer is just the nearest player
+        public static PlayerCharacterMasterController GetHostPlayer()
+        {
+            foreach (var player in PlayerCharacterMasterController.instances)
+            {
+                if (player && player.hasAuthority)
+                {
+                    return player;
+                }
+            }
+            return null;
+        }
+
         public static int GetCost(int cost, CostTypeIndex costType)
         {
             if (ModConfig.ScaleMoneyCosts.Value && costType == CostTypeIndex.Money && Run.instance)

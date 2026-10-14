@@ -89,9 +89,9 @@ namespace BazaarIsMyHaven
         // The host's own view; clients lose the Seer instead
         private static bool PurchaseInteraction_ShouldDisplayHologram(On.RoR2.PurchaseInteraction.orig_ShouldDisplayHologram orig, PurchaseInteraction self, GameObject viewer)
         {
-            if (instances.Count > 0 && viewer && viewer.TryGetComponent(out CharacterBody body) && body.master && body.master.playerCharacterMasterController)
+            var player = instances.Count > 0 && NetworkServer.active ? Helper.GetHostPlayer() : null;
+            if (player)
             {
-                var player = body.master.playerCharacterMasterController;
                 foreach (var priceSigns in instances)
                 {
                     foreach (var sign in priceSigns.signs)
