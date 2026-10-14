@@ -44,6 +44,7 @@ namespace BazaarIsMyHaven
             On.RoR2.PickupPickerController.GetInteractability += PickupPickerController_GetInteractability;
             On.RoR2.PurchaseInteraction.GetInteractability += PurchaseInteraction_GetInteractability;
             On.RoR2.DroneVendorMultiShopController.Start += DroneVendorMultiShopController_Start;
+            On.RoR2.DroneVendorMultiShopController.ResetDroneVendor += DroneVendorMultiShopController_ResetDroneVendor;
         }
 
         // clients only have the stations if the run has the Alloyed Collective
@@ -199,6 +200,16 @@ namespace BazaarIsMyHaven
                 var pivot = projector && projector.hologramPivot ? projector.hologramPivot : self.transform;
                 self.Networkavailable = false;
                 PriceSigns.Apply(self.gameObject, pivot.position, self.transform.rotation * Quaternion.Euler(0f, 180f, 0f), cost, costType);
+            }
+        }
+
+        // Reopening after a purchase with an Executive Card brings the shop's own price back, which clients show as money
+        private void DroneVendorMultiShopController_ResetDroneVendor(On.RoR2.DroneVendorMultiShopController.orig_ResetDroneVendor orig, DroneVendorMultiShopController self)
+        {
+            orig(self);
+            if (NetworkServer.active && tripleDroneShop != null && tripleDroneShop.instance && self.gameObject == tripleDroneShop.instance && self.costType != CostTypeIndex.Money)
+            {
+                self.Networkavailable = false;
             }
         }
 
