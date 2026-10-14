@@ -5,13 +5,15 @@ using UnityEngine;
 
 namespace BazaarIsMyHaven
 {
-    // A player whose old equipment went into a Lunar Bud or an Equipment Terminal in exchange owns that slot:
-    // swapping there again is free. The game's purchase still runs, only without its payment.
+    // A purchase that puts the buyer's old equipment into a Lunar Bud or an Equipment Terminal buys that slot:
+    // swapping there again is free, for the buyer at an instanced slot and for everyone otherwise.
+    // The game's purchase still runs, only without its payment.
     public class FreeSwaps : MonoBehaviour
     {
         private static PurchaseInteraction freePurchase;
 
         private readonly HashSet<PlayerCharacterMasterController> owners = new HashSet<PlayerCharacterMasterController>();
+        private bool freeForEveryone;
 
         public static void Hook()
         {
@@ -19,9 +21,9 @@ namespace BazaarIsMyHaven
             On.RoR2.PurchaseInteraction.UpdateHologramContent += PurchaseInteraction_UpdateHologramContent;
         }
 
-        public static void AddOwner(GameObject slot, PlayerCharacterMasterController player)
+        public static void BuySlot(GameObject slot, PlayerCharacterMasterController buyer)
         {
-            if (!slot || !player)
+            if (!slot || !buyer)
             {
                 return;
             }
@@ -29,12 +31,23 @@ namespace BazaarIsMyHaven
             {
                 freeSwaps = slot.AddComponent<FreeSwaps>();
             }
-            freeSwaps.owners.Add(player);
+            // each player has their own instanced slot
+            if (slot.GetComponent<InstancedPurchase>())
+            {
+                freeSwaps.owners.Add(buyer);
+                return;
+            }
+            freeSwaps.freeForEveryone = true;
+            // everyone sees the price drop to nothing; price signs go away at 0
+            if (slot.TryGetComponent(out PurchaseInteraction purchase))
+            {
+                purchase.Networkcost = 0;
+            }
         }
 
-        public static bool IsOwner(Component slot, PlayerCharacterMasterController player)
+        public static bool IsFreeFor(Component slot, PlayerCharacterMasterController player)
         {
-            return slot && player && slot.TryGetComponent(out FreeSwaps freeSwaps) && freeSwaps.owners.Contains(player);
+            return slot && slot.TryGetComponent(out FreeSwaps freeSwaps) && (freeSwaps.freeForEveryone || (player && freeSwaps.owners.Contains(player)));
         }
 
         // Runs the game's purchase without charging anything
@@ -70,7 +83,7 @@ namespace BazaarIsMyHaven
         private static void PurchaseInteraction_UpdateHologramContent(On.RoR2.PurchaseInteraction.orig_UpdateHologramContent orig, PurchaseInteraction self, GameObject hologramContentObject, Transform viewer)
         {
             orig(self, hologramContentObject, viewer);
-            if (viewer && viewer.TryGetComponent(out CharacterBody body) && body.master && IsOwner(self, body.master.playerCharacterMasterController)
+            if (viewer && viewer.TryGetComponent(out CharacterBody body) && body.master && IsFreeFor(self, body.master.playerCharacterMasterController)
                 && hologramContentObject.TryGetComponent(out CostHologramContent content))
             {
                 content.displayValue = 0;
