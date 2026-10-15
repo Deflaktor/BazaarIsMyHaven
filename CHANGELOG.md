@@ -1,3 +1,17 @@
+# 5.1.0
+
+- Triple Drone Shop: new `CostType`, plus a cost and a weight for common and uncommon drones.
+- Drone Combiner Station: moved to make room for the Void Suppressor of the SuppressorInBazaar mod.
+- Command Pedestal: one `DirectorWeight` and a `<Tier>Weight` per tier, like printers, with defaults based on how rare each tier is. The old `<Tier>DirectorWeight` settings are no longer read, so check your config.
+- Cleansing Pool: `DirectorCost` now defaults to 0, so it always spawns. Only the pool this mod spawns gives Lunar Coins, not ones other mods add.
+- Equipment swaps with `BuyToInventory`:
+  - Lunar Buds and Equipment Terminals: swapping back at a slot you bought is free. Fixes swapping at Equipment Terminals.
+  - Command Pedestal: no longer needs a free equipment slot. Your old equipment goes into the vault; use the vault again to swap back.
+  - Wandering CHEF: no longer needs a free equipment slot. Your old equipment is discarded.
+- Donation Altar: reward equipment replaces yours, and the old one is discarded. The altar shows as used once you reach your donation limit.
+- Price signs disappear for players who bought from the Command Pedestal or can't donate anymore.
+- Newt no longer comments on equipment swaps.
+
 # 5.0.0
 
 Updated for the latest Risk of Rain 2 patch. Requires ItemStringParser 2.1.0. Many settings were renamed or removed, so check your config after updating.
