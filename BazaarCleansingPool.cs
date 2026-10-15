@@ -19,6 +19,9 @@ namespace BazaarIsMyHaven
         Dictionary<int, SpawnCardStruct> DicLunarPools = new Dictionary<int, SpawnCardStruct>();
         DirectorCard card;
         bool spawned;
+        // only this mod's pool and its coin give Lunar Coins, not pools other mods spawn
+        GameObject pool;
+        GameObject hoveringCoin;
 
         public override void Preload()
         {
@@ -48,6 +51,8 @@ namespace BazaarIsMyHaven
         public override void SetupBazaar()
         {
             spawned = false;
+            pool = null;
+            hoveringCoin = null;
             SpawnLatePicks();
         }
 
@@ -61,13 +66,13 @@ namespace BazaarIsMyHaven
 
         private void ShopTerminalBehavior_SetPickup(On.RoR2.ShopTerminalBehavior.orig_SetPickup orig, ShopTerminalBehavior self, UniquePickup newPickup, bool newHidden)
         {
-            if (ModConfig.EnableMod.Value && ModConfig.CleansingPoolSectionEnabled.Value && ModConfig.CleansingPoolRewardsLunarCoins.Value && IsCurrentMapInBazaar() && NetworkServer.active)
+            if (ModConfig.CleansingPoolRewardsLunarCoins.Value && NetworkServer.active && self)
             {
-                if (self.name.StartsWith("ShrineCleanse"))
+                if (pool && self.gameObject == pool)
                 {
                     newPickup.pickupIndex = PickupCatalog.FindPickupIndex(RoR2Content.MiscPickups.LunarCoin.miscPickupIndex);
                 }
-                if (self.name.StartsWith("HoveringLunarCoin"))
+                if (hoveringCoin && self.gameObject == hoveringCoin)
                 {
                     newPickup.pickupIndex = PickupCatalog.FindPickupIndex(RoR2Content.MiscPickups.LunarCoin.miscPickupIndex);
                     self.gameObject.GetComponent<PurchaseInteraction>().SetAvailable(false);
@@ -80,7 +85,8 @@ namespace BazaarIsMyHaven
         {
             DicLunarPools.Clear();
             SetLunarPool();
-            SpawnAt(iscShrineCleanse.WaitForCompletion().prefab, DicLunarPools[0]);
+            // both pick their pickup in Start, after these references are set
+            pool = SpawnAt(iscShrineCleanse.WaitForCompletion().prefab, DicLunarPools[0]);
 
             if (ModConfig.CleansingPoolRewardsLunarCoins.Value)
             {
@@ -88,6 +94,7 @@ namespace BazaarIsMyHaven
                 gameObject.transform.localPosition = new Vector3(DicLunarPools[0].Position.x, DicLunarPools[0].Position.y + 0.5f, DicLunarPools[0].Position.z);
                 gameObject.transform.eulerAngles = DicLunarPools[0].Rotation;
                 gameObject.name = "HoveringLunarCoin";
+                hoveringCoin = gameObject;
                 NetworkServer.Spawn(gameObject);
             }
         }
