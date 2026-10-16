@@ -70,5 +70,50 @@ namespace BazaarIsMyHaven
             return printerCauldronFix != null && printerCauldronFix.Value;
         }
 
+        // In multiplayer, ShareSuite can keep all players' gold at one shared value.
+        // sharedGold is null if it doesn't; false if ShareSuite's state can't be read.
+        public static bool TryGetSharedGold(out int? sharedGold)
+        {
+            try
+            {
+                sharedGold = ReadSharedGold();
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Log.LogWarning($"Could not read ShareSuite's shared gold - {exception.Message}");
+                sharedGold = null;
+                return false;
+            }
+        }
+
+        public static void SetSharedGold(int sharedGold)
+        {
+            try
+            {
+                WriteSharedGold(sharedGold);
+            }
+            catch (Exception exception)
+            {
+                Log.LogWarning($"Could not set ShareSuite's shared gold - {exception.Message}");
+            }
+        }
+
+        // Kept apart, so a changed ShareSuite fails inside the try blocks above
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        private static int? ReadSharedGold()
+        {
+            if (!ShareSuite.ShareSuite.ModIsEnabled.Value || !ShareSuite.ShareSuite.MoneyIsShared.Value || !GeneralHooks.IsMultiplayer())
+            {
+                return null;
+            }
+            return MoneySharingHooks.SharedMoneyValue;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        private static void WriteSharedGold(int sharedGold)
+        {
+            MoneySharingHooks.SharedMoneyValue = sharedGold;
+        }
     }
 }
