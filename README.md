@@ -20,17 +20,26 @@ Adds printers, cauldrons, shops and more to the Bazaar Between Time, all configu
   - Command Pedestal: pick any item of its tier
   - Wandering CHEF, drone stations and a Triple Drone Shop (with the Alloyed Collective). Your drones come along into the Bazaar.
 - **The further into the run, the more the Bazaar offers.**
-- **Shopping in multiplayer**: every player can buy from each Equipment Terminal, Lunar Bud and Command Pedestal, and purchases go straight into the buyer's inventory.
+- **Instanced Purchases**: every player can buy from each Equipment Terminal, Lunar Bud and Command Pedestal.
+- **Buy to Inventory**: purchases go straight into the buyer's inventory.
 - **Newt**: stop him from kicking you out, change what happens after you kill him, and let him greet you and comment on your purchases.
 - **Portals**: spawn a Bazaar portal after every teleporter event, and keep your gold when you enter the Bazaar to spend it there.
 - **Other tweaks**:
   - Drifter can't bag things, farm Junk or use Tinker in the Bazaar.
-  - Captain's hacking beacon makes only one purchase free.
+  - Captain's hacking beacon makes only one purchase free (requires a mod which allows him to use hacking in the bazaar).
   - Config changes apply from the next run, without restarting the game.
 
 ## Compatibility
 
-Works with [BiggerBazaar](https://thunderstore.io/package/MagnusMagnuson/BiggerBazaar/), [ShareSuite](https://thunderstore.io/package/FunkFrog-and-Sipondo/ShareSuite/), QoLChests and [InLobbyConfig](https://thunderstore.io/package/KingEnderBrine/InLobbyConfig/). Not compatible with BazaarLunarForEveryone.
+Works with
+- [BiggerBazaar](https://thunderstore.io/package/MagnusMagnuson/BiggerBazaar/)
+- [ShareSuite](https://thunderstore.io/package/FunkFrog-and-Sipondo/ShareSuite/)
+- [QoLChests](https://thunderstore.io/c/riskofrain2/p/Faustvii/QoLChests/)
+- [InLobbyConfig](https://thunderstore.io/package/KingEnderBrine/InLobbyConfig/)
+- [SuppressorInBazaar](https://thunderstore.io/c/riskofrain2/p/TheBugReport/SuppressorInBazaar/)
+
+Not compatible with
+- BazaarLunarForEveryone
 
 ## Settings
 
@@ -40,7 +49,7 @@ The config file explains every setting. A few need more:
 
 On every visit, a director spends credits on interactables, like the game's own scene director:
 
-`Credits = DirectorExtraCredits + DirectorCreditsPerStage × stages cleared`, at most `DirectorCreditsCap` (-1 for no cap)
+`Credits = DirectorExtraCredits + DirectorCreditsPerStage x stages cleared`, at most `DirectorCreditsCap` (-1 for no cap)
 
 Each interactable has a `DirectorCost` and a `DirectorWeight`, which sets how often it gets picked. `MaxAmount` limits how many of a kind appear. Lunar Buds and the Cleansing Pool cost nothing, so they always appear.
 
