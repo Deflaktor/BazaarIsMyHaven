@@ -93,6 +93,7 @@ namespace BazaarIsMyHaven
             InstancedPurchases.Hook();
             PriceSigns.Hook();
             FreeSwaps.Hook();
+            RetainGold.Hook();
 
             On.RoR2.Run.Start += Run_Start;
             Run.onRunDestroyGlobal += Run_Destroy;

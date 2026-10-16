@@ -28,6 +28,7 @@ This is a fork of Lunzir's excellent [BazaarIsMyHome](https://thunderstore.io/pa
 
 - **Portal Options**:
   - Spawn a Bazaar portal after *every* teleporter event.
+  - Keep your gold when you take the portal to the Bazaar, so you can spend it there.
 
 - **Other Tweaks**:
   - A director that decides which interactables appear, with more credits the further you are into the run.

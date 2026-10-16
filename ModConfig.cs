@@ -12,6 +12,7 @@ namespace BazaarIsMyHaven
         // general
         public static ConfigEntry<bool> EnableMod;
         public static ConfigEntry<bool> AlwaysSpawnShopPortal;
+        public static ConfigEntry<bool> RetainGold;
         public static ConfigEntry<bool> ScaleMoneyCosts;
         public static ConfigEntry<bool> PreventDrifterBagging;
         public static ConfigEntry<bool> PreventDrifterJunk;
@@ -180,6 +181,7 @@ namespace BazaarIsMyHaven
             // 00 General
             EnableMod = config.Bind("00 General", "Enabled", true, "Enable Mod");
             AlwaysSpawnShopPortal = config.Bind("00 General", "AlwaysSpawnShopPortal", false, "Spawn a portal to the Bazaar after each teleporter event.");
+            RetainGold = config.Bind("00 General", "RetainGold", true, "Players keep their gold when they take the portal to the Bazaar, instead of it turning into experience, so they can spend it there. Gold left when they leave the Bazaar turns into experience as usual. With BiggerBazaar, its own gold transfer is used instead, unless its disableTransferMoney is on.");
             DirectorExtraCredits = config.Bind("00 General", "DirectorExtraCredits", 15, "Credits the director gets on every visit to the Bazaar, on top of DirectorCreditsPerStage. Like the game's scene director, it spends them at random on the sections' interactables, by their DirectorCost and DirectorWeight.");
             DirectorCreditsPerStage = config.Bind("00 General", "DirectorCreditsPerStage", 25, "Credits the director gets for every stage cleared in the run.");
             DirectorCreditsCap = config.Bind("00 General", "DirectorCreditsCap", 200, "The most credits the director gets on a visit, DirectorExtraCredits included. -1 = No cap.");
