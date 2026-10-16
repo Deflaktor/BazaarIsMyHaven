@@ -37,6 +37,7 @@ Works with
 - [QoLChests](https://thunderstore.io/c/riskofrain2/p/Faustvii/QoLChests/)
 - [InLobbyConfig](https://thunderstore.io/package/KingEnderBrine/InLobbyConfig/)
 - [SuppressorInBazaar](https://thunderstore.io/c/riskofrain2/p/TheBugReport/SuppressorInBazaar/)
+- [ProperSave](https://thunderstore.io/c/riskofrain2/p/KingEnderBrine/ProperSave/)
 
 Not compatible with
 - BazaarLunarForEveryone

@@ -56,11 +56,47 @@ namespace BazaarIsMyHaven
         public override void Hook()
         {
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
+            ModCompatibilityProperSave.Register("BazaarIsMyHaven.DonationsDuringRun", SaveDonations, LoadDonations);
         }
         public override void RunStart()
         {
             donationsDuringRun.Clear();
             loggedRewardWarnings.Clear();
+        }
+
+        // A loaded run has new player masters, so the donations are saved by user
+        private object SaveDonations()
+        {
+            var donations = new Dictionary<string, int>();
+            foreach (var donation in donationsDuringRun)
+            {
+                if (donation.Key && donation.Key.networkUser)
+                {
+                    donations[GetUserKey(donation.Key.networkUser.id)] = donation.Value;
+                }
+            }
+            return donations;
+        }
+
+        private void LoadDonations(object saved)
+        {
+            if (saved is not Dictionary<string, int> donations)
+            {
+                return;
+            }
+            donationsDuringRun.Clear();
+            foreach (var pc in PlayerCharacterMasterController.instances)
+            {
+                if (pc.networkUser && donations.TryGetValue(GetUserKey(pc.networkUser.id), out int count))
+                {
+                    donationsDuringRun[pc] = count;
+                }
+            }
+        }
+
+        private static string GetUserKey(NetworkUserId id)
+        {
+            return $"{id.value}/{id.strValue}/{id.subId}";
         }
 
         public override void RunEnd()

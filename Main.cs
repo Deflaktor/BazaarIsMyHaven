@@ -24,6 +24,7 @@ namespace BazaarIsMyHaven
     [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.funkfrog_sipondo.sharesuite", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("Faust.QoLChests", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.KingEnderBrine.ProperSave", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(ItemStringParser.ItemStringParser.PluginGUID)]
     [BepInIncompatibility("com.Lunzir.BazaarLunarForEveryone")]
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
