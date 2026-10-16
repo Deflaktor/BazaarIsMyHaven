@@ -1,6 +1,8 @@
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using R2API.Utils;
 using RoR2;
 using System;
@@ -100,6 +102,7 @@ namespace BazaarIsMyHaven
             On.RoR2.BazaarController.SetUpSeerStations += BazaarController_SetUpSeerStations;
             RoR2.SceneDirector.onPrePopulateSceneServer += SceneDirector_onPrePopulateSceneServer;
             On.RoR2.TeleporterInteraction.Start += TeleporterInteraction_Start;
+            IL.RoR2.InfiniteTowerRun.OnPrePopulateSceneServer += InfiniteTowerRun_OnPrePopulateSceneServer;
             On.RoR2.DrifterBagController.AssignPassenger += DrifterBagController_AssignPassenger;
             On.RoR2.JunkController.GenerateJunk += JunkController_GenerateJunk;
             Inventory.onServerItemGiven += Inventory_onServerItemGiven;
@@ -231,6 +234,28 @@ namespace BazaarIsMyHaven
             {
                 self.shouldAttemptToSpawnShopPortal = true;
             }
+        }
+
+        // Simulacrum sets up its void fog, safe ward and waves on every stage, the Bazaar included.
+        // Returning inside the method keeps other mods' hooks on it working, e.g. SimulacrumNormalStages, which does the same.
+        private void InfiniteTowerRun_OnPrePopulateSceneServer(ILContext il)
+        {
+            ILCursor c = new ILCursor(il);
+            ILLabel setUpStage = c.DefineLabel();
+            c.Emit(OpCodes.Ldarg_0);
+            c.EmitDelegate<Func<InfiniteTowerRun, bool>>(run =>
+            {
+                if (!ModConfig.EnableMod.Value || !IsCurrentMapInBazaar())
+                {
+                    return false;
+                }
+                // still clean up the previous stage's wave
+                run.PerformStageCleanUp();
+                return true;
+            });
+            c.Emit(OpCodes.Brfalse, setUpStage);
+            c.Emit(OpCodes.Ret);
+            c.MarkLabel(setUpStage);
         }
         // The host decides what goes into the bag, so refusing here empties it on every client
         private bool IsDrifterJunkPrevented()
