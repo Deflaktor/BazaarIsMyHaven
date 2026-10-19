@@ -276,8 +276,9 @@ namespace BazaarIsMyHaven
                     // give items
                     Dictionary<PickupIndex, int> itemsToGive = new Dictionary<PickupIndex, int>();
                     itemsToGive[reward] = count;
-                    // cooked equipment replaces the player's; the old one is discarded, so it can't go to another player
-                    Helper.GivePickups(characterBody, itemsToGive, null, false);
+                    // cooked equipment replaces the player's; the old one is discarded, so it can't go to another player.
+                    // The meal flies from the chef to the player, like the items they paid with fly to the chef
+                    Helper.GivePickups(characterBody, itemsToGive, self.transform.position, false);
                     // skip original method
                     return;
                 }
