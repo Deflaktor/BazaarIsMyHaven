@@ -2,6 +2,7 @@
 using HG;
 using RoR2;
 using RoR2.Navigation;
+using RoR2.Orbs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -76,6 +77,18 @@ namespace BazaarIsMyHaven
             EffectManager.SpawnEffect(Main.instance.pickupTakenOrbPrefab.WaitForCompletion(), effectData, transmit: true);
         }
 
+        // Only for show, the pickup is given separately
+        public static void CreateItemHandedOverOrb(Vector3 effectOrigin, HurtBox target, PickupIndex pickupIndex)
+        {
+            OrbManager.instance.AddOrb(new PickupTransferOrb
+            {
+                origin = effectOrigin,
+                target = target,
+                uniquePickup = new UniquePickup(pickupIndex),
+                onArrival = orb => { }
+            });
+        }
+
         public static EquipmentIndex GivePickup(CharacterBody characterBody, PickupIndex pickupToGive, Vector3 itemOrbSource, bool dropReplacedEquipmentAsPickupDroplet)
         {
             Dictionary<PickupIndex, int> itemsToGive = new Dictionary<PickupIndex, int>();
@@ -103,7 +116,11 @@ namespace BazaarIsMyHaven
                 {
                     if (itemAmount <= 0 || itemTakenOrbs >= 20)
                         continue;
-                    CreateItemTakenOrb(itemOrbSource.Value, characterBody.gameObject, pickupIndex);
+                    // the first one with the whoosh of an item being handed over, the rest silently
+                    if (itemTakenOrbs == 0 && characterBody.mainHurtBox)
+                        CreateItemHandedOverOrb(itemOrbSource.Value, characterBody.mainHurtBox, pickupIndex);
+                    else
+                        CreateItemTakenOrb(itemOrbSource.Value, characterBody.gameObject, pickupIndex);
                     itemTakenOrbs++;
                 }
             }
