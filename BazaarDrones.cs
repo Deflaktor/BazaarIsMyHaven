@@ -201,6 +201,16 @@ namespace BazaarIsMyHaven
                 self.Networkavailable = false;
                 PriceSigns.Apply(self.gameObject, pivot.position, self.transform.rotation * Quaternion.Euler(0f, 180f, 0f), cost, costType);
             }
+
+            // every terminal keeps the shop open when bought, as an Executive Card does for its purchase, so the shop
+            // reopens the others after each drone
+            if (ModConfig.DronesTripleDroneShopBuyAll.Value && self.doCloseOnTerminalPurchase != null)
+            {
+                for (int i = 0; i < self.doCloseOnTerminalPurchase.Length; i++)
+                {
+                    self.doCloseOnTerminalPurchase[i] = false;
+                }
+            }
         }
 
         // Reopening after a purchase with an Executive Card brings the shop's own price back, which clients show as money
