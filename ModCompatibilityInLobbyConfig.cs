@@ -26,6 +26,7 @@ namespace BazaarIsMyHaven
         public static void CreateFromBepInExConfigFile(ConfigFile config, string displayName)
         {
             var configuration = InLobbyConfig.Fields.ConfigFieldUtilities.CreateFromBepInExConfigFile(config, displayName);
+            configuration.SectionFields.Remove(ConfigMigration.MetaSection);
            
             foreach (var section in configuration.SectionFields)
             {

@@ -179,6 +179,8 @@ namespace BazaarIsMyHaven
 
         public static void InitConfig(ConfigFile config)
         {
+            ConfigMigration.BindVersion(config);
+
             // 00 General
             EnableMod = config.Bind("00 General", "Enabled", true, "Enable Mod");
             AlwaysSpawnShopPortal = config.Bind("00 General", "AlwaysSpawnShopPortal", false, "Spawn a portal to the Bazaar after each teleporter event.");
@@ -355,6 +357,7 @@ namespace BazaarIsMyHaven
             CommandPedestalBuyToInventory = config.Bind("14 CommandPedestal", "BuyToInventory", true, "Using the Command Pedestal shows its item picker right away, and the price is only charged once you pick an item, which goes directly into your inventory. Equipment it replaces goes into the vault, where only you can swap it back, for free. No essence appears; closing the picker costs nothing, and using the Command Pedestal again reopens it. Otherwise buying drops a Command Essence that anyone can use.");
 
             RefreshDerivedData(config);
+            ConfigMigration.Migrate();
             LunarShopAmountDependingOnCharacter.SettingChanged += LunarShopCharacterAmountsChanged;
             DonateRewardListAvailableCharacters.SettingChanged += DonationCharactersChanged;
 
@@ -373,6 +376,7 @@ namespace BazaarIsMyHaven
             {
                 // Reload sets the entries one at a time; saving after each would rewrite the file mid-reload
                 config.SaveOnConfigSet = false;
+                ConfigMigration.ReadOldValues(config);
                 config.Reload();
             }
             catch (Exception exception)
@@ -385,6 +389,8 @@ namespace BazaarIsMyHaven
                 reloading = false;
             }
             RefreshDerivedData(config);
+            // e.g. an older config file put in place of the current one
+            ConfigMigration.Migrate();
         }
 
         // One tier of Command Pedestal: once the director picks the pedestal, it rolls a tier it can afford by the tier weights
