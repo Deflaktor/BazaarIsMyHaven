@@ -1,4 +1,5 @@
 using EntityStates.Missions.RepurposedCrater;
+using PerClientSync;
 using RoR2;
 using RoR2.Artifacts;
 using RoR2.Networking;
@@ -24,6 +25,8 @@ namespace BazaarIsMyHaven
         private const float HiddenEssenceDepth = 5f;
         // the essence shown above the vault rests on whatever is below this point
         private const float DisplayDropHeight = 5f;
+        // GenericInteraction's dirty bit for interactability
+        private const uint InteractabilityBit = 1u;
 
         private class Essence
         {
@@ -248,11 +251,9 @@ namespace BazaarIsMyHaven
             }
             vault.DoInteractResult(true);
             vault.CallRpcInteractResult(true);
-            // the opening disables the vault for everyone, the buyer's client included; a buyer with stored equipment gets it back afterwards
-            if (storedEquipment.ContainsKey(player))
-            {
-                Main.instance.StartCoroutine(UpdateSwapAvailabilityLater(player));
-            }
+            // the opening disables the vault for everyone, the buyer's client included; the vault's update after it gives a
+            // buyer with stored equipment the swap back
+            UpdateSwapAvailability(player);
             // nobody else can buy it now, so their open pickers close
             foreach (var picker in essences.Keys)
             {
@@ -314,49 +315,31 @@ namespace BazaarIsMyHaven
             return orig(self, activator);
         }
 
-        // Shows the vault as usable or used to this player's client only, with the vault's own interactability field
-        private void SetInteractabilityForClient(PlayerCharacterMasterController player, Interactability interactability)
+        // The vault as each player's client shows it: usable while it holds their equipment, used once they bought from an
+        // instanced pedestal. The host's own player and the server's checks go through GetInteractability.
+        private class VaultView : ClientView<GenericInteraction>
         {
-            var connection = player.networkUser ? player.networkUser.connectionToClient : null;
-            var identity = pedestal.GetComponent<NetworkIdentity>();
-            var interaction = pedestal.GetComponent<GenericInteraction>();
-            if (connection == null || !connection.isReady || Util.ConnectionIsLocal(connection) || !identity || !interaction)
-            {
-                return;
-            }
+            public BazaarCommandPedestal owner;
+            private Interactability realInteractability;
 
-            int channel = interaction.GetNetworkChannel();
-            var writer = new NetworkWriter();
-            writer.StartMessage(MsgType.UpdateVars);
-            writer.Write(identity.netId);
-            var previousInteractability = interaction.interactability;
-            try
+            protected override void Apply(NetworkConnection client)
             {
-                interaction.interactability = interactability;
-                // every component must be serialized in the order the client reads them
-                foreach (var behaviour in identity.GetBehavioursOfSameChannel(channel, false))
+                var interaction = Component;
+                realInteractability = interaction.interactability;
+                var player = PerClient.GetPlayer(client);
+                if (player && owner.storedEquipment.ContainsKey(player))
                 {
-                    uint dirtyBits = behaviour.m_SyncVarDirtyBits;
-                    try
-                    {
-                        // dirty bit 1 is GenericInteraction.interactability
-                        behaviour.m_SyncVarDirtyBits = behaviour == interaction ? 1u : 0u;
-                        behaviour.OnSerialize(writer, false);
-                    }
-                    finally
-                    {
-                        behaviour.m_SyncVarDirtyBits = dirtyBits;
-                    }
+                    interaction.interactability = Interactability.Available;
+                }
+                else if (player && owner.buyers.Contains(player))
+                {
+                    interaction.interactability = Interactability.Disabled;
                 }
             }
-            finally
+
+            protected override void Restore()
             {
-                interaction.interactability = previousInteractability;
-            }
-            writer.FinishMessage();
-            if (!connection.SendWriter(writer, channel))
-            {
-                Log.LogWarning("Could not update the Command Pedestal for a client.");
+                Component.interactability = realInteractability;
             }
         }
 
@@ -489,19 +472,12 @@ namespace BazaarIsMyHaven
             UpdateSwapAvailability(player);
         }
 
-        // A buyer can use the vault while it holds their equipment
+        // A buyer can use the vault while it holds their equipment; their client gets it with the vault's next update
         private void UpdateSwapAvailability(PlayerCharacterMasterController player)
         {
-            SetInteractabilityForClient(player, storedEquipment.ContainsKey(player) ? Interactability.Available : Interactability.Disabled);
-        }
-
-        private System.Collections.IEnumerator UpdateSwapAvailabilityLater(PlayerCharacterMasterController player)
-        {
-            // after the opening's own messages, which disable the vault on the client
-            yield return new WaitForSecondsRealtime(0.5f);
-            if (pedestal && player)
+            if (pedestal && pedestal.TryGetComponent(out VaultView view))
             {
-                UpdateSwapAvailability(player);
+                view.SetDirty(PerClient.GetConnection(player), InteractabilityBit);
             }
         }
 
@@ -575,6 +551,7 @@ namespace BazaarIsMyHaven
         {
             rng = new Xoroshiro128Plus(Run.instance.treasureRng.nextUlong);
             pedestal = Object.Instantiate(vaultPrefab.WaitForCompletion(), new Vector3(-63.9613f, -26.3518f, -73.8056f), Quaternion.Euler(0f, 300f, 0f));
+            pedestal.AddComponent<VaultView>().owner = this;
             NetworkServer.Spawn(pedestal);
 
             hasOffer = TryRollPickup(out offer);
