@@ -1,4 +1,5 @@
-﻿using RoR2;
+﻿using PerClientSync;
+using RoR2;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -9,12 +10,37 @@ namespace BazaarIsMyHaven
     {
         public readonly InstancedPurchaseStruct original = new InstancedPurchaseStruct();
         public Dictionary<PlayerCharacterMasterController, InstancedPurchaseStruct> purchases = new Dictionary<PlayerCharacterMasterController, InstancedPurchaseStruct>();
-        public PlayerCharacterMasterController pcClient;
         public int lunarShopIndex = -1;
 
-        private readonly HashSet<PlayerCharacterMasterController> pendingUpdates = new HashSet<PlayerCharacterMasterController>();
-        private readonly Dictionary<PlayerCharacterMasterController, NetworkConnection> initializedClients = new Dictionary<PlayerCharacterMasterController, NetworkConnection>();
-        private float nextRetryTime;
+        // each client sees its player's state in the shop's own fields
+        private InstancedTerminalView terminalView;
+        private InstancedPurchaseView purchaseView;
+
+        private void Awake()
+        {
+            // chests have no terminal; only their availability is per player
+            if (GetComponent<ShopTerminalBehavior>())
+            {
+                terminalView = gameObject.AddComponent<InstancedTerminalView>();
+            }
+            if (GetComponent<PurchaseInteraction>())
+            {
+                purchaseView = gameObject.AddComponent<InstancedPurchaseView>();
+            }
+        }
+
+        // A shop that spawned for clients before it got its per-player states, e.g. one the director picked late, showed them
+        // the original state; players with their own from the start, like a character limit, get theirs
+        private void Start()
+        {
+            foreach (var pc in PlayerCharacterMasterController.instances)
+            {
+                if (pc && GetOrOriginal(pc) != original)
+                {
+                    QueueUpdate(pc);
+                }
+            }
+        }
 
         public InstancedPurchaseStruct GetOrCreate(PlayerCharacterMasterController pc)
         {
@@ -67,54 +93,98 @@ namespace BazaarIsMyHaven
             return pc && purchases.TryGetValue(pc, out var state) ? state : original;
         }
 
+        // Sends this player's state to their client with the shop's next update
         public void QueueUpdate(PlayerCharacterMasterController pc)
         {
-            if (pc)
+            var client = PerClient.GetConnection(pc);
+            if (terminalView)
             {
-                pendingUpdates.Add(pc);
+                terminalView.SetDirty(client, InstancedPurchases.TerminalMask);
+            }
+            if (purchaseView)
+            {
+                purchaseView.SetDirty(client, InstancedPurchases.PurchaseMask);
             }
         }
 
-        private void LateUpdate()
+        // Sends every client its player's state with the shop's next update
+        public void QueueUpdateForAll()
         {
-            if (!NetworkServer.active || Time.unscaledTime < nextRetryTime)
+            if (terminalView)
             {
-                return;
+                terminalView.SetDirtyForAll(InstancedPurchases.TerminalMask);
             }
-
-            var identity = GetComponent<NetworkIdentity>();
-            foreach (var pc in PlayerCharacterMasterController.instances)
+            if (purchaseView)
             {
-                if (!pc || pc.hasAuthority)
-                {
-                    continue;
-                }
-
-                var connection = pc.networkUser ? pc.networkUser.connectionToClient : null;
-                if (connection == null || !connection.isReady || !identity || identity.observers == null || !identity.observers.Contains(connection))
-                {
-                    initializedClients.Remove(pc);
-                    continue;
-                }
-
-                //Initial updates must follow spawning; also covers slow clients.
-                bool initialized = initializedClients.TryGetValue(pc, out var previousConnection) && previousConnection == connection;
-                if (initialized && !pendingUpdates.Contains(pc))
-                {
-                    continue;
-                }
-
-                if (InstancedPurchases.SendUpdateToClient(this, pc))
-                {
-                    initializedClients[pc] = connection;
-                    pendingUpdates.Remove(pc);
-                }
-                else
-                {
-                    nextRetryTime = Time.unscaledTime + 1f;
-                    break;
-                }
+                purchaseView.SetDirtyForAll(InstancedPurchases.PurchaseMask);
             }
+        }
+    }
+
+    // The shop terminal as a client's player sees it: their item, whether it is hidden and whether they bought it
+    public class InstancedTerminalView : ClientView<ShopTerminalBehavior>
+    {
+        private InstancedPurchase instance;
+        private UniquePickup realPickup;
+        private bool realHidden;
+        private bool realPurchased;
+
+        // the real fields hold the host's player's state, so only a player's own updates carry theirs
+        public override uint PrivateBits => InstancedPurchases.TerminalMask;
+        // clients would clear a bought bud's item before its purchased flag, and close the bud instead of opening it
+        public override uint LeadingBits => InstancedPurchases.PurchasedMask;
+
+        protected override void Apply(NetworkConnection client)
+        {
+            var terminal = Component;
+            realPickup = terminal.pickup;
+            realHidden = terminal.hidden;
+            realPurchased = terminal.hasBeenPurchased;
+            instance = instance ? instance : GetComponent<InstancedPurchase>();
+            var state = instance.GetOrOriginal(PerClient.GetPlayer(client));
+            terminal.pickup = state.pickup;
+            terminal.hidden = state.hidden;
+            terminal.hasBeenPurchased = state.hasBeenPurchased;
+        }
+
+        protected override void Restore()
+        {
+            var terminal = Component;
+            terminal.pickup = realPickup;
+            terminal.hidden = realHidden;
+            terminal.hasBeenPurchased = realPurchased;
+        }
+    }
+
+    // The purchase as a client's player sees it: whether they can buy, and its price, which is free for swaps at a slot they bought
+    public class InstancedPurchaseView : ClientView<PurchaseInteraction>
+    {
+        private InstancedPurchase instance;
+        private bool realAvailable;
+        private int realCost;
+
+        // the real field holds the host's player's state, so only a player's own updates carry theirs
+        public override uint PrivateBits => InstancedPurchases.AvailableMask;
+
+        protected override void Apply(NetworkConnection client)
+        {
+            var purchase = Component;
+            realAvailable = purchase.available;
+            realCost = purchase.cost;
+            instance = instance ? instance : GetComponent<InstancedPurchase>();
+            var player = PerClient.GetPlayer(client);
+            purchase.available = instance.GetOrOriginal(player).available;
+            if (FreeSwaps.IsFreeFor(purchase, player))
+            {
+                purchase.cost = 0;
+            }
+        }
+
+        protected override void Restore()
+        {
+            var purchase = Component;
+            purchase.available = realAvailable;
+            purchase.cost = realCost;
         }
     }
 

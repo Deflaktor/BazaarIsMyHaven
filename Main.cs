@@ -27,6 +27,7 @@ namespace BazaarIsMyHaven
     [BepInDependency("com.KingEnderBrine.ProperSave", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.MagnusMagnuson.BiggerBazaar", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(ItemStringParser.ItemStringParser.PluginGUID)]
+    [BepInDependency(PerClientSync.PerClientSyncPlugin.PluginGUID)]
     [BepInIncompatibility("com.Lunzir.BazaarLunarForEveryone")]
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync, VersionStrictness.DifferentModVersionsAreOk)]

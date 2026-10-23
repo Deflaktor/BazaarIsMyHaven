@@ -1,4 +1,5 @@
-﻿using RoR2;
+﻿using PerClientSync;
+using RoR2;
 using System;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -10,16 +11,17 @@ namespace BazaarIsMyHaven
         public static PlayerCharacterMasterController currentInteractor;
 
         // SyncVar masks used by the game's serializers.
-        private const uint PickupMask = 1u;
-        private const uint HiddenMask = 2u;
-        private const uint PurchasedMask = 4u;
-        private const uint AvailableMask = 8u;
-        private const uint CostMask = 16u;
+        internal const uint PickupMask = 1u;
+        internal const uint HiddenMask = 2u;
+        internal const uint PurchasedMask = 4u;
+        internal const uint AvailableMask = 8u;
+        internal const uint CostMask = 16u;
+        // what a player's state changes in the terminal and in the purchase
+        internal const uint TerminalMask = PickupMask | HiddenMask | PurchasedMask;
+        internal const uint PurchaseMask = AvailableMask | CostMask;
 
         public static void Hook()
         {
-            On.RoR2.PurchaseInteraction.OnSerialize += PurchaseInteraction_OnSerialize;
-            On.RoR2.ShopTerminalBehavior.OnSerialize += ShopTerminalBehavior_OnSerialize;
             On.RoR2.ShopTerminalBehavior.SetPickup += ShopTerminalBehavior_SetPickup;
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
             On.RoR2.ShopTerminalBehavior.SetHasBeenPurchased += ShopTerminalBehavior_SetHasBeenPurchased;
@@ -165,72 +167,6 @@ namespace BazaarIsMyHaven
             return NetworkServer.active && self.TryGetComponent(out InstancedPurchase instance) ? instance.GetOrOriginal(currentInteractor).pickup : orig(self);
         }
 
-        private static bool ShopTerminalBehavior_OnSerialize(On.RoR2.ShopTerminalBehavior.orig_OnSerialize orig, ShopTerminalBehavior self, NetworkWriter writer, bool initialState)
-        {
-
-            if (!self.TryGetComponent(out InstancedPurchase instance))
-            {
-                return orig(self, writer, initialState);
-            }
-
-            var previousPickup = self.pickup;
-            bool previousHidden = self.hidden;
-            bool previousPurchased = self.hasBeenPurchased;
-            var state = instance.GetOrOriginal(instance.pcClient);
-            
-            // Personalized fields use targeted messages, not the broadcast; other fields like prices sync normally
-            if (!initialState && !instance.pcClient)
-            {
-                self.m_SyncVarDirtyBits &= ~(PickupMask | HiddenMask | PurchasedMask);
-            }
-
-            try
-            {
-                self.pickup = state.pickup;
-                self.hidden = state.hidden;
-                self.hasBeenPurchased = state.hasBeenPurchased;
-                return orig(self, writer, initialState);
-            }
-            finally
-            {
-                self.pickup = previousPickup;
-                self.hidden = previousHidden;
-                self.hasBeenPurchased = previousPurchased;
-            }
-        }
-
-        private static bool PurchaseInteraction_OnSerialize(On.RoR2.PurchaseInteraction.orig_OnSerialize orig, PurchaseInteraction self, NetworkWriter writer, bool initialState)
-        {
-            if (!self.TryGetComponent(out InstancedPurchase instance))
-            {
-                return orig(self, writer, initialState);
-            }
-
-            bool previousAvailable = self.available;
-            int previousCost = self.cost;
-            if (!initialState && !instance.pcClient)
-            {
-                self.m_SyncVarDirtyBits &= ~AvailableMask;
-            }
-
-            try
-            {
-                self.available = instance.GetOrOriginal(instance.pcClient).available;
-                // swaps are free for the slot's owner
-                if (instance.pcClient && FreeSwaps.IsFreeFor(self, instance.pcClient))
-                {
-                    self.cost = 0;
-                }
-                return orig(self, writer, initialState);
-
-            }
-            finally
-            {
-                self.available = previousAvailable;
-                self.cost = previousCost;
-            }
-        }
-
         private static void ApplyState(GameObject shop, InstancedPurchaseStruct state, bool refreshAnimation)
         {
             var purchase = shop.GetComponent<PurchaseInteraction>();
@@ -278,13 +214,7 @@ namespace BazaarIsMyHaven
             }
 
             RestoreHostView(shop);
-            foreach (var pc in PlayerCharacterMasterController.instances)
-            {
-                if(pc && !pc.hasAuthority)
-                {
-                    instance.QueueUpdate(pc);
-                }
-            }
+            instance.QueueUpdateForAll();
         }
 
         // Shows a changed state to its player only; resending an empty bud would replay its closing sound
@@ -305,31 +235,6 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private static byte[] CreateUpdateMessage(NetworkIdentity identity, int channel, uint shopMask, uint purchaseMask)
-        {
-            var writer = new NetworkWriter();
-            writer.StartMessage(MsgType.UpdateVars);
-            writer.Write(identity.netId);
-
-            foreach (var behavior in identity.GetBehavioursOfSameChannel(channel, false))
-            {
-                uint previousDirtyBits = behavior.m_SyncVarDirtyBits;
-                try
-                {
-                    // Serialize only the requested fields; other components write nothing
-                    behavior.m_SyncVarDirtyBits = behavior is ShopTerminalBehavior ? shopMask : behavior is PurchaseInteraction ? purchaseMask : 0u;
-                    behavior.OnSerialize(writer, false);
-                }
-                finally
-                {
-                    behavior.m_SyncVarDirtyBits = previousDirtyBits;
-                }
-            }
-
-            writer.FinishMessage();
-            return writer.ToArray();
-        }
-
         // Plays the shop's buy sound when a purchase leaves an item in it, e.g. when equipment swapped in replaces the bought one.
         // Clients play it only when the shop's pickup clears, so they get it cleared and back; instanced shops play it for the buyer only.
         public static void PlayBuySound(ShopTerminalBehavior shop, PlayerCharacterMasterController buyer)
@@ -340,7 +245,6 @@ namespace BazaarIsMyHaven
                 return;
             }
             shop.TryGetComponent(out InstancedPurchase instance);
-            int channel = shop.GetNetworkChannel();
             foreach (var pc in PlayerCharacterMasterController.instances)
             {
                 if (!pc || (instance && pc != buyer))
@@ -353,7 +257,7 @@ namespace BazaarIsMyHaven
                     Util.PlaySound("Play_UI_tripleChestShutter", shop.gameObject);
                     continue;
                 }
-                var connection = pc.networkUser ? pc.networkUser.connectionToClient : null;
+                var connection = PerClient.GetConnection(pc);
                 if (connection == null || !connection.isReady || identity.observers == null || !identity.observers.Contains(connection))
                 {
                     continue;
@@ -361,194 +265,101 @@ namespace BazaarIsMyHaven
 
                 var state = instance ? instance.GetOrOriginal(pc) : null;
                 var pickup = state != null ? state.pickup : shop.pickup;
-                var previousRecipient = instance ? instance.pcClient : null;
+                byte[] clearUpdate;
                 try
                 {
-                    if (instance)
-                    {
-                        instance.pcClient = pc;
-                        state.pickup = UniquePickup.none;
-                    }
-                    else
-                    {
-                        shop.pickup = UniquePickup.none;
-                    }
-                    var clearMessage = CreateUpdateMessage(identity, channel, PickupMask, 0u);
-                    if (instance)
-                    {
-                        state.pickup = pickup;
-                    }
-                    else
-                    {
-                        shop.pickup = pickup;
-                    }
-                    var restoreMessage = CreateUpdateMessage(identity, channel, PickupMask, 0u);
-
-                    var messages = new byte[clearMessage.Length + restoreMessage.Length];
-                    Buffer.BlockCopy(clearMessage, 0, messages, 0, clearMessage.Length);
-                    Buffer.BlockCopy(restoreMessage, 0, messages, clearMessage.Length, restoreMessage.Length);
-                    if (!connection.SendBytes(messages, messages.Length, channel))
-                    {
-                        Log.LogWarning("Could not play a shop's buy sound for a client.");
-                    }
+                    SetPickup(shop, state, UniquePickup.none);
+                    clearUpdate = PerClient.BuildUpdate(connection, shop, PickupMask);
                 }
                 finally
                 {
-                    if (instance)
-                    {
-                        state.pickup = pickup;
-                        instance.pcClient = previousRecipient;
-                    }
-                    else
-                    {
-                        shop.pickup = pickup;
-                    }
+                    SetPickup(shop, state, pickup);
+                }
+                var restoreUpdate = PerClient.BuildUpdate(connection, shop, PickupMask);
+                var updates = Concat(clearUpdate, restoreUpdate);
+                if (!connection.SendBytes(updates, updates.Length, shop.GetNetworkChannel()))
+                {
+                    Log.LogWarning("Could not play a shop's buy sound for a client.");
                 }
             }
         }
 
+        // The player's own state of an instanced shop, the shop's fields otherwise
+        private static void SetPickup(ShopTerminalBehavior shop, InstancedPurchaseStruct state, UniquePickup pickup)
+        {
+            if (state != null)
+            {
+                state.pickup = pickup;
+            }
+            else
+            {
+                shop.pickup = pickup;
+            }
+        }
+
+        private static void SetHidden(ShopTerminalBehavior shop, InstancedPurchaseStruct state, bool hidden)
+        {
+            if (state != null)
+            {
+                state.hidden = hidden;
+            }
+            else
+            {
+                shop.hidden = hidden;
+            }
+        }
+
+        private static byte[] Concat(params byte[][] updates)
+        {
+            var writer = new NetworkWriter();
+            foreach (var update in updates)
+            {
+                writer.Write(update, update.Length);
+            }
+            return writer.ToArray();
+        }
+
         // Rebuilds a shop's model on one client (e.g. after fixing its scale) without changing stock or purchase state
-        internal static byte[] CreatePickupDisplayRefresh(NetworkIdentity identity, NetworkConnection connection, int channel)
+        internal static byte[] CreatePickupDisplayRefresh(NetworkIdentity identity, NetworkConnection connection)
         {
             var terminal = identity.GetComponent<ShopTerminalBehavior>();
             var instance = identity.GetComponent<InstancedPurchase>();
-            PlayerCharacterMasterController player = null;
-            InstancedPurchaseStruct state = null;
+            var player = PerClient.GetPlayer(connection);
 
-            if (instance)
+            // A late join may see shops before the player is ready. Retry instead of
+            // sending the host's stock or another player's personalized offer.
+            if (instance && !player)
             {
-                foreach (var pc in PlayerCharacterMasterController.instances)
-                {
-                    if (pc && pc.networkUser && pc.networkUser.connectionToClient == connection)
-                    {
-                        player = pc;
-                        break;
-                    }
-                }
-
-                // A late join may see shops before the player is ready. Retry instead of
-                // sending the host's stock or another player's personalized offer.
-                if (!player)
-                {
-                    return null;
-                }
-
-                state = instance.GetOrOriginal(player);
+                return null;
             }
 
+            var state = instance ? instance.GetOrOriginal(player) : null;
             var pickup = state != null ? state.pickup : terminal.pickup;
             if (pickup.Equals(UniquePickup.none))
             {
                 return Array.Empty<byte>();
             }
 
+            // Hidden alone does not refresh the display. Send the temp value first;
+            // this change only applies while serializing this client's update.
             bool originalHidden = state != null ? state.hidden : terminal.hidden;
-            var previousRecipient = instance ? instance.pcClient : null;
+            byte[] toggleHiddenUpdate;
             try
             {
-                if (instance)
-                {
-                    instance.pcClient = player;
-                    state.hidden = !originalHidden;
-                }
-                else
-                {
-                    terminal.hidden = !originalHidden;
-                }
-
-                // Hidden alone does not refresh the display. Send the temp value first;
-                // this change only applies while serializing this client's messages.
-                var toggleHiddenMessage = CreateUpdateMessage(identity, channel, HiddenMask, 0u);
-
-                if (state != null)
-                {
-                    state.hidden = originalHidden;
-                }
-                else
-                {
-                    terminal.hidden = originalHidden;
-                }
-
-                // Vanilla reads pickup before hidden: rebuild with the temp hidden value,
-                // then put the real value back in the same message. The final pickup update
-                // rebuilds the intended display without changing its item or purchase state.
-                var restoreHiddenMessage = CreateUpdateMessage(identity, channel, PickupMask | HiddenMask, 0u);
-                var restoreModelMessage = CreateUpdateMessage(identity, channel, PickupMask, 0u);
-                var writer = new NetworkWriter();
-                writer.Write(toggleHiddenMessage, toggleHiddenMessage.Length);
-                writer.Write(restoreHiddenMessage, restoreHiddenMessage.Length);
-                writer.Write(restoreModelMessage, restoreModelMessage.Length);
-
-                return writer.ToArray();
+                SetHidden(terminal, state, !originalHidden);
+                toggleHiddenUpdate = PerClient.BuildUpdate(connection, terminal, HiddenMask);
             }
             finally
             {
-                if (instance)
-                {
-                    state.hidden = originalHidden;
-                    instance.pcClient = previousRecipient;
-                }
-                else
-                {
-                    terminal.hidden = originalHidden;
-                }
-            }
-        }
-
-        internal static bool SendUpdateToClient(InstancedPurchase instance, PlayerCharacterMasterController pc)
-        {
-            var identity = instance.GetComponent<NetworkIdentity>();
-            var connection = pc.networkUser ? pc.networkUser.connectionToClient : null;
-
-            if (connection == null || !connection.isReady || !identity || identity.observers == null || !identity.observers.Contains(connection) || Util.ConnectionIsLocal(connection))
-            {
-                return false;
+                SetHidden(terminal, state, originalHidden);
             }
 
-            var previousRecipient = instance.pcClient;
-            try
-            {
-                instance.pcClient = pc;
-                var terminal = instance.GetComponent<ShopTerminalBehavior>();
-                byte[] messages;
-                int channel;
-                if (terminal)
-                {
-                    channel = terminal.GetNetworkChannel();
-
-                    //The first message sets the flag without triggering the item animation
-                    // the second updates stock/availability with that flag already set
-                    var purchaseMessage = CreateUpdateMessage(identity, channel, PurchasedMask, 0u);
-                    var stockMessage = CreateUpdateMessage(identity, channel, PickupMask | HiddenMask, AvailableMask | CostMask);
-                    messages = new byte[purchaseMessage.Length + stockMessage.Length];
-
-                    Buffer.BlockCopy(purchaseMessage, 0, messages, 0, purchaseMessage.Length);
-                    Buffer.BlockCopy(stockMessage, 0, messages, purchaseMessage.Length, stockMessage.Length);
-                }
-                else
-                {
-                    // chests only send their availability
-                    channel = instance.GetComponent<PurchaseInteraction>().GetNetworkChannel();
-                    messages = CreateUpdateMessage(identity, channel, 0u, AvailableMask);
-                }
-
-                if (connection.SendBytes(messages, messages.Length, channel))
-                {
-                    return true;
-                }
-
-                Log.LogWarning($"Could not update instanced shop for {connection.connectionId}; retrying");
-                return false;
-            }
-            catch (Exception exception)
-            {
-                Log.LogError($"Instanced shop sync failed: {exception}");
-                return false;
-            }
-            finally
-            {
-                instance.pcClient = previousRecipient;
-            }
+            // Vanilla reads pickup before hidden: rebuild with the temp hidden value,
+            // then put the real value back in the same update. The final pickup update
+            // rebuilds the intended display without changing its item or purchase state.
+            var restoreHiddenUpdate = PerClient.BuildUpdate(connection, terminal, PickupMask | HiddenMask);
+            var restoreModelUpdate = PerClient.BuildUpdate(connection, terminal, PickupMask);
+            return Concat(toggleHiddenUpdate, restoreHiddenUpdate, restoreModelUpdate);
         }
     }
 }

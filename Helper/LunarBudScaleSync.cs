@@ -130,7 +130,7 @@ namespace BazaarIsMyHaven
                     foreach (var bud in buds)
                     {
                         // each player may have their own stock, so build the refresh per client
-                        var refresh = InstancedPurchases.CreatePickupDisplayRefresh(bud, connection, QosChannelIndex.defaultReliable.intVal);
+                        var refresh = InstancedPurchases.CreatePickupDisplayRefresh(bud, connection);
                         if (refresh == null)
                         {
                             sent = false;

@@ -79,7 +79,7 @@ namespace BazaarIsMyHaven
             orig(self, context, result);
         }
 
-        // The host's own view of an instanced bud's price; clients get theirs from InstancedPurchases.
+        // The host's own view of an instanced bud's price; clients get theirs from InstancedPurchaseView.
         // Shared buds show everyone the same price.
         private static void PurchaseInteraction_UpdateHologramContent(On.RoR2.PurchaseInteraction.orig_UpdateHologramContent orig, PurchaseInteraction self, GameObject hologramContentObject, Transform viewer)
         {
