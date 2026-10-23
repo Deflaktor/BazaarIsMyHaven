@@ -339,19 +339,32 @@ namespace BazaarIsMyHaven
 
             // 14 CommandPedestal
             CommandPedestalSectionEnabled = config.Bind("14 CommandPedestal", "SectionEnabled", true, "Enables or disables the Command Pedestal section. It lets you pick an item for a price.");
-            CommandPedestalDirectorWeight = config.Bind("14 CommandPedestal", "DirectorWeight", 0.2f, "How likely the director picks the Command Pedestal, compared to the DirectorWeight of the other interactables. Which tier it offers is rolled by the tier weights below.");
             CommandPedestalTiers.Clear();
             // by how many items of each tier a typical stage gives; lunar and void boss items are off
-            AddCommandPedestalTier(config, "Tier1", "white items", run => run.availableTier1DropList, 50, 10, 0.5f);
-            AddCommandPedestalTier(config, "Tier2", "green items", run => run.availableTier2DropList, 100, 20, 0.25f);
-            AddCommandPedestalTier(config, "Tier3", "red items", run => run.availableTier3DropList, 800, 30, 0.05f);
-            AddCommandPedestalTier(config, "Boss", "boss items", run => run.availableBossDropList, 400, 20, 0.05f);
-            AddCommandPedestalTier(config, "Equipment", "equipment", run => run.availableEquipmentDropList, 100, 10, 0.125f);
-            AddCommandPedestalTier(config, "Lunar", "lunar items", run => run.availableLunarItemDropList, 100, 20, 0f);
-            AddCommandPedestalTier(config, "VoidTier1", "void white items", run => run.availableVoidTier1DropList, 50, 10, 0.05f);
-            AddCommandPedestalTier(config, "VoidTier2", "void green items", run => run.availableVoidTier2DropList, 100, 20, 0.025f);
-            AddCommandPedestalTier(config, "VoidTier3", "void red items", run => run.availableVoidTier3DropList, 800, 30, 0.0125f);
-            AddCommandPedestalTier(config, "VoidBoss", "void boss items", run => run.availableVoidBossDropList, 400, 20, 0f);
+            AddCommandPedestalTier("Tier1", "white items", run => run.availableTier1DropList, 50, 10, 0.5f);
+            AddCommandPedestalTier("Tier2", "green items", run => run.availableTier2DropList, 100, 20, 0.25f);
+            AddCommandPedestalTier("Tier3", "red items", run => run.availableTier3DropList, 800, 30, 0.05f);
+            AddCommandPedestalTier("Boss", "boss items", run => run.availableBossDropList, 400, 20, 0.05f);
+            AddCommandPedestalTier("Equipment", "equipment", run => run.availableEquipmentDropList, 100, 10, 0.125f);
+            AddCommandPedestalTier("Lunar", "lunar items", run => run.availableLunarItemDropList, 100, 20, 0f);
+            AddCommandPedestalTier("VoidTier1", "void white items", run => run.availableVoidTier1DropList, 50, 10, 0.05f);
+            AddCommandPedestalTier("VoidTier2", "void green items", run => run.availableVoidTier2DropList, 100, 20, 0.025f);
+            AddCommandPedestalTier("VoidTier3", "void red items", run => run.availableVoidTier3DropList, 800, 30, 0.0125f);
+            AddCommandPedestalTier("VoidBoss", "void boss items", run => run.availableVoidBossDropList, 400, 20, 0f);
+            // all the tiers' director costs, then the pedestal's own weight, then the tiers' weights and prices
+            foreach (var tier in CommandPedestalTiers)
+            {
+                tier.directorCost = config.Bind("14 CommandPedestal", $"{tier.name}DirectorCost", tier.defaultDirectorCost, $"Director credits a Command Pedestal offering {tier.offers} costs.");
+            }
+            CommandPedestalDirectorWeight = config.Bind("14 CommandPedestal", "DirectorWeight", 0.2f, "How likely the director picks the Command Pedestal, compared to the DirectorWeight of the other interactables. Which tier it offers is rolled by the tier weights below.");
+            foreach (var tier in CommandPedestalTiers)
+            {
+                tier.weight = config.Bind("14 CommandPedestal", $"{tier.name}Weight", tier.defaultWeight, $"Weight for a Command Pedestal offering {tier.offers}, compared to the other tier weights. 0 = never.");
+            }
+            foreach (var tier in CommandPedestalTiers)
+            {
+                tier.cost = config.Bind("14 CommandPedestal", $"{tier.name}Cost", tier.defaultCost, $"Cost of a Command Pedestal offering {tier.offers}, paid in CostType.");
+            }
             CommandPedestalCostType = config.Bind("14 CommandPedestal", "CostType", CostTypeIndex.Money, "What opening the Command Pedestal costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
             CommandPedestalInstancedPurchases = config.Bind("14 CommandPedestal", "InstancedPurchases", true, "Each player can buy from the Command Pedestal once, independently of the others. It stays ready for the others, and each buyer gets their own Command Essence.");
             CommandPedestalBuyToInventory = config.Bind("14 CommandPedestal", "BuyToInventory", true, "Using the Command Pedestal shows its item picker right away, and the price is only charged once you pick an item, which goes directly into your inventory. Equipment it replaces goes into the vault, where only you can swap it back, for free. No essence appears; closing the picker costs nothing, and using the Command Pedestal again reopens it. Otherwise buying drops a Command Essence that anyone can use.");
@@ -401,17 +414,23 @@ namespace BazaarIsMyHaven
             public ConfigEntry<int> directorCost;
             public ConfigEntry<float> weight;
             public ConfigEntry<int> cost;
+            public string offers;
+            public int defaultCost;
+            public int defaultDirectorCost;
+            public float defaultWeight;
         }
 
-        private static void AddCommandPedestalTier(ConfigFile config, string name, string offers, Func<Run, List<PickupIndex>> dropList, int cost, int directorCost, float weight)
+        // bound afterwards, kind by kind
+        private static void AddCommandPedestalTier(string name, string offers, Func<Run, List<PickupIndex>> dropList, int cost, int directorCost, float weight)
         {
             CommandPedestalTiers.Add(new CommandPedestalTier
             {
                 name = name,
                 dropList = dropList,
-                directorCost = config.Bind("14 CommandPedestal", $"{name}DirectorCost", directorCost, $"Director credits a Command Pedestal offering {offers} costs."),
-                weight = config.Bind("14 CommandPedestal", $"{name}Weight", weight, $"Weight for a Command Pedestal offering {offers}, compared to the other tier weights. 0 = never."),
-                cost = config.Bind("14 CommandPedestal", $"{name}Cost", cost, $"Cost of a Command Pedestal offering {offers}, paid in CostType."),
+                offers = offers,
+                defaultCost = cost,
+                defaultDirectorCost = directorCost,
+                defaultWeight = weight,
             });
         }
 
