@@ -1,3 +1,4 @@
+using PerClientSync;
 using RoR2;
 using RoR2.Hologram;
 using RoR2.Networking;
@@ -37,7 +38,6 @@ namespace BazaarIsMyHaven
             public readonly HashSet<NetworkConnection> synchronizedClients = new HashSet<NetworkConnection>();
             // players who no longer see the sign, e.g. after buying from an instanced terminal
             public readonly HashSet<PlayerCharacterMasterController> hiddenFor = new HashSet<PlayerCharacterMasterController>();
-            public readonly HashSet<NetworkConnection> hiddenClients = new HashSet<NetworkConnection>();
         }
 
         public static void Preload()
@@ -74,13 +74,9 @@ namespace BazaarIsMyHaven
             {
                 foreach (var sign in priceSigns.signs)
                 {
-                    if (sign.terminal == terminal && sign.hiddenFor.Add(player))
+                    if (sign.terminal == terminal && sign.hiddenFor.Add(player) && sign.seer)
                     {
-                        var connection = player.networkUser ? player.networkUser.connectionToClient : null;
-                        if (connection != null && !Util.ConnectionIsLocal(connection))
-                        {
-                            TryHideFromClient(sign, connection);
-                        }
+                        PerClient.Hide(sign.seer, PerClient.GetConnection(player));
                     }
                 }
             }
@@ -104,42 +100,6 @@ namespace BazaarIsMyHaven
                 }
             }
             return orig(self, viewer);
-        }
-
-        private static PlayerCharacterMasterController GetPlayer(NetworkConnection connection)
-        {
-            foreach (var player in PlayerCharacterMasterController.instances)
-            {
-                if (player && player.networkUser && player.networkUser.connectionToClient == connection)
-                {
-                    return player;
-                }
-            }
-            return null;
-        }
-
-        // The vanilla message that removes a spawned object, sent to this client only
-        private static bool TryHideFromClient(Sign sign, NetworkConnection connection)
-        {
-            if (sign.hiddenClients.Contains(connection))
-            {
-                return true;
-            }
-            // the client needs the Seer spawned before it can lose it
-            if (!sign.seer || sign.seer.observers == null || !sign.seer.observers.Contains(connection))
-            {
-                return false;
-            }
-            var writer = new NetworkWriter();
-            writer.StartMessage(MsgType.ObjectDestroy);
-            writer.Write(sign.seer.netId);
-            writer.FinishMessage();
-            if (!connection.SendWriter(writer, QosChannelIndex.defaultReliable.intVal))
-            {
-                return false;
-            }
-            sign.hiddenClients.Add(connection);
-            return true;
         }
 
         // Shows cost in costType this high above each of the terminals, readable from their front, like the Seer's own sign in front of its table
@@ -254,7 +214,6 @@ namespace BazaarIsMyHaven
                     }
 
                     sign.synchronizedClients.RemoveWhere(connection => !connection.isReady || !NetworkServer.connections.Contains(connection));
-                    sign.hiddenClients.RemoveWhere(connection => !connection.isReady || !NetworkServer.connections.Contains(connection));
                     foreach (var connection in NetworkServer.connections)
                     {
                         // the host already shows the sign, and on the server the death state would destroy the Seer
@@ -262,9 +221,10 @@ namespace BazaarIsMyHaven
                         {
                             continue;
                         }
-                        if (sign.hiddenFor.Count > 0 && sign.hiddenFor.Contains(GetPlayer(connection)))
+                        // a player's new connection, e.g. after coming back, doesn't get the sign either
+                        if (sign.hiddenFor.Count > 0 && sign.hiddenFor.Contains(PerClient.GetPlayer(connection)))
                         {
-                            TryHideFromClient(sign, connection);
+                            PerClient.Hide(sign.seer, connection);
                             continue;
                         }
                         if (sign.synchronizedClients.Contains(connection))

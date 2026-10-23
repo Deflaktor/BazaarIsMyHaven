@@ -485,12 +485,12 @@ namespace BazaarIsMyHaven
         private void HideDisplayFor(PlayerCharacterMasterController player)
         {
             var identity = displayEssence ? displayEssence.GetComponent<NetworkIdentity>() : null;
-            var connection = player.networkUser ? player.networkUser.connectionToClient : null;
+            var connection = PerClient.GetConnection(player);
             if (!identity || connection == null)
             {
                 return;
             }
-            if (Util.ConnectionIsLocal(connection))
+            if (PerClient.IsLocal(connection))
             {
                 // the host sees the server's own essence, so only its visuals go
                 var visuals = displayEssence.transform.Find("PickupDisplay");
@@ -500,15 +500,7 @@ namespace BazaarIsMyHaven
                 }
                 return;
             }
-            // the vanilla message that removes a spawned object, sent to this client only
-            var writer = new NetworkWriter();
-            writer.StartMessage(MsgType.ObjectDestroy);
-            writer.Write(identity.netId);
-            writer.FinishMessage();
-            if (!connection.SendWriter(writer, QosChannelIndex.defaultReliable.intVal))
-            {
-                Log.LogWarning("Could not hide the Command Pedestal's essence for a client.");
-            }
+            PerClient.Hide(identity, connection);
         }
 
         // Shows the essence the vault gives above it, as a Command Essence nobody can use.
