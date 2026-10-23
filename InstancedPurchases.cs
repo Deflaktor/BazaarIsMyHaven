@@ -19,12 +19,15 @@ namespace BazaarIsMyHaven
         // what a player's state changes in the terminal and in the purchase
         internal const uint TerminalMask = PickupMask | HiddenMask | PurchasedMask;
         internal const uint PurchaseMask = AvailableMask | CostMask;
+        // a Triple Drone Shop terminal's pickup and purchased flag
+        internal const uint DroneTerminalMask = PickupMask | PurchasedMask;
 
         public static void Hook()
         {
             On.RoR2.ShopTerminalBehavior.SetPickup += ShopTerminalBehavior_SetPickup;
             On.RoR2.PurchaseInteraction.SetAvailable += PurchaseInteraction_SetAvailable;
             On.RoR2.ShopTerminalBehavior.SetHasBeenPurchased += ShopTerminalBehavior_SetHasBeenPurchased;
+            On.RoR2.DroneVendorTerminalBehavior.SetHasBeenPurchased += DroneVendorTerminalBehavior_SetHasBeenPurchased;
             On.RoR2.PurchaseInteraction.GetInteractability += PurchaseInteraction_GetInteractability;
             On.RoR2.PurchaseInteraction.OnInteractionBegin += PurchaseInteraction_OnInteractionBegin;
             On.RoR2.ShopTerminalBehavior.CurrentPickupIndex += ShopTerminalBehavior_CurrentPickupIndex;
@@ -113,6 +116,26 @@ namespace BazaarIsMyHaven
             }
         }
 
+        // the drone terminal's own purchase event marks it as bought
+        private static void DroneVendorTerminalBehavior_SetHasBeenPurchased(On.RoR2.DroneVendorTerminalBehavior.orig_SetHasBeenPurchased orig, DroneVendorTerminalBehavior self, bool newHasBeenPurchased)
+        {
+            if (!NetworkServer.active || !self.TryGetComponent(out InstancedPurchase instance))
+            {
+                orig(self, newHasBeenPurchased);
+                return;
+            }
+
+            instance.GetOrCreate(currentInteractor).hasBeenPurchased = newHasBeenPurchased;
+            if (currentInteractor)
+            {
+                self.hasBeenPurchased = newHasBeenPurchased;
+            }
+            else
+            {
+                UpdateAll(self.gameObject);
+            }
+        }
+
         private static void PurchaseInteraction_SetAvailable(On.RoR2.PurchaseInteraction.orig_SetAvailable orig, PurchaseInteraction self, bool newAvailable)
         {
             if (!NetworkServer.active || !self.TryGetComponent(out InstancedPurchase instance))
@@ -171,6 +194,16 @@ namespace BazaarIsMyHaven
         {
             var purchase = shop.GetComponent<PurchaseInteraction>();
             purchase.available = state.available;
+            if (shop.TryGetComponent(out DroneVendorTerminalBehavior droneTerminal))
+            {
+                droneTerminal.currentPickup = state.pickup;
+                droneTerminal.hasBeenPurchased = state.hasBeenPurchased;
+                if (refreshAnimation && NetworkClient.active)
+                {
+                    droneTerminal.UpdateVisuals();
+                }
+                return;
+            }
             // chests have no terminal; only their availability is per player
             var terminal = shop.GetComponent<ShopTerminalBehavior>();
             if (!terminal)
@@ -202,7 +235,9 @@ namespace BazaarIsMyHaven
 
             var state = instance.GetOrOriginal(host);
             var terminal = shop.GetComponent<ShopTerminalBehavior>();
-            bool changed = terminal && (!terminal.pickup.Equals(state.pickup) || terminal.hidden != state.hidden || terminal.hasBeenPurchased != state.hasBeenPurchased);
+            var droneTerminal = shop.GetComponent<DroneVendorTerminalBehavior>();
+            bool changed = terminal && (!terminal.pickup.Equals(state.pickup) || terminal.hidden != state.hidden || terminal.hasBeenPurchased != state.hasBeenPurchased)
+                || droneTerminal && !droneTerminal.currentPickup.Equals(state.pickup);
             ApplyState(shop, state, forceAnimation || changed);
         }
 

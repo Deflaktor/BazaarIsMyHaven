@@ -164,6 +164,7 @@ namespace BazaarIsMyHaven
         public static ConfigEntry<int> DronesTripleDroneShopUncommonCost;
         public static ConfigEntry<CostTypeIndex> DronesTripleDroneShopCostType;
         public static ConfigEntry<bool> DronesTripleDroneShopBuyAll;
+        public static ConfigEntry<bool> DronesTripleDroneShopInstancedPurchases;
 
         // command pedestal
         public static ConfigEntry<bool> CommandPedestalSectionEnabled;
@@ -335,6 +336,7 @@ namespace BazaarIsMyHaven
             DronesTripleDroneShopCommonCost = config.Bind("13 Drones", "TripleDroneShopCommonCost", 40, "Cost of a common drone from the Triple Drone Shop, paid in TripleDroneShopCostType.");
             DronesTripleDroneShopUncommonCost = config.Bind("13 Drones", "TripleDroneShopUncommonCost", 60, "Cost of an uncommon drone from the Triple Drone Shop, paid in TripleDroneShopCostType.");
             DronesTripleDroneShopBuyAll = config.Bind("13 Drones", "TripleDroneShopBuyAll", false, "Lets you buy all three drones of the Triple Drone Shop, as with an Executive Card. Off = only one, like in the base game.");
+            DronesTripleDroneShopInstancedPurchases = config.Bind("13 Drones", "TripleDroneShopInstancedPurchases", true, "Each player can buy from the Triple Drone Shop independently: one drone, or all three with TripleDroneShopBuyAll. It stays full for the others.");
             DronesTripleDroneShopCostType = config.Bind("13 Drones", "TripleDroneShopCostType", CostTypeIndex.Money, "What a drone from the Triple Drone Shop costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
 
             // 14 CommandPedestal

@@ -13,7 +13,8 @@ namespace BazaarIsMyHaven
         public int lunarShopIndex = -1;
 
         // each client sees its player's state in the shop's own fields
-        private InstancedTerminalView terminalView;
+        private ClientView terminalView;
+        private uint terminalMask;
         private InstancedPurchaseView purchaseView;
 
         private void Awake()
@@ -22,6 +23,12 @@ namespace BazaarIsMyHaven
             if (GetComponent<ShopTerminalBehavior>())
             {
                 terminalView = gameObject.AddComponent<InstancedTerminalView>();
+                terminalMask = InstancedPurchases.TerminalMask;
+            }
+            else if (GetComponent<DroneVendorTerminalBehavior>())
+            {
+                terminalView = gameObject.AddComponent<InstancedDroneTerminalView>();
+                terminalMask = InstancedPurchases.DroneTerminalMask;
             }
             if (GetComponent<PurchaseInteraction>())
             {
@@ -99,7 +106,7 @@ namespace BazaarIsMyHaven
             var client = PerClient.GetConnection(pc);
             if (terminalView)
             {
-                terminalView.SetDirty(client, InstancedPurchases.TerminalMask);
+                terminalView.SetDirty(client, terminalMask);
             }
             if (purchaseView)
             {
@@ -112,7 +119,7 @@ namespace BazaarIsMyHaven
         {
             if (terminalView)
             {
-                terminalView.SetDirtyForAll(InstancedPurchases.TerminalMask);
+                terminalView.SetDirtyForAll(terminalMask);
             }
             if (purchaseView)
             {
@@ -152,6 +159,35 @@ namespace BazaarIsMyHaven
             var terminal = Component;
             terminal.pickup = realPickup;
             terminal.hidden = realHidden;
+            terminal.hasBeenPurchased = realPurchased;
+        }
+    }
+
+    // A Triple Drone Shop terminal as a client's player sees it: their drone, or none once they bought it or closed the shop
+    public class InstancedDroneTerminalView : ClientView<DroneVendorTerminalBehavior>
+    {
+        private InstancedPurchase instance;
+        private UniquePickup realPickup;
+        private bool realPurchased;
+
+        // the real fields hold the host's player's state, so only a player's own updates carry theirs
+        public override uint PrivateBits => InstancedPurchases.DroneTerminalMask;
+
+        protected override void Apply(NetworkConnection client)
+        {
+            var terminal = Component;
+            realPickup = terminal.currentPickup;
+            realPurchased = terminal.hasBeenPurchased;
+            instance = instance ? instance : GetComponent<InstancedPurchase>();
+            var state = instance.GetOrOriginal(PerClient.GetPlayer(client));
+            terminal.currentPickup = state.pickup;
+            terminal.hasBeenPurchased = state.hasBeenPurchased;
+        }
+
+        protected override void Restore()
+        {
+            var terminal = Component;
+            terminal.currentPickup = realPickup;
             terminal.hasBeenPurchased = realPurchased;
         }
     }

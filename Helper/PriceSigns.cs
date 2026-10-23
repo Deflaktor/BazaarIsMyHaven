@@ -276,6 +276,12 @@ namespace BazaarIsMyHaven
             }
             if (terminal.TryGetComponent(out DroneVendorMultiShopController droneShop))
             {
+                // with instanced purchases, as long as one player can still buy from it
+                if (droneShop._terminals != null && droneShop._terminals.Any(droneTerminal => droneTerminal && droneTerminal.GetComponent<InstancedPurchase>()))
+                {
+                    return droneShop._terminals.Any(droneTerminal => droneTerminal && droneTerminal.TryGetComponent(out InstancedPurchase droneInstance)
+                        && PlayerCharacterMasterController.instances.Any(player => droneInstance.GetOrOriginal(player).available));
+                }
                 // after a purchase with an Executive Card, the unbought terminals keep their drones and reopen
                 return droneShop._terminals != null && droneShop._terminals.Any(droneTerminal => droneTerminal && droneTerminal.purchaseInteraction
                     && (droneTerminal.purchaseInteraction.available || (!droneTerminal.GetHasBeenPurchased() && droneTerminal.CurrentPickupIndex != PickupIndex.none)));

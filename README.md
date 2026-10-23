@@ -20,7 +20,7 @@ Adds printers, cauldrons, shops and more to the Bazaar Between Time, all configu
   - Command Pedestal: pick any item of its tier
   - Wandering CHEF, drone stations and a Triple Drone Shop (with the Alloyed Collective). Your drones come along into the Bazaar.
 - **The further into the run, the more the Bazaar offers.**
-- **Instanced Purchases**: every player can buy from each Equipment Terminal, Lunar Bud and Command Pedestal.
+- **Instanced Purchases**: every player can buy from each Equipment Terminal, Lunar Bud, Command Pedestal and Triple Drone Shop.
 - **Buy to Inventory**: purchases go straight into the buyer's inventory.
 - **Newt**: stop him from kicking you out, change what happens after you kill him, and let him greet you and comment on your purchases.
 - **Portals**: spawn a Bazaar portal after every teleporter event, and keep your gold when you enter the Bazaar to spend it there.

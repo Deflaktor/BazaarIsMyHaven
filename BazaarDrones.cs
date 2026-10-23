@@ -1,4 +1,5 @@
 using BepInEx.Configuration;
+using PerClientSync;
 using RoR2;
 using RoR2.CharacterAI;
 using RoR2.Navigation;
@@ -45,6 +46,7 @@ namespace BazaarIsMyHaven
             On.RoR2.PurchaseInteraction.GetInteractability += PurchaseInteraction_GetInteractability;
             On.RoR2.DroneVendorMultiShopController.Start += DroneVendorMultiShopController_Start;
             On.RoR2.DroneVendorMultiShopController.ResetDroneVendor += DroneVendorMultiShopController_ResetDroneVendor;
+            On.RoR2.DroneVendorMultiShopController.OnPurchase += DroneVendorMultiShopController_OnPurchase;
         }
 
         // clients only have the stations if the run has the Alloyed Collective
@@ -210,6 +212,116 @@ namespace BazaarIsMyHaven
                 {
                     self.doCloseOnTerminalPurchase[i] = false;
                 }
+            }
+
+            if (ModConfig.DronesTripleDroneShopInstancedPurchases.Value)
+            {
+                foreach (var terminal in self._terminals ?? new DroneVendorTerminalBehavior[0])
+                {
+                    if (terminal && terminal.purchaseInteraction)
+                    {
+                        var instancedPurchase = terminal.gameObject.AddComponent<InstancedPurchase>();
+                        instancedPurchase.original.available = terminal.purchaseInteraction.available;
+                        instancedPurchase.original.pickup = terminal.currentPickup;
+                    }
+                }
+                self.gameObject.AddComponent<InstancedDroneShop>().open = self.available;
+            }
+        }
+
+        // The Triple Drone Shop as each player's client shows it: open until that player closed it with a purchase
+        private class InstancedDroneShop : ClientView<DroneVendorMultiShopController>
+        {
+            // DroneVendorMultiShopController's dirty bit for available
+            public const uint AvailableBit = 1u;
+
+            // whether it is open for everyone at first; a price sign shows the price instead of the shop itself
+            public bool open;
+            public readonly HashSet<PlayerCharacterMasterController> closedFor = new HashSet<PlayerCharacterMasterController>();
+            private bool realAvailable;
+
+            protected override void Apply(NetworkConnection client)
+            {
+                realAvailable = Component.available;
+                Component.available = open && !closedFor.Contains(PerClient.GetPlayer(client));
+            }
+
+            protected override void Restore()
+            {
+                Component.available = realAvailable;
+            }
+        }
+
+        // With instanced purchases each player buys for themselves: the bought terminal empties for them, and unless they
+        // can buy all three, the shop closes for them. Their drone comes right away, as the shop stays the same for the others.
+        private void DroneVendorMultiShopController_OnPurchase(On.RoR2.DroneVendorMultiShopController.orig_OnPurchase orig, DroneVendorMultiShopController self, CostTypeDef.PayCostContext payCostContext, CostTypeDef.PayCostResults payCostResult)
+        {
+            var player = payCostContext.activatorMaster ? payCostContext.activatorMaster.playerCharacterMasterController : null;
+            int bought = self._terminals == null ? -1 : System.Array.FindIndex(self._terminals, terminal => terminal && terminal.purchaseInteraction == payCostContext.purchaseInteraction);
+            if (!NetworkServer.active || !self.TryGetComponent(out InstancedDroneShop shop) || !player || bought < 0)
+            {
+                orig(self, payCostContext, payCostResult);
+                return;
+            }
+
+            // an Executive Card keeps the shop open for this purchase only
+            bool close = self.doCloseOnTerminalPurchase[bought];
+            self.doCloseOnTerminalPurchase[bought] = !ModConfig.DronesTripleDroneShopBuyAll.Value;
+            for (int i = 0; i < self._terminals.Length; i++)
+            {
+                var terminal = self._terminals[i];
+                if (!terminal || (i != bought && !close) || !terminal.TryGetComponent(out InstancedPurchase instance))
+                {
+                    continue;
+                }
+                var state = instance.GetOrCreate(player);
+                state.available = false;
+                state.pickup = UniquePickup.none;
+                state.hasBeenPurchased |= i == bought;
+                InstancedPurchases.UpdatePlayer(terminal.gameObject, player);
+            }
+            if (close && shop.closedFor.Add(player))
+            {
+                var client = PerClient.GetConnection(player);
+                if (PerClient.IsLocal(client))
+                {
+                    // the host's own view
+                    self.Networkavailable = false;
+                }
+                else
+                {
+                    shop.SetDirty(client, InstancedDroneShop.AvailableBit);
+                }
+                PriceSigns.HideFor(self.gameObject, player);
+            }
+            DispatchDrone(self._terminals[bought], payCostContext.activator);
+        }
+
+        // As the game dispatches a bought drone, from the drone the shop offers to everyone
+        private static void DispatchDrone(DroneVendorTerminalBehavior terminal, Interactor activator)
+        {
+            var pickup = terminal.GetComponent<InstancedPurchase>().original.pickup;
+            var pickupDef = PickupCatalog.GetPickupDef(pickup.pickupIndex);
+            var droneDef = pickupDef != null ? DroneCatalog.GetDroneDef(pickupDef.droneIndex) : null;
+            if (!droneDef || !droneDef.masterPrefab || !activator)
+            {
+                return;
+            }
+            AkSoundEngine.PostEvent("Play_GG_INTER_DroneVendor_DroneReady", terminal.gameObject);
+            var master = new MasterSummon
+            {
+                masterPrefab = droneDef.masterPrefab,
+                position = terminal.dropTransform.position,
+                rotation = terminal.transform.rotation,
+                summonerBodyObject = activator.gameObject,
+                ignoreTeamMemberLimit = true,
+                useAmbientLevel = true,
+                enablePrintController = true
+            }.Perform();
+            if (master)
+            {
+                master.inventory.GiveItemPermanent(DLC3Content.Items.DroneUpgradeHidden, pickup.upgradeValue);
+                terminal.NotifySummoner(activator.gameObject, master.GetBodyObject());
             }
         }
 
