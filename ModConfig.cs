@@ -225,12 +225,12 @@ namespace BazaarIsMyHaven
             CauldronDirectorCost = config.Bind("03 Cauldron", "DirectorCost", 10, "Director credits a cauldron costs.");
             CauldronDirectorWeight = config.Bind("03 Cauldron", "DirectorWeight", 2f, "How likely the director picks a cauldron, compared to the DirectorWeight of the other interactables. Which type it is is rolled by the weights below.");
             CauldronWhiteToGreenWeight = config.Bind("03 Cauldron", "WhiteToGreenWeight", 0.75f, "Weight for White->Green cauldrons.");
-            CauldronWhiteToGreenCost = config.Bind("03 Cauldron", "WhiteToGreenCost", 3, "Number of White items required for Green conversion.");
             CauldronGreenToRedWeight = config.Bind("03 Cauldron", "GreenToRedWeight", 0.25f, "Weight for Green->Red cauldrons.");
-            CauldronGreenToRedCost = config.Bind("03 Cauldron", "GreenToRedCost", 5, "Number of Green items required for Red conversion.");
             CauldronRedToWhiteWeight = config.Bind("03 Cauldron", "RedToWhiteWeight", 0f, "Weight for Red->White cauldrons.");
-            CauldronRedToWhiteCost = config.Bind("03 Cauldron", "RedToWhiteCost", 1, "Number of Red items required for White conversion.");
             CauldronTranscendentWeight = config.Bind("03 Cauldron", "TranscendentWeight", 0f, "Weight for Transcendent Cauldrons from Hallowed Concepts, which turn a Hex into a cursed item. Only spawns if Hallowed Concepts is enabled for the run.");
+            CauldronWhiteToGreenCost = config.Bind("03 Cauldron", "WhiteToGreenCost", 3, "Number of White items required for Green conversion.");
+            CauldronGreenToRedCost = config.Bind("03 Cauldron", "GreenToRedCost", 5, "Number of Green items required for Red conversion.");
+            CauldronRedToWhiteCost = config.Bind("03 Cauldron", "RedToWhiteCost", 1, "Number of Red items required for White conversion.");
             CauldronTranscendentCost = config.Bind("03 Cauldron", "TranscendentCost", 1, "Number of Hexes a Transcendent Cauldron takes.");
 
             // 04 Scrapper
