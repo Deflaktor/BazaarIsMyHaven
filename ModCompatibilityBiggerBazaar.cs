@@ -21,6 +21,8 @@ namespace BazaarIsMyHaven
             }
         }
 
+        public static bool enabled => Chainloader.PluginInfos.ContainsKey("com.MagnusMagnuson.BiggerBazaar");
+
         // BiggerBazaar takes the players' gold at the portal to the Bazaar and gives it back there, unless its disableTransferMoney is on
         public static bool TransfersGold()
         {

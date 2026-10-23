@@ -5,6 +5,13 @@ using UnityEngine.SceneManagement;
 
 namespace BazaarIsMyHaven
 {
+    public enum DisableTransferMoneyMode
+    {
+        Off,
+        On,
+        InheritFromBiggerBazaar,
+    }
+
     // Players keep their gold when they take the portal to the Bazaar, instead of the portal turning it into experience,
     // so they can spend it there. Gold left when they leave the Bazaar turns into experience as usual.
     public static class RetainGold
@@ -41,10 +48,20 @@ namespace BazaarIsMyHaven
 
         private static bool IsRetainingGold(SceneExitController exit)
         {
-            return NetworkServer.active && ModConfig.EnableMod.Value && ModConfig.RetainGold.Value
-                && exit.destinationScene && exit.destinationScene.cachedName == "bazaar"
-                // BiggerBazaar brings the gold over itself
-                && !ModCompatibilityBiggerBazaar.TransfersGold();
+            if (!NetworkServer.active || !ModConfig.EnableMod.Value || !exit.destinationScene || exit.destinationScene.cachedName != "bazaar")
+            {
+                return false;
+            }
+            switch (ModConfig.DisableTransferMoney.Value)
+            {
+                case DisableTransferMoneyMode.Off:
+                    // BiggerBazaar brings the gold over itself
+                    return !ModCompatibilityBiggerBazaar.TransfersGold();
+                case DisableTransferMoneyMode.InheritFromBiggerBazaar:
+                    return !ModCompatibilityBiggerBazaar.enabled;
+                default:
+                    return false;
+            }
         }
 
         private static void SceneDirector_onPrePopulateSceneServer(SceneDirector sceneDirector)
