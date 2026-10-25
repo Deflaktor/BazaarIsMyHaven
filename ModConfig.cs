@@ -4,6 +4,7 @@ using RoR2;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace BazaarIsMyHaven
 {
@@ -458,7 +459,7 @@ namespace BazaarIsMyHaven
 
         private static void DonationCharactersChanged(object sender, EventArgs args)
         {
-            if (!reloading)
+            if (!reloading && !addingModSurvivors)
                 RefreshDonationRewardLists(DonateRewardListAvailableCharacters.ConfigFile);
         }
 
@@ -499,94 +500,155 @@ namespace BazaarIsMyHaven
             }
         }
 
+        // the Donation Altar rewards other mods gave their survivors, see BazaarAPI, by survivor or body name
+        private static readonly Dictionary<string, string> modDonationRewards = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
+        public static void SetModDonationReward(string survivorOrBodyName, string rewardList)
+        {
+            modDonationRewards[survivorOrBodyName] = rewardList;
+            // after the game loaded, the settings are there already
+            if (DonateRewardListAvailableCharacters != null)
+                RefreshDonationRewardLists(DonateRewardListAvailableCharacters.ConfigFile);
+        }
+
         private static void RefreshDonationRewardLists(ConfigFile config)
         {
             DonateRewardListCharacters.Clear();
-            string[] availableCharacters = DonateRewardListAvailableCharacters.Value.Split(",");
-            foreach (string availableCharacter in availableCharacters)
+            var listed = DonateRewardListAvailableCharacters.Value.Split(",").Select(name => name.Trim()).Where(name => !string.IsNullOrWhiteSpace(name)).ToList();
+            var listedBodies = new HashSet<BodyIndex>(listed.Select(CatalogHelper.FindBody));
+            // A mod's survivor joins RewardListAvailableCharacters once, when its reward list is new to the config, e.g.
+            // when the config is older than the mod. After that the setting decides, so players can take it out again.
+            var modRewards = new Dictionary<BodyIndex, string>();
+            var added = new List<string>();
+            foreach (var (name, reward) in modDonationRewards)
             {
-                var name = availableCharacter.Trim();
-                if (string.IsNullOrWhiteSpace(name))
+                BodyIndex bodyIndex = CatalogHelper.FindBody(name);
+                if (bodyIndex == BodyIndex.None)
+                {
+                    Log.LogError($"A mod gave a Donation Altar reward to a survivor that doesn't exist: {name}");
                     continue;
+                }
+                modRewards[bodyIndex] = reward;
+                if (!listedBodies.Contains(bodyIndex) && !HasEntry(config, new ConfigDefinition("11 Donate", $"RewardList{name}")))
+                {
+                    added.Add(name);
+                    listedBodies.Add(bodyIndex);
+                }
+            }
+            if (added.Count > 0)
+            {
+                listed.AddRange(added);
+                addingModSurvivors = true;
+                try
+                {
+                    DonateRewardListAvailableCharacters.Value = string.Join(", ", listed);
+                }
+                finally
+                {
+                    addingModSurvivors = false;
+                }
+            }
+            foreach (var name in listed)
+            {
                 BodyIndex bodyIndex = CatalogHelper.FindBody(name);
                 if (bodyIndex == BodyIndex.None)
                 {
                     Log.LogError($"RewardListAvailableCharacters: Could not find body or survivor: {name}");
                     continue;
                 }
-                string defaultReward;
-                switch (name)
-                {
-                    case "Bandit2":
-                        defaultReward = "BleedOnHitAndExplode";
-                        break;
-                    case "Captain":
-                        defaultReward = "3xBleedOnHit";
-                        break;
-                    case "Commando":
-                        defaultReward = "5xStickyBomb";
-                        break;
-                    case "Croco":
-                        defaultReward = "TriggerEnemyDebuffs";
-                        break;
-                    case "Engi":
-                        defaultReward = "HealingPotion";
-                        break;
-                    case "Heretic":
-                        defaultReward = "2xHealWhileSafe";
-                        break;
-                    case "Huntress":
-                        defaultReward = "2xAttackSpeedOnCrit";
-                        break;
-                    case "Loader":
-                        defaultReward = "2xIceRing";
-                        break;
-                    case "Mage":
-                        defaultReward = "StrengthenBurn";
-                        break;
-                    case "Merc":
-                        defaultReward = "AlienHead";
-                        break;
-                    case "Toolbot":
-                        defaultReward = "5xSecondarySkillMagazine";
-                        break;
-                    case "Treebot":
-                        defaultReward = "3xMedkit";
-                        break;
-                    case "Railgunner":
-                        defaultReward = "CritDamage";
-                        break;
-                    case "VoidSurvivor":
-                        defaultReward = "3xSlowOnHitVoid";
-                        break;
-                    case "Chef":
-                        defaultReward = "5xAttackSpeedPerNearbyAllyOrEnemy";
-                        break;
-                    case "FalseSon":
-                        defaultReward = "3xInfusion";
-                        break;
-                    case "Seeker":
-                        defaultReward = "5xArmorPlate";
-                        break;
-                    case "DroneTech":
-                        defaultReward = "3xBarrierOnCooldown";
-                        break;
-                    case "Drifter":
-                        defaultReward = "SpeedOnPickup";
-                        break;
-                    case "Acolyte":
-                        defaultReward = "2xSeed";
-                        break;
-                    case "Enforcer2":
-                        defaultReward = "3xBarrierOnKill";
-                        break;
-                    default:
-                        defaultReward = "3xScrapGreen";
-                        break;
-                }   
+                if (DonateRewardListCharacters.ContainsKey(bodyIndex))
+                    continue;
+                string defaultReward = modRewards.TryGetValue(bodyIndex, out var modReward) ? modReward : DefaultDonationReward(name);
                 ConfigEntry<string> donateRewardListCharacter = config.Bind("11 Donate", $"RewardList{name}", defaultReward, $"Item reward pool for {name} in the format <amount1>x<item1> & <amount2>x<item2>. See README.md for more detailed description. {itemKeyWordsExplanation}");
                 DonateRewardListCharacters[bodyIndex] = donateRewardListCharacter;
             }
+        }
+
+        // while a mod's survivor is added to RewardListAvailableCharacters, which would refresh the lists again
+        private static bool addingModSurvivors;
+
+        // whether the config has the setting, bound or only in the file; BepInEx keeps the latter private
+        private static bool HasEntry(ConfigFile config, ConfigDefinition definition)
+        {
+            if (config.ContainsKey(definition))
+                return true;
+            var orphaned = typeof(ConfigFile).GetProperty("OrphanedEntries", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(config) as Dictionary<ConfigDefinition, string>;
+            return orphaned != null && orphaned.ContainsKey(definition);
+        }
+
+        private static string DefaultDonationReward(string name)
+        {
+            string defaultReward;
+            switch (name)
+            {
+                case "Bandit2":
+                    defaultReward = "BleedOnHitAndExplode";
+                    break;
+                case "Captain":
+                    defaultReward = "3xBleedOnHit";
+                    break;
+                case "Commando":
+                    defaultReward = "5xStickyBomb";
+                    break;
+                case "Croco":
+                    defaultReward = "TriggerEnemyDebuffs";
+                    break;
+                case "Engi":
+                    defaultReward = "HealingPotion";
+                    break;
+                case "Heretic":
+                    defaultReward = "2xHealWhileSafe";
+                    break;
+                case "Huntress":
+                    defaultReward = "2xAttackSpeedOnCrit";
+                    break;
+                case "Loader":
+                    defaultReward = "2xIceRing";
+                    break;
+                case "Mage":
+                    defaultReward = "StrengthenBurn";
+                    break;
+                case "Merc":
+                    defaultReward = "AlienHead";
+                    break;
+                case "Toolbot":
+                    defaultReward = "5xSecondarySkillMagazine";
+                    break;
+                case "Treebot":
+                    defaultReward = "3xMedkit";
+                    break;
+                case "Railgunner":
+                    defaultReward = "CritDamage";
+                    break;
+                case "VoidSurvivor":
+                    defaultReward = "3xSlowOnHitVoid";
+                    break;
+                case "Chef":
+                    defaultReward = "5xAttackSpeedPerNearbyAllyOrEnemy";
+                    break;
+                case "FalseSon":
+                    defaultReward = "3xInfusion";
+                    break;
+                case "Seeker":
+                    defaultReward = "5xArmorPlate";
+                    break;
+                case "DroneTech":
+                    defaultReward = "3xBarrierOnCooldown";
+                    break;
+                case "Drifter":
+                    defaultReward = "SpeedOnPickup";
+                    break;
+                case "Acolyte":
+                    defaultReward = "2xSeed";
+                    break;
+                case "Enforcer2":
+                    defaultReward = "3xBarrierOnKill";
+                    break;
+                default:
+                    defaultReward = "3xScrapGreen";
+                    break;
+            }
+            return defaultReward;
         }
     }
 
