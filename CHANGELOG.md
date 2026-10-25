@@ -1,3 +1,16 @@
+# 5.2.0
+
+- New `DisableTransferMoney` setting, named after BiggerBazaar's: with it `Off`, you keep your gold when you take the portal to the Bazaar, so you can spend it there. `InheritFromBiggerBazaar`, the default with BiggerBazaar installed, leaves it to BiggerBazaar's own `disableTransferMoney`. Works with ShareSuite's shared gold.
+- No void fog in the Bazaar in Simulacrum.
+- Works with ProperSave: loading a save keeps the Donation Altar's per-run reward limit.
+- Works with Quality: the Command Pedestal's item can have a quality, with the chance set in Quality's config.
+- The Wandering CHEF's meal now visibly flies to you when it goes straight into your inventory.
+- Items bought straight into your inventory fly to you with the whoosh of an item being handed over.
+- Triple Drone Shop: new `BuyAll` setting to buy all three drones instead of one.
+- Triple Drone Shop: new `InstancedPurchases` setting, on by default, so each player can buy from it.
+- Requires the new PerClientSync library, which sends each player their own state of the instanced shops.
+- For mod authors: `BazaarAPI` lets other mods add their own sections to the Bazaar, which the director buys for with the same credits, add their own printers, cauldrons and Command Pedestal tiers to the Bazaar's, and give their survivors a Donation Altar reward of their own. See the README.
+
 # 5.1.0
 
 - Triple Drone Shop: new `CostType`, plus a cost and a weight for common and uncommon drones.
