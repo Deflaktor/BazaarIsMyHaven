@@ -9,21 +9,32 @@ using UnityEngine.Networking;
 
 namespace BazaarIsMyHaven
 {
-    // One kind of interactable the director can buy, like a card of the game's scene director
+    /// <summary>
+    /// One kind of interactable the Bazaar's director can buy, like a card of the game's scene director. A section adds
+    /// its cards in BazaarBase.AddDirectorCards and spawns as many as the director bought, Count, in SetupBazaar.
+    /// </summary>
     public class DirectorCard
     {
         public readonly string name;
         // late picks are made in the final pass, after the section spawned its first picks
         public readonly bool allowLatePicks;
+        /// <summary>How many the director bought.</summary>
         public int Count { get; private set; }
+        /// <summary>The credits the director spent on them.</summary>
         public int Spent { get; private set; }
 
-        private readonly ConfigEntry<int> cost;
-        private readonly ConfigEntry<float> weight;
+        private readonly Func<int> cost;
+        private readonly Func<float> weight;
         private readonly Func<int> maxCount;
         private readonly Func<bool> isAvailable;
 
-        public DirectorCard(string name, ConfigEntry<int> cost, ConfigEntry<float> weight, Func<int> maxCount, Func<bool> isAvailable = null, bool allowLatePicks = true)
+        /// <param name="name">The name in the log</param>
+        /// <param name="cost">The credits one costs</param>
+        /// <param name="weight">How likely the director picks it, compared to the other cards' weights</param>
+        /// <param name="maxCount">How many the director can buy at most</param>
+        /// <param name="isAvailable">Whether the director can buy it at all, e.g. only with an expansion enabled</param>
+        /// <param name="allowLatePicks">Whether the director can still buy it in its final pass, a frame after setup</param>
+        public DirectorCard(string name, Func<int> cost, Func<float> weight, Func<int> maxCount, Func<bool> isAvailable = null, bool allowLatePicks = true)
         {
             this.name = name;
             this.cost = cost;
@@ -33,7 +44,13 @@ namespace BazaarIsMyHaven
             this.allowLatePicks = allowLatePicks;
         }
 
-        public virtual float Weight => Mathf.Max(0f, weight.Value);
+        /// <summary>A card whose cost and weight are settings.</summary>
+        public DirectorCard(string name, ConfigEntry<int> cost, ConfigEntry<float> weight, Func<int> maxCount, Func<bool> isAvailable = null, bool allowLatePicks = true)
+            : this(name, () => cost.Value, () => weight.Value, maxCount, isAvailable, allowLatePicks)
+        {
+        }
+
+        public virtual float Weight => Mathf.Max(0f, weight());
 
         public bool CanPick(int credits)
         {
@@ -51,7 +68,7 @@ namespace BazaarIsMyHaven
 
         protected virtual int CheapestCost()
         {
-            return Math.Max(0, cost.Value);
+            return Math.Max(0, cost());
         }
 
         // Chooses what this pick spawns; credits are at least CheapestCost()
