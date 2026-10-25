@@ -35,6 +35,9 @@
 	<ProjectReference Include="..\PerClientSync\PerClientSync.csproj">
 		<Private>False</Private>
 	</ProjectReference>
+	<ProjectReference Include="..\ConfigPresets\ConfigPresets.csproj">
+		<Private>False</Private>
+	</ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
