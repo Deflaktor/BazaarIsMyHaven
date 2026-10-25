@@ -42,46 +42,104 @@ Works with
 Not compatible with
 - BazaarLunarForEveryone
 
-## Settings
+## How it works
 
-The config file explains every setting. A few need more:
+The Bazaar is split into sections, one for each kind of thing this mod adds: printers, cauldrons, the Donation Altar and so on. Each has its own part of the config, starting with `SectionEnabled` if you don't want it at all.
 
-### Director
+Most of it doesn't just always appear. Every time you enter the Bazaar, a director gets some credits and spends them on what the sections offer, a bit like the game's own director does with chests on a stage. The further you are into the run, the more it has to spend:
 
-On every visit, a director spends credits on interactables, like the game's own scene director:
+`Credits = DirectorExtraCredits + DirectorCreditsPerStage x stages cleared`, capped at `DirectorCreditsCap` (-1 for no cap)
 
-`Credits = DirectorExtraCredits + DirectorCreditsPerStage x stages cleared`, at most `DirectorCreditsCap` (-1 for no cap)
+Everything it can buy has a `DirectorCost` (how many credits it takes) and a `DirectorWeight` (how often it gets picked over the rest). `MaxAmount` caps how many of one kind you can get. Anything that costs 0 always shows up, which is how the Lunar Buds and the Cleansing Pool work by default.
 
-Each interactable has a `DirectorCost` and a `DirectorWeight`, which sets how often it gets picked. `MaxAmount` limits how many of a kind appear. Lunar Buds and the Cleansing Pool cost nothing, so they always appear.
+Some settings come up in several sections:
 
-### Shops
+- `Cost` and `CostType`: the price and what you pay with, e.g. `Money`, `LunarCoin`, `WhiteItem` or `PercentHealth`. Money prices scale with difficulty if `ScaleMoneyCosts` is on.
+- `InstancedPurchases`: every player can buy from it once, without taking it away from the others.
+- `BuyToInventory`: what you buy goes straight into your inventory. Equipment you swap out stays in the shop, and swapping back there is free.
 
-- `InstancedPurchases`: each player can buy from a shop once, without taking it away from the others.
-- `BuyToInventory`: purchases go straight into the buyer's inventory. Equipment you replace stays in the shop, and swapping back there is free for you.
-- `CostType`: what a price is paid in, e.g. `Money`, `LunarCoin`, `WhiteItem` or `PercentHealth`.
+Item lists, like the Lunar Shop's `ItemList` or the Donation Altar's rewards, use the [ItemStringParser](https://thunderstore.io/package/Def/ItemStringParser/) format. Its page lists the item names and keywords. A few examples:
 
-### Item lists
+- `Tier1 | Tier2 | Tier3 | Lunar | Boss`: one item of a random tier
+- `dtLunarChest`: the same items the game's own Lunar Buds have
+- `5xdtChest1 | 2xdtChest2`: either 5 small chest items or 2 large chest items
 
-The Lunar Shop's `ItemList` and the Donation Altar's reward lists use the [ItemStringParser](https://thunderstore.io/package/Def/ItemStringParser/) format. Its page lists the item names and keywords. Examples:
-
-- `Tier1 | Tier2 | Tier3 | Lunar | Boss`: one item of a random tier. With `SequentialItems` on, the Lunar Shop takes them in order, so 5 buds offer one item of each tier.
-- `dtLunarChest`: the game's own Lunar Bud items.
-- `5xdtChest1 | 2xdtChest2`: a reward of either 5 small chest items or 2 large chest items.
-
-### Donation Altar
-
-A donation gives a reward from one of the reward lists, picked by their weights:
-
-- `RewardList<Character>`, e.g. `RewardListCommando`: a reward for each survivor, used by default. `RewardListAvailableCharacters` sets which characters have one, by survivor name or body name. Everyone else gets `RewardListCharacterDefault`.
-- `RewardList1` to `RewardList3`: more lists, off by default.
-
-`RewardLimitPerVisit` and `RewardLimitPerRun` limit how many rewards each player gets.
+## Sections
 
 ### Newt
 
-- `Dialogue`: `Off`, `Default` (the game's own unused Newt lines, in each player's language) or `BazaarIsMyHome` (the original mod's lines).
-- `KarmaTrigger`: in runs with karma, angering Newt makes the final fight harder. `OnDamage` raises karma when he's hit, like the game does; `OnKill` only when he dies.
-- `DeathBehavior`: with `Tank`, `Ghost` or `Hostile`, Newt has much less health and comes back after you kill him: with double health, as a ghost, or fighting back.
+- `NoKickFromShop`: he won't kick you out when you hit him.
+- `DeathBehavior`: with `Tank`, `Ghost` or `Hostile` he has much less health and comes back after you kill him: with double health, as a ghost, or fighting back.
+- `Dialogue`: he talks in chat. `Default` uses the game's own unused Newt lines, in each player's language, `BazaarIsMyHome` the original mod's lines, and `Off` keeps him quiet.
+- `KarmaTrigger`: when angering him counts toward the run's karma.
+
+### Printers
+
+3D printers for items. The tier weights (`Tier1Weight`, `Tier2Weight`, ...) decide what a printer prints, and `DirectorCostWhite`, `DirectorCostGreen` and so on what each tier costs the director. Void printers exist too, but they're rare.
+
+### Cauldrons
+
+Trade items into another tier.
+
+- `WhiteToGreenWeight` and the others pick the kind of cauldron.
+- `WhiteToGreenCost` and the others set how many items it takes.
+- `TranscendentWeight` adds Transcendent Cauldrons, with Hallowed Concepts.
+
+### Scrappers
+
+The director buys them once, and then all of them spawn. `MaxAmount` sets how many.
+
+### Equipment Terminals
+
+Sell equipment. `ReplaceWithEliteChance` sometimes offers an elite aspect instead, and `ReplaceLunarSeersWithEquipment` puts terminals where the Lunar Seers stand.
+
+### Lunar Shop
+
+Lunar Buds that sell from your own `ItemList`.
+
+- `BuyLimit`: caps purchases per visit.
+- `SequentialItems`: goes through the list in order instead of randomly, so `Tier1 | Tier2 | Tier3 | Lunar | Boss` on 5 buds gives one item of each tier.
+- `AmountDependingOnCharacter`: gives some survivors more or fewer buds.
+
+### Lunar Recycler
+
+Rerolls the Lunar Buds. The first reroll costs `Cost`, each one after that `CostMultiplier` times more, and `RerollLimit` caps them per visit.
+
+### Cleansing Pool
+
+Like the normal one, but with `RewardsLunarCoin` you get a Lunar Coin back instead of a Pearl. Idea is to give a way out for accidental Lunar purchases.
+
+### Lunar Seers
+
+The two Seer Stations that pick where the next stage takes you. Turn them off with `Available` or change their `Cost`.
+
+### Shrine of Order
+
+Turns all your items of a tier into one random item of that tier, for a Lunar Coin. `UseLimit` caps uses per visit.
+
+### Donation Altar
+
+The director can place an altar next to Newt, and you donate to it for a reward: by default 5 Lunar Coins (`Cost`, `CostType`) for one reward per run. Each player donates on their own, and above the altar you see an example of what you could get. Once you've reached your limit (`RewardLimitPerVisit`, `RewardLimitPerRun`), the altar looks used to you, but the others can still donate.
+
+What you get depends on your survivor:
+
+- Every survivor has a reward of their own that fits their kit, e.g. 5 Sticky Bombs for Commando or 3 Medkits for REX. You can change each one (`RewardListCommando` and so on).
+- `RewardListAvailableCharacters` sets which survivors have their own. Everyone else gets `RewardListCharacterDefault`, 3 green scrap by default. Survivors from other mods that give them a reward are added to it once, and stay out if you remove them.
+- Rewards can also be a choice, e.g. `Tier3 | 2xTier2` gives one red item or two greens.
+
+For more variety, `RewardList1` to `RewardList3` are extra reward lists, off by default. Give them a weight (`RewardList1Weight` and so on) and each donation picks a list by weight, the survivor's list included (`RewardListCharacterWeight`). With `SequentialRewardLists` on, they take turns instead, from the highest weight down. That way you can set it up that the more you donate the higher tier rewards you get.
+
+### Command Pedestal
+
+Pick any item of a tier for a price. Each tier has its own director cost, weight and price, e.g. `Tier2DirectorCost`, `Tier2Weight` and `Tier2Cost`.
+
+### Wandering CHEF
+
+Needs the Alloyed Collective. He cooks you a meal from one recipe, by default one you can actually make from your inventory and what the Bazaar sells (`CraftableRecipesOnly`). With `UnrestrictedCrafting` you can cook anything, which is the vanilla behavior.
+
+### Drones
+
+Needs the Alloyed Collective. A Drone Combiner Station, Drone Upgrade Station, Drone Scrapper and Triple Drone Shop, each with its own director cost and weight. `TripleDroneShopBuyAll` lets you take all three drones from the shop.
 
 ## For mod authors
 
