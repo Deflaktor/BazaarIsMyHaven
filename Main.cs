@@ -88,8 +88,22 @@ namespace BazaarIsMyHaven
             };
         }
 
+        // a section of another mod, see BazaarAPI; added after the game loaded, it is hooked right away
+        public void AddSection(BazaarBase section)
+        {
+            if (section == null || bazaarMods.Contains(section))
+                return;
+            bazaarMods.Add(section);
+            section.Preload();
+            if (hooked)
+                section.Hook();
+        }
+
+        private bool hooked;
+
         private void Hook()
         {
+            hooked = true;
             foreach (var bazaarMod in bazaarMods)
             {
                 bazaarMod.Hook();

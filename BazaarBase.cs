@@ -13,20 +13,32 @@ using UnityEngine.SceneManagement;
 
 namespace BazaarIsMyHaven
 {
+    /// <summary>
+    /// A section of the Bazaar, e.g. the printers or the Donation Altar. Other mods add their own with
+    /// BazaarAPI.AddSection. On every visit, the director collects the cards of all sections, buys from them with its
+    /// credits, and then each section spawns what the director bought. Everything but Preload and Hook runs on the host
+    /// only, and only while the mod is enabled.
+    /// </summary>
     public abstract class BazaarBase
     {
         protected System.Random RNG = new System.Random();
 
+        /// <summary>Loads the section's assets, once, when it is added.</summary>
         public abstract void Preload();
+        /// <summary>Spawns what the director bought from the section's cards, when the Bazaar is set up.</summary>
         public abstract void SetupBazaar();
+        /// <summary>Adds the section's hooks, once, after the game loaded.</summary>
         public virtual void Hook() { }
         public virtual void RunStart() { }
         public virtual void RunEnd() { }
-        // Adds the cards the director can pick for this section; SetupBazaar spawns the picks
+        /// <summary>Adds the cards the director can buy for the section, on every visit, before SetupBazaar.</summary>
         public virtual void AddDirectorCards(List<DirectorCard> cards) { }
-        // Runs a frame after setup, once the shops rolled their items. Returns credits to give back to the director.
+        /// <summary>
+        /// Runs a frame after setup, once the shops rolled their items, e.g. to remove a shop that has nothing to offer.
+        /// Returns the credits to give back to the director, which spends them in a final pass.
+        /// </summary>
         public virtual int CheckAfterSetup() { return 0; }
-        // Spawns what the director picked in its final pass
+        /// <summary>Spawns what the director bought in its final pass.</summary>
         public virtual void SpawnLatePicks() { }
 
         // Spawns a prefab already rotated, so every client gets the rotation the host sees
