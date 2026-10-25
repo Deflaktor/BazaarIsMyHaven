@@ -83,6 +83,64 @@ A donation gives a reward from one of the reward lists, picked by their weights:
 - `KarmaTrigger`: in runs with karma, angering Newt makes the final fight harder. `OnDamage` raises karma when he's hit, like the game does; `OnKill` only when he dies.
 - `DeathBehavior`: with `Tank`, `Ghost` or `Hostile`, Newt has much less health and comes back after you kill him: with double health, as a ghost, or fighting back.
 
+## For mod authors
+
+You can hook your own mod into the Bazaar with `BazaarAPI`. Add `[BepInDependency(BazaarIsMyHaven.Main.PluginGUID)]` to your plugin and call it in `Awake`.
+
+### Adding your own interactables
+
+Everything this mod spawns in the Bazaar comes from a section (the printers, the Donation Altar, and so on). Each visit, a director gets some credits and buys from the sections' director cards, and then every section spawns whatever was bought for it.
+
+To add your own, subclass `BazaarBase` and pass it to `BazaarAPI.AddSection`. Your cards go into the same pool as the built-in ones, so they compete for the same credits. Here's a section that sometimes adds a Shrine of Chance:
+
+```csharp
+public class ShrineSection : BazaarBase
+{
+    private AsyncOperationHandle<GameObject> shrine;
+    private DirectorCard card;
+
+    public override void Preload()
+    {
+        shrine = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ShrineChance/ShrineChance.prefab");
+    }
+
+    // on every visit: cost 5 credits, weight 1, at most 1
+    public override void AddDirectorCards(List<DirectorCard> cards)
+    {
+        card = new DirectorCard("Shrine of Chance", () => 5, () => 1f, () => 1);
+        cards.Add(card);
+    }
+
+    // spawns as many as the director bought
+    public override void SetupBazaar()
+    {
+        for (int i = 0; i < card.Count; i++)
+        {
+            var instance = Object.Instantiate(shrine.WaitForCompletion(), new Vector3(-100f, -24f, -40f), Quaternion.identity);
+            NetworkServer.Spawn(instance);
+        }
+    }
+}
+
+BazaarAPI.AddSection(new ShrineSection());
+```
+
+A few things worth knowing:
+
+- Cost and weight can be plain numbers like above, or your own config entries: `new DirectorCard("Shrine of Chance", myCost, myWeight, () => 1)`.
+- If your shop turns out to have nothing to sell, you can give the credits back in `CheckAfterSetup`. The director spends them again a frame later, and you spawn those in `SpawnLatePicks`.
+- Apart from `Preload` and `Hook`, your section only runs on the host. Clients don't have your mod, so stick to prefabs the game already knows.
+
+### Donation Altar rewards for your survivor
+
+If your mod adds a survivor, you can give it its own Donation Altar reward:
+
+```csharp
+BazaarAPI.SetSurvivorDonationReward("MySurvivor", "3xFeather | Tier3");
+```
+
+The reward uses the [ItemStringParser](https://thunderstore.io/package/Def/ItemStringParser/) format. It only sets the default of the survivor's `RewardList<name>` setting, so players can still change it. The first time, usually because their config is older than your mod, your survivor is added to the player's `RewardListAvailableCharacters`. If they take it out again, it stays out.
+
 ## Credits
 
 Thanks to Lunzir for [BazaarIsMyHome](https://thunderstore.io/package/Lunzir2/BazaarIsMyHome/), the mod this one is a fork of.
