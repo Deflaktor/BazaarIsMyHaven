@@ -16,10 +16,17 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<GameObject> lunarCauldronGreenToRed;
         AsyncOperationHandle<GameObject> lunarCauldronRedToWhite;
         AsyncOperationHandle<GameObject> transcendentCauldron;
-        AsyncOperationHandle<GameObject>[] LunarCauldronsCode;
         Dictionary<int, SpawnCardStruct> DicCauldrons = new Dictionary<int, SpawnCardStruct>();
-        DirectorCard card;
+        KindCard card;
         int spawned;
+
+        // cauldrons of other mods, see BazaarAPI.AddCauldron
+        private static readonly List<DirectorKind> addedKinds = new List<DirectorKind>();
+
+        public static void AddKind(string name, Func<SpawnCard> spawnCard, Func<int> cost, Func<float> weight, Func<bool> isAvailable)
+        {
+            addedKinds.Add(AddedKind(name, spawnCard, cost, weight, isAvailable));
+        }
 
         public override void Preload()
         {
@@ -27,12 +34,6 @@ namespace BazaarIsMyHaven
             lunarCauldronGreenToRed = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, GreenToRed Variant.prefab");
             lunarCauldronRedToWhite = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarCauldrons/LunarCauldron, RedToWhite Variant.prefab");
             transcendentCauldron = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/BetterCauldron.prefab");
-            LunarCauldronsCode = [
-                lunarCauldronWhiteToGreen,
-                lunarCauldronGreenToRed,
-                lunarCauldronRedToWhite,
-                transcendentCauldron
-            ];
         }
 
         public override void Hook()
@@ -52,12 +53,13 @@ namespace BazaarIsMyHaven
             card = null;
             if (ModConfig.CauldronSectionEnabled.Value)
             {
-                if (!GetRandomLunarCauldron().IsValid())
+                var kinds = GetKinds();
+                if (kinds.Count == 0)
                 {
                     Log.LogWarning("No cauldron types with a valid weight; skipping cauldrons.");
                     return;
                 }
-                card = new DirectorCard("Lunar Cauldron", ModConfig.CauldronDirectorCost, ModConfig.CauldronDirectorWeight, () => ModConfig.CauldronMaxAmount.Value);
+                card = new KindCard("Lunar Cauldron", kinds, () => ModConfig.CauldronDirectorWeight.Value, () => ModConfig.CauldronMaxAmount.Value);
                 cards.Add(card);
             }
         }
@@ -77,9 +79,9 @@ namespace BazaarIsMyHaven
         {
             if (card == null)
                 return;
-            for (; spawned < card.Count; spawned++)
+            for (; spawned < card.picks.Count; spawned++)
             {
-                SpawnAt(GetRandomLunarCauldron().WaitForCompletion(), DicCauldrons[spawned]);
+                card.picks[spawned].spawn(DicCauldrons[spawned]);
             }
         }
 
@@ -220,31 +222,31 @@ namespace BazaarIsMyHaven
             }
         }
 
-        private AsyncOperationHandle<GameObject> GetRandomLunarCauldron()
+        // The types the director can roll on this visit: the Bazaar's own with a weight, and other mods' cauldrons
+        private List<DirectorKind> GetKinds()
         {
-            float w_g = ModConfig.CauldronWhiteToGreenWeight.Value;
-            float g_r = ModConfig.CauldronGreenToRedWeight.Value;
-            float r_w = ModConfig.CauldronRedToWhiteWeight.Value;
+            var kinds = new List<DirectorKind>();
+
+            void AddType(string name, AsyncOperationHandle<GameObject> prefab, float weight)
+            {
+                if (weight > 0f)
+                    kinds.Add(new DirectorKind
+                    {
+                        name = name,
+                        cost = () => ModConfig.CauldronDirectorCost.Value,
+                        weight = () => weight,
+                        spawn = slot => SpawnAt(prefab.WaitForCompletion(), slot)
+                    });
+            }
+
+            AddType("WhiteToGreen", lunarCauldronWhiteToGreen, ModConfig.CauldronWhiteToGreenWeight.Value);
+            AddType("GreenToRed", lunarCauldronGreenToRed, ModConfig.CauldronGreenToRedWeight.Value);
+            AddType("RedToWhite", lunarCauldronRedToWhite, ModConfig.CauldronRedToWhiteWeight.Value);
             // clients only have Transcendent Cauldrons if the run has Hallowed Concepts
-            float t = DLC4Content.DLC4 && Run.instance.IsExpansionEnabled(DLC4Content.DLC4) ? ModConfig.CauldronTranscendentWeight.Value : 0f;
-
-            // Negative weights count as off.
-            if (w_g < 0) w_g = 0;
-            if (g_r < 0) g_r = 0;
-            if (r_w < 0) r_w = 0;
-            if (t < 0) t = 0;
-
-            float total = w_g + g_r + r_w + t;
-
-            // No cauldron type is on when all weights are zero.
-            if (total == 0)
-                return default;
-
-            double d = RNG.NextDouble() * total;
-            if (d < w_g) return LunarCauldronsCode[0];
-            else if (d < w_g + g_r) return LunarCauldronsCode[1];
-            else if (d < w_g + g_r + r_w) return LunarCauldronsCode[2];
-            else { return LunarCauldronsCode[3]; }
+            if (DLC4Content.DLC4 && Run.instance.IsExpansionEnabled(DLC4Content.DLC4))
+                AddType("Transcendent", transcendentCauldron, ModConfig.CauldronTranscendentWeight.Value);
+            kinds.AddRange(DirectorKind.Available(addedKinds));
+            return kinds;
         }
     }
 }

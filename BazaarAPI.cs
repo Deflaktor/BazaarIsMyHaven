@@ -34,6 +34,20 @@ namespace BazaarIsMyHaven
         }
 
         /// <summary>
+        /// Adds a kind of cauldron to the Bazaar's cauldrons, as AddPrinter does for printers: yours competes with the
+        /// cauldron types' weights (WhiteToGreenWeight and so on) and spawns in one of the cauldron spots.
+        /// </summary>
+        /// <param name="name">The name in the log</param>
+        /// <param name="spawnCard">The cauldron's spawn card; its prefab is spawned</param>
+        /// <param name="directorCost">The credits one costs, e.g. 10 like the Bazaar's own cauldrons by default</param>
+        /// <param name="weight">How likely the director rolls it, compared to the cauldron types' weights</param>
+        /// <param name="isAvailable">Whether the director can roll it on this visit</param>
+        public static void AddCauldron(string name, Func<SpawnCard> spawnCard, Func<int> directorCost, Func<float> weight, Func<bool> isAvailable = null)
+        {
+            BazaarCauldron.AddKind(name, spawnCard, directorCost, weight, isAvailable);
+        }
+
+        /// <summary>
         /// Gives a survivor its own Donation Altar reward, e.g. for a survivor your mod adds. It becomes the default of the
         /// survivor's RewardList&lt;name&gt; setting, which players can still change. The first time, e.g. when their config
         /// is older than your mod, the survivor is added to their RewardListAvailableCharacters; if they take it out
