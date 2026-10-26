@@ -78,20 +78,18 @@ namespace BazaarIsMyHaven
         }
 
         // For a setting whose type changed: the new default if its old value was the old default, otherwise the old value
-        // converted. Without an old value, it stays. Only the config file is updated, not a preset.
+        // converted. Without an old value, it stays.
         private static void MigrateChangedType<T>(ConfigEntry<T> entry, string oldDefault, Func<string, T> convert)
         {
-            entry = ModCompatibilityConfigPresets.PlayerEntry(entry);
             if (oldValues.TryGetValue((entry.Definition.Section, entry.Definition.Key), out var oldValue))
             {
                 entry.Value = string.Equals(oldValue, oldDefault, StringComparison.OrdinalIgnoreCase) ? (T)entry.DefaultValue : convert(oldValue);
             }
         }
 
-        // the new default if the setting still has the old one, otherwise its value converted; in the config file, not a preset
+        // the new default if the setting still has the old one, otherwise its value converted
         private static void Migrate<T>(ConfigEntry<T> entry, T oldDefault, Func<T, T> convert)
         {
-            entry = ModCompatibilityConfigPresets.PlayerEntry(entry);
             entry.Value = EqualityComparer<T>.Default.Equals(entry.Value, oldDefault) ? (T)entry.DefaultValue : convert(entry.Value);
         }
     }

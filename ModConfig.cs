@@ -184,164 +184,164 @@ namespace BazaarIsMyHaven
             ConfigMigration.BindVersion(config);
 
             // 00 General
-            EnableMod = ModCompatibilityConfigPresets.Bind(config, "00 General", "Enabled", true, "Enable Mod");
-            AlwaysSpawnShopPortal = ModCompatibilityConfigPresets.Bind(config, "00 General", "AlwaysSpawnShopPortal", false, "Spawn a portal to the Bazaar after each teleporter event.");
-            DisableTransferMoney = ModCompatibilityConfigPresets.Bind(config, "00 General", "DisableTransferMoney", ModCompatibilityBiggerBazaar.enabled ? DisableTransferMoneyMode.InheritFromBiggerBazaar : DisableTransferMoneyMode.Off, "Whether the gold players have when they take the portal to the Bazaar turns into experience, as in the base game, instead of them keeping it to spend there. Named after BiggerBazaar's own disableTransferMoney. Gold left when they leave the Bazaar turns into experience as usual. The default is InheritFromBiggerBazaar with BiggerBazaar installed, otherwise Off.\nOff: Players keep their gold. If BiggerBazaar transfers the gold itself, with its disableTransferMoney off, that is used instead.\nOn: The gold turns into experience. BiggerBazaar still transfers the gold if its disableTransferMoney is off.\nInheritFromBiggerBazaar: BiggerBazaar's disableTransferMoney decides: off, it transfers the gold; on, the gold turns into experience. Without BiggerBazaar, the same as Off.");
-            DirectorExtraCredits = ModCompatibilityConfigPresets.Bind(config, "00 General", "DirectorExtraCredits", 15, "Credits the director gets on every visit to the Bazaar, on top of DirectorCreditsPerStage. Like the game's scene director, it spends them at random on the sections' interactables, by their DirectorCost and DirectorWeight.");
-            DirectorCreditsPerStage = ModCompatibilityConfigPresets.Bind(config, "00 General", "DirectorCreditsPerStage", 25, "Credits the director gets for every stage cleared in the run.");
-            DirectorCreditsCap = ModCompatibilityConfigPresets.Bind(config, "00 General", "DirectorCreditsCap", 200, "The most credits the director gets on a visit, DirectorExtraCredits included. -1 = No cap.");
-            ScaleMoneyCosts = ModCompatibilityConfigPresets.Bind(config, "00 General", "ScaleMoneyCosts", true, "Costs paid in Money scale with difficulty, like the game's own shops. E.g. an Equipment Terminal with Cost 50 then costs what the game's triple equipment shop costs.");
-            PreventDrifterBagging = ModCompatibilityConfigPresets.Bind(config, "00 General", "PreventDrifterBagging", true, "Drifter can't put anything into his bag in the Bazaar: no interactables, no Newt, no other players or drones. The bag stays empty, like when he grabs something he can't carry.");
-            PreventDrifterJunk = ModCompatibilityConfigPresets.Bind(config, "00 General", "PreventDrifterJunk", true, "Drifter gains no Junk in the Bazaar, so Salvage can't farm temporary items there or on the next stage. Junk brought into the Bazaar can still be used.");
-            PreventDrifterTinker = ModCompatibilityConfigPresets.Bind(config, "00 General", "PreventDrifterTinker", true, "Drifter's Tinker changes nothing in the Bazaar: it doesn't reroll Lunar Buds, terminals or printers, and doesn't turn item pickups into scrap and temporary items. It causes issues together with Instanced Purchases.");
+            EnableMod = config.Bind("00 General", "Enabled", true, "Enable Mod");
+            AlwaysSpawnShopPortal = config.Bind("00 General", "AlwaysSpawnShopPortal", false, "Spawn a portal to the Bazaar after each teleporter event.");
+            DisableTransferMoney = config.Bind("00 General", "DisableTransferMoney", ModCompatibilityBiggerBazaar.enabled ? DisableTransferMoneyMode.InheritFromBiggerBazaar : DisableTransferMoneyMode.Off, "Whether the gold players have when they take the portal to the Bazaar turns into experience, as in the base game, instead of them keeping it to spend there. Named after BiggerBazaar's own disableTransferMoney. Gold left when they leave the Bazaar turns into experience as usual. The default is InheritFromBiggerBazaar with BiggerBazaar installed, otherwise Off.\nOff: Players keep their gold. If BiggerBazaar transfers the gold itself, with its disableTransferMoney off, that is used instead.\nOn: The gold turns into experience. BiggerBazaar still transfers the gold if its disableTransferMoney is off.\nInheritFromBiggerBazaar: BiggerBazaar's disableTransferMoney decides: off, it transfers the gold; on, the gold turns into experience. Without BiggerBazaar, the same as Off.");
+            DirectorExtraCredits = config.Bind("00 General", "DirectorExtraCredits", 15, "Credits the director gets on every visit to the Bazaar, on top of DirectorCreditsPerStage. Like the game's scene director, it spends them at random on the sections' interactables, by their DirectorCost and DirectorWeight.");
+            DirectorCreditsPerStage = config.Bind("00 General", "DirectorCreditsPerStage", 25, "Credits the director gets for every stage cleared in the run.");
+            DirectorCreditsCap = config.Bind("00 General", "DirectorCreditsCap", 200, "The most credits the director gets on a visit, DirectorExtraCredits included. -1 = No cap.");
+            ScaleMoneyCosts = config.Bind("00 General", "ScaleMoneyCosts", true, "Costs paid in Money scale with difficulty, like the game's own shops. E.g. an Equipment Terminal with Cost 50 then costs what the game's triple equipment shop costs.");
+            PreventDrifterBagging = config.Bind("00 General", "PreventDrifterBagging", true, "Drifter can't put anything into his bag in the Bazaar: no interactables, no Newt, no other players or drones. The bag stays empty, like when he grabs something he can't carry.");
+            PreventDrifterJunk = config.Bind("00 General", "PreventDrifterJunk", true, "Drifter gains no Junk in the Bazaar, so Salvage can't farm temporary items there or on the next stage. Junk brought into the Bazaar can still be used.");
+            PreventDrifterTinker = config.Bind("00 General", "PreventDrifterTinker", true, "Drifter's Tinker changes nothing in the Bazaar: it doesn't reroll Lunar Buds, terminals or printers, and doesn't turn item pickups into scrap and temporary items. It causes issues together with Instanced Purchases.");
 
             // 01 Newt
-            NewtSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "01 Newt", "SectionEnabled", true, "Enables or disables the Newt section.");
-            NewtNoKickFromShop = ModCompatibilityConfigPresets.Bind(config, "01 Newt", "NoKickFromShop", true, "Prevents being kicked out of the Bazaar after angering Newt.");
-            NewtDeathBehavior = ModCompatibilityConfigPresets.Bind(config, "01 Newt", "DeathBehavior", ShopKeeper.DeathState.Tank, "Determines Newt's behavior after death.\nDefault: Vanilla - Unchanged behavior\nTank: Doubles Newt's health after each kill\nGhost: Newt respawns as a passive ghost\nHostile: Newt revives hostile and attacks players");
-            NewtKarmaTrigger = ModCompatibilityConfigPresets.Bind(config, "01 Newt", "KarmaTrigger", ShopKeeper.KarmaTrigger.OnKill, "When angering Newt raises the run's karma, if karma is enabled for the run.\nOnDamage: Vanilla - When he would kick you out after being hit, also if NoKickFromShop keeps you in\nOnKill: Only when he is killed");
-            NewtKarmaTriggerOncePerVisit = ModCompatibilityConfigPresets.Bind(config, "01 Newt", "KarmaTriggerOncePerVisit", true, "Angering Newt raises the run's karma at most once per visit to the Bazaar, even if he revives and is angered again.");
-            NewtDialogue = ModCompatibilityConfigPresets.Bind(config, "01 Newt", "Dialogue", ShopKeeper.Dialogue.Default, "What Newt says in chat.\nOff: Nothing\nDefault: The game's own unused Newt lines when you donate, buy from a Lunar Bud or hit him, shown in each player's language. He also greets you, in English.\nBazaarIsMyHome: The greetings and remarks of the original BazaarIsMyHome mod, in the host's language");
+            NewtSectionEnabled = config.Bind("01 Newt", "SectionEnabled", true, "Enables or disables the Newt section.");
+            NewtNoKickFromShop = config.Bind("01 Newt", "NoKickFromShop", true, "Prevents being kicked out of the Bazaar after angering Newt.");
+            NewtDeathBehavior = config.Bind("01 Newt", "DeathBehavior", ShopKeeper.DeathState.Tank, "Determines Newt's behavior after death.\nDefault: Vanilla - Unchanged behavior\nTank: Doubles Newt's health after each kill\nGhost: Newt respawns as a passive ghost\nHostile: Newt revives hostile and attacks players");
+            NewtKarmaTrigger = config.Bind("01 Newt", "KarmaTrigger", ShopKeeper.KarmaTrigger.OnKill, "When angering Newt raises the run's karma, if karma is enabled for the run.\nOnDamage: Vanilla - When he would kick you out after being hit, also if NoKickFromShop keeps you in\nOnKill: Only when he is killed");
+            NewtKarmaTriggerOncePerVisit = config.Bind("01 Newt", "KarmaTriggerOncePerVisit", true, "Angering Newt raises the run's karma at most once per visit to the Bazaar, even if he revives and is angered again.");
+            NewtDialogue = config.Bind("01 Newt", "Dialogue", ShopKeeper.Dialogue.Default, "What Newt says in chat.\nOff: Nothing\nDefault: The game's own unused Newt lines when you donate, buy from a Lunar Bud or hit him, shown in each player's language. He also greets you, in English.\nBazaarIsMyHome: The greetings and remarks of the original BazaarIsMyHome mod, in the host's language");
 
             // 02 Printer
-            PrinterSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "SectionEnabled", true, "Enables or disables the Printer section.");
-            PrinterMaxAmount = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "MaxAmount", 9, new ConfigDescription("Maximum number of printers the director can spawn (max 9).", new AcceptableValueRange<int>(0, 9)));
-            PrinterDirectorCostWhite = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "DirectorCostWhite", 5, "Director credits a printer for white (Tier 1) items costs.");
-            PrinterDirectorCostGreen = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "DirectorCostGreen", 10, "Director credits a printer for green (Tier 2) items costs.");
-            PrinterDirectorCostRed = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "DirectorCostRed", 15, "Director credits a printer for red (Tier 3) or Void items costs.");
-            PrinterDirectorCostBoss = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "DirectorCostBoss", 10, "Director credits a printer for Boss items costs.");
-            PrinterDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "DirectorWeight", 4f, "How likely the director picks a printer, compared to the DirectorWeight of the other interactables. Which tier it prints is rolled by the tier weights below.");
-            PrinterTier1Weight = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "Tier1Weight", 0.5f, "Weight for Tier 1 (white) items.");
-            PrinterTier2Weight = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "Tier2Weight", 0.25f, "Weight for Tier 2 (green) items.");
-            PrinterTier3Weight = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "Tier3Weight", 0.17f, "Weight for Tier 3 (red) items.");
-            PrinterTierBossWeight = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "BossWeight", 0.04f, "Weight for Boss-tier items.");
-            PrinterTierVoid1Weight = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "TierVoid1Weight", 0.015f, "Weight for Tier 1 Void items (traded from red).");
-            PrinterTierVoid2Weight = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "TierVoid2Weight", 0.015f, "Weight for Tier 2 Void items (traded from red).");
-            PrinterTierVoid3Weight = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "TierVoid3Weight", 0.006f, "Weight for Tier 3 Void items (traded from red).");
-            PrinterTierVoidBossWeight = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "TierVoidBossWeight", 0.003f, "Weight for Boss-tier Void items (traded from red).");
-            PrinterTierVoidAnyWeight = ModCompatibilityConfigPresets.Bind(config, "02 Printer", "TierVoidAnyWeight", 0f, "Weight for Void items of any tier (traded from red).");
+            PrinterSectionEnabled = config.Bind("02 Printer", "SectionEnabled", true, "Enables or disables the Printer section.");
+            PrinterMaxAmount = config.Bind("02 Printer", "MaxAmount", 9, new ConfigDescription("Maximum number of printers the director can spawn (max 9).", new AcceptableValueRange<int>(0, 9)));
+            PrinterDirectorCostWhite = config.Bind("02 Printer", "DirectorCostWhite", 5, "Director credits a printer for white (Tier 1) items costs.");
+            PrinterDirectorCostGreen = config.Bind("02 Printer", "DirectorCostGreen", 10, "Director credits a printer for green (Tier 2) items costs.");
+            PrinterDirectorCostRed = config.Bind("02 Printer", "DirectorCostRed", 15, "Director credits a printer for red (Tier 3) or Void items costs.");
+            PrinterDirectorCostBoss = config.Bind("02 Printer", "DirectorCostBoss", 10, "Director credits a printer for Boss items costs.");
+            PrinterDirectorWeight = config.Bind("02 Printer", "DirectorWeight", 4f, "How likely the director picks a printer, compared to the DirectorWeight of the other interactables. Which tier it prints is rolled by the tier weights below.");
+            PrinterTier1Weight = config.Bind("02 Printer", "Tier1Weight", 0.5f, "Weight for Tier 1 (white) items.");
+            PrinterTier2Weight = config.Bind("02 Printer", "Tier2Weight", 0.25f, "Weight for Tier 2 (green) items.");
+            PrinterTier3Weight = config.Bind("02 Printer", "Tier3Weight", 0.17f, "Weight for Tier 3 (red) items.");
+            PrinterTierBossWeight = config.Bind("02 Printer", "BossWeight", 0.04f, "Weight for Boss-tier items.");
+            PrinterTierVoid1Weight = config.Bind("02 Printer", "TierVoid1Weight", 0.015f, "Weight for Tier 1 Void items (traded from red).");
+            PrinterTierVoid2Weight = config.Bind("02 Printer", "TierVoid2Weight", 0.015f, "Weight for Tier 2 Void items (traded from red).");
+            PrinterTierVoid3Weight = config.Bind("02 Printer", "TierVoid3Weight", 0.006f, "Weight for Tier 3 Void items (traded from red).");
+            PrinterTierVoidBossWeight = config.Bind("02 Printer", "TierVoidBossWeight", 0.003f, "Weight for Boss-tier Void items (traded from red).");
+            PrinterTierVoidAnyWeight = config.Bind("02 Printer", "TierVoidAnyWeight", 0f, "Weight for Void items of any tier (traded from red).");
 
             // 03 Cauldron
-            CauldronSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "SectionEnabled", true, "Enables or disables the Cauldron section.");
-            CauldronMaxAmount = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "MaxAmount", 7, new ConfigDescription("Maximum number of cauldrons the director can spawn (max 7).", new AcceptableValueRange<int>(0, 7)));
-            CauldronDirectorCost = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "DirectorCost", 10, "Director credits a cauldron costs.");
-            CauldronDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "DirectorWeight", 2f, "How likely the director picks a cauldron, compared to the DirectorWeight of the other interactables. Which type it is is rolled by the weights below.");
-            CauldronWhiteToGreenWeight = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "WhiteToGreenWeight", 0.75f, "Weight for White->Green cauldrons.");
-            CauldronGreenToRedWeight = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "GreenToRedWeight", 0.25f, "Weight for Green->Red cauldrons.");
-            CauldronRedToWhiteWeight = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "RedToWhiteWeight", 0f, "Weight for Red->White cauldrons.");
-            CauldronTranscendentWeight = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "TranscendentWeight", 0f, "Weight for Transcendent Cauldrons from Hallowed Concepts, which turn a Hex into a cursed item. Only spawns if Hallowed Concepts is enabled for the run.");
-            CauldronWhiteToGreenCost = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "WhiteToGreenCost", 3, "Number of White items required for Green conversion.");
-            CauldronGreenToRedCost = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "GreenToRedCost", 5, "Number of Green items required for Red conversion.");
-            CauldronRedToWhiteCost = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "RedToWhiteCost", 1, "Number of Red items required for White conversion.");
-            CauldronTranscendentCost = ModCompatibilityConfigPresets.Bind(config, "03 Cauldron", "TranscendentCost", 1, "Number of Hexes a Transcendent Cauldron takes.");
+            CauldronSectionEnabled = config.Bind("03 Cauldron", "SectionEnabled", true, "Enables or disables the Cauldron section.");
+            CauldronMaxAmount = config.Bind("03 Cauldron", "MaxAmount", 7, new ConfigDescription("Maximum number of cauldrons the director can spawn (max 7).", new AcceptableValueRange<int>(0, 7)));
+            CauldronDirectorCost = config.Bind("03 Cauldron", "DirectorCost", 10, "Director credits a cauldron costs.");
+            CauldronDirectorWeight = config.Bind("03 Cauldron", "DirectorWeight", 2f, "How likely the director picks a cauldron, compared to the DirectorWeight of the other interactables. Which type it is is rolled by the weights below.");
+            CauldronWhiteToGreenWeight = config.Bind("03 Cauldron", "WhiteToGreenWeight", 0.75f, "Weight for White->Green cauldrons.");
+            CauldronGreenToRedWeight = config.Bind("03 Cauldron", "GreenToRedWeight", 0.25f, "Weight for Green->Red cauldrons.");
+            CauldronRedToWhiteWeight = config.Bind("03 Cauldron", "RedToWhiteWeight", 0f, "Weight for Red->White cauldrons.");
+            CauldronTranscendentWeight = config.Bind("03 Cauldron", "TranscendentWeight", 0f, "Weight for Transcendent Cauldrons from Hallowed Concepts, which turn a Hex into a cursed item. Only spawns if Hallowed Concepts is enabled for the run.");
+            CauldronWhiteToGreenCost = config.Bind("03 Cauldron", "WhiteToGreenCost", 3, "Number of White items required for Green conversion.");
+            CauldronGreenToRedCost = config.Bind("03 Cauldron", "GreenToRedCost", 5, "Number of Green items required for Red conversion.");
+            CauldronRedToWhiteCost = config.Bind("03 Cauldron", "RedToWhiteCost", 1, "Number of Red items required for White conversion.");
+            CauldronTranscendentCost = config.Bind("03 Cauldron", "TranscendentCost", 1, "Number of Hexes a Transcendent Cauldron takes.");
 
             // 04 Scrapper
-            ScrapperSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "04 Scrapper", "SectionEnabled", true, "Enables or disables the Scrapper section.");
-            ScrapperMaxAmount = ModCompatibilityConfigPresets.Bind(config, "04 Scrapper", "MaxAmount", 2, new ConfigDescription("Number of Scrappers spawned when the director picks them (max 2).", new AcceptableValueRange<int>(0, 2)));
-            ScrapperDirectorCost = ModCompatibilityConfigPresets.Bind(config, "04 Scrapper", "DirectorCost", 3, "Director credits the Scrappers cost. The director picks them only once, and then all of them spawn.");
-            ScrapperDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "04 Scrapper", "DirectorWeight", 1f, "How likely the director picks the Scrappers, compared to the DirectorWeight of the other interactables.");
+            ScrapperSectionEnabled = config.Bind("04 Scrapper", "SectionEnabled", true, "Enables or disables the Scrapper section.");
+            ScrapperMaxAmount = config.Bind("04 Scrapper", "MaxAmount", 2, new ConfigDescription("Number of Scrappers spawned when the director picks them (max 2).", new AcceptableValueRange<int>(0, 2)));
+            ScrapperDirectorCost = config.Bind("04 Scrapper", "DirectorCost", 3, "Director credits the Scrappers cost. The director picks them only once, and then all of them spawn.");
+            ScrapperDirectorWeight = config.Bind("04 Scrapper", "DirectorWeight", 1f, "How likely the director picks the Scrappers, compared to the DirectorWeight of the other interactables.");
 
             // 05 Equipment
-            EquipmentSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "05 Equipment", "SectionEnabled", true, "Enables or disables the Equipment section.");
-            EquipmentMaxAmount = ModCompatibilityConfigPresets.Bind(config, "05 Equipment", "MaxAmount", 3, new ConfigDescription("Maximum number of Equipment Terminals the director can spawn (max 3 normally, 5 if replacing Lunar Seers).", new AcceptableValueRange<int>(0, 5)));
-            EquipmentDirectorCost = ModCompatibilityConfigPresets.Bind(config, "05 Equipment", "DirectorCost", 2, "Director credits an Equipment Terminal costs.");
-            EquipmentDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "05 Equipment", "DirectorWeight", 1f, "How likely the director picks an Equipment Terminal, compared to the DirectorWeight of the other interactables.");
-            EquipmentReplaceLunarSeersWithEquipment = ModCompatibilityConfigPresets.Bind(config, "05 Equipment", "ReplaceLunarSeersWithEquipment", false, "Replaces Lunar Seers with Equipment Terminals (increases equipment max to 5). Makes the Lunar Seer section irrelevant.");
-            EquipmentReplaceWithEliteChance = ModCompatibilityConfigPresets.Bind(config, "05 Equipment", "ReplaceWithEliteChance", 0.15f, "Chance for replacing the equipment with an elite equipment.");
-            EquipmentReplaceWithEliteList = ModCompatibilityConfigPresets.Bind(config, "05 Equipment", "ReplaceWithEliteList", "EliteEarthEquipment | EliteFireEquipment | EliteIceEquipment | EliteLunarEquipment | EliteLightningEquipment", "With which elite equipments to replace. List in the format equipment1 | equipment2. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md). Follows ItemStringParser format.");
-            EquipmentCost = ModCompatibilityConfigPresets.Bind(config, "05 Equipment", "Cost", 50, "Cost of an equipment purchase, paid in CostType.");
-            EquipmentCostType = ModCompatibilityConfigPresets.Bind(config, "05 Equipment", "CostType", CostTypeIndex.Money, "What equipment purchases cost, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price sign shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
-            EquipmentInstancedPurchases = ModCompatibilityConfigPresets.Bind(config, "05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
-            EquipmentBuyToInventory = ModCompatibilityConfigPresets.Bind(config, "05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground. Equipment replaced by a purchase goes into the terminal, where swapping again is free for the buyer.");
+            EquipmentSectionEnabled = config.Bind("05 Equipment", "SectionEnabled", true, "Enables or disables the Equipment section.");
+            EquipmentMaxAmount = config.Bind("05 Equipment", "MaxAmount", 3, new ConfigDescription("Maximum number of Equipment Terminals the director can spawn (max 3 normally, 5 if replacing Lunar Seers).", new AcceptableValueRange<int>(0, 5)));
+            EquipmentDirectorCost = config.Bind("05 Equipment", "DirectorCost", 2, "Director credits an Equipment Terminal costs.");
+            EquipmentDirectorWeight = config.Bind("05 Equipment", "DirectorWeight", 1f, "How likely the director picks an Equipment Terminal, compared to the DirectorWeight of the other interactables.");
+            EquipmentReplaceLunarSeersWithEquipment = config.Bind("05 Equipment", "ReplaceLunarSeersWithEquipment", false, "Replaces Lunar Seers with Equipment Terminals (increases equipment max to 5). Makes the Lunar Seer section irrelevant.");
+            EquipmentReplaceWithEliteChance = config.Bind("05 Equipment", "ReplaceWithEliteChance", 0.15f, "Chance for replacing the equipment with an elite equipment.");
+            EquipmentReplaceWithEliteList = config.Bind("05 Equipment", "ReplaceWithEliteList", "EliteEarthEquipment | EliteFireEquipment | EliteIceEquipment | EliteLunarEquipment | EliteLightningEquipment", "With which elite equipments to replace. List in the format equipment1 | equipment2. Can use:\\n- internal item names (see https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Developer-Reference/Items-and-Equipments-Data/)\\n- item tier keywords ({itemTiersString})\\n- droptable names (see README.md). Follows ItemStringParser format.");
+            EquipmentCost = config.Bind("05 Equipment", "Cost", 50, "Cost of an equipment purchase, paid in CostType.");
+            EquipmentCostType = config.Bind("05 Equipment", "CostType", CostTypeIndex.Money, "What equipment purchases cost, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price sign shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
+            EquipmentInstancedPurchases = config.Bind("05 Equipment", "InstancedPurchases", true, "Each player can purchase equipment independently.");
+            EquipmentBuyToInventory = config.Bind("05 Equipment", "BuyToInventory", true, "Purchased equipment goes directly into inventory instead of dropping to the ground. Equipment replaced by a purchase goes into the terminal, where swapping again is free for the buyer.");
 
             // 06 LunarShop
-            LunarShopSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "SectionEnabled", true, "Enables or disables the Lunar Shop section.");
-            LunarShopMaxAmount = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "MaxAmount", 5, new ConfigDescription("Maximum number of Lunar Buds the director can spawn (max 20).", new AcceptableValueRange<int>(0, 20)));
-            LunarShopDirectorCost = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "DirectorCost", 0, "Director credits a Lunar Bud costs. With 0, all buds up to MaxAmount always spawn.");
-            LunarShopDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "DirectorWeight", 1f, "How likely the director picks a Lunar Bud, compared to the DirectorWeight of the other interactables.");
+            LunarShopSectionEnabled = config.Bind("06 LunarShop", "SectionEnabled", true, "Enables or disables the Lunar Shop section.");
+            LunarShopMaxAmount = config.Bind("06 LunarShop", "MaxAmount", 5, new ConfigDescription("Maximum number of Lunar Buds the director can spawn (max 20).", new AcceptableValueRange<int>(0, 20)));
+            LunarShopDirectorCost = config.Bind("06 LunarShop", "DirectorCost", 0, "Director credits a Lunar Bud costs. With 0, all buds up to MaxAmount always spawn.");
+            LunarShopDirectorWeight = config.Bind("06 LunarShop", "DirectorWeight", 1f, "How likely the director picks a Lunar Bud, compared to the DirectorWeight of the other interactables.");
             var items = "Tonic | AutoCastEquipment | RandomDamageZone | LunarDagger | HalfSpeedDoubleHealth | ShieldOnly | ShieldOnly | ShieldOnly | LunarPrimaryReplacement | LunarSecondaryReplacement | LunarSpecialReplacement | LunarBadLuck | LunarBadLuck | LunarBadLuck | LunarSun | HalfAttackSpeedHalfCooldowns | HalfAttackSpeedHalfCooldowns";
-            LunarShopItemList = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "ItemList", "dtLunarChest", $"List of items available in Lunar Shop. {itemKeyWordsExplanation} Example: {items}");
-            LunarShopSequentialItems = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "SequentialItems", false, "Picks items sequentially from the list instead of randomly.");
-            LunarShopCost = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "Cost", 2, "Cost of a Lunar Bud purchase, paid in CostType.");
-            LunarShopCostType = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "CostType", CostTypeIndex.LunarCoin, "What Lunar Bud purchases cost, e.g. LunarCoin, Money, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
-            LunarShopBuyLimit = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar. -1 = Unlimited.");
-            LunarShopInstancedPurchases = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "InstancedPurchases", true, "Each player can buy independently from Lunar Shop.");
-            LunarShopAmountDependingOnCharacter = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "AmountDependingOnCharacter", "", "Change the number of Lunar Buds by Character. Needs InstancedPurchases. Cannot exceed the number of spawned buds. Comma-separated <characterBody|survivorName>=<amount>.\nExample: Seeker=15, FalseSon=16");
-            LunarShopBuyToInventory = ModCompatibilityConfigPresets.Bind(config, "06 LunarShop", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground. Equipment replaced by a purchase goes into the bud, where swapping again is free for the buyer.");
+            LunarShopItemList = config.Bind("06 LunarShop", "ItemList", "dtLunarChest", $"List of items available in Lunar Shop. {itemKeyWordsExplanation} Example: {items}");
+            LunarShopSequentialItems = config.Bind("06 LunarShop", "SequentialItems", false, "Picks items sequentially from the list instead of randomly.");
+            LunarShopCost = config.Bind("06 LunarShop", "Cost", 2, "Cost of a Lunar Bud purchase, paid in CostType.");
+            LunarShopCostType = config.Bind("06 LunarShop", "CostType", CostTypeIndex.LunarCoin, "What Lunar Bud purchases cost, e.g. LunarCoin, Money, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
+            LunarShopBuyLimit = config.Bind("06 LunarShop", "BuyLimit", 5, "Limit on Lunar Shop purchases each player can make per visit to the Bazaar. -1 = Unlimited.");
+            LunarShopInstancedPurchases = config.Bind("06 LunarShop", "InstancedPurchases", true, "Each player can buy independently from Lunar Shop.");
+            LunarShopAmountDependingOnCharacter = config.Bind("06 LunarShop", "AmountDependingOnCharacter", "", "Change the number of Lunar Buds by Character. Needs InstancedPurchases. Cannot exceed the number of spawned buds. Comma-separated <characterBody|survivorName>=<amount>.\nExample: Seeker=15, FalseSon=16");
+            LunarShopBuyToInventory = config.Bind("06 LunarShop", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground. Equipment replaced by a purchase goes into the bud, where swapping again is free for the buyer.");
 
             // 07 LunarRecycler
-            LunarRecyclerSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "07 LunarRecycler", "SectionEnabled", true, "Enables or disables the Lunar Recycler section.");
-            LunarRecyclerAvailable = ModCompatibilityConfigPresets.Bind(config, "07 LunarRecycler", "Available", true, "If enabled, a Lunar Recycler is available in the Bazaar. Otherwise it will get removed. It is also removed when the director spawns no Lunar Buds.");
-            LunarRecyclerCost = ModCompatibilityConfigPresets.Bind(config, "07 LunarRecycler", "Cost", 1, "Initial lunar coin cost to reroll.");
-            LunarRecyclerCostMultiplier = ModCompatibilityConfigPresets.Bind(config, "07 LunarRecycler", "CostMultiplier", 2, "Cost multiplier applied after each reroll use.");
-            LunarRecyclerRerollLimit = ModCompatibilityConfigPresets.Bind(config, "07 LunarRecycler", "RerollLimit", 3, "Limit the amount of rerolls allowed per visit to the Bazaar. -1 = Unlimited.");
+            LunarRecyclerSectionEnabled = config.Bind("07 LunarRecycler", "SectionEnabled", true, "Enables or disables the Lunar Recycler section.");
+            LunarRecyclerAvailable = config.Bind("07 LunarRecycler", "Available", true, "If enabled, a Lunar Recycler is available in the Bazaar. Otherwise it will get removed. It is also removed when the director spawns no Lunar Buds.");
+            LunarRecyclerCost = config.Bind("07 LunarRecycler", "Cost", 1, "Initial lunar coin cost to reroll.");
+            LunarRecyclerCostMultiplier = config.Bind("07 LunarRecycler", "CostMultiplier", 2, "Cost multiplier applied after each reroll use.");
+            LunarRecyclerRerollLimit = config.Bind("07 LunarRecycler", "RerollLimit", 3, "Limit the amount of rerolls allowed per visit to the Bazaar. -1 = Unlimited.");
 
             // 08 CleansingPool
-            CleansingPoolSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "08 CleansingPool", "SectionEnabled", true, "Enables or disables the Cleansing Pool section.");
-            CleansingPoolDirectorCost = ModCompatibilityConfigPresets.Bind(config, "08 CleansingPool", "DirectorCost", 0, "Director credits the Cleansing Pool costs. Free by default, since with RewardsLunarCoin it only gives back a Lunar Coin, so it always spawns unless its DirectorWeight is 0. Vanilla value: 5.");
-            CleansingPoolDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "08 CleansingPool", "DirectorWeight", 1f, "How likely the director picks the Cleansing Pool, compared to the DirectorWeight of the other interactables.");
-            CleansingPoolRewardsLunarCoins = ModCompatibilityConfigPresets.Bind(config, "08 CleansingPool", "RewardsLunarCoin", true, "Cleansing Pools reward a Lunar Coin instead of a Pearl.");
+            CleansingPoolSectionEnabled = config.Bind("08 CleansingPool", "SectionEnabled", true, "Enables or disables the Cleansing Pool section.");
+            CleansingPoolDirectorCost = config.Bind("08 CleansingPool", "DirectorCost", 0, "Director credits the Cleansing Pool costs. Free by default, since with RewardsLunarCoin it only gives back a Lunar Coin, so it always spawns unless its DirectorWeight is 0. Vanilla value: 5.");
+            CleansingPoolDirectorWeight = config.Bind("08 CleansingPool", "DirectorWeight", 1f, "How likely the director picks the Cleansing Pool, compared to the DirectorWeight of the other interactables.");
+            CleansingPoolRewardsLunarCoins = config.Bind("08 CleansingPool", "RewardsLunarCoin", true, "Cleansing Pools reward a Lunar Coin instead of a Pearl.");
 
             // 09 LunarSeer
-            LunarSeerSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "09 LunarSeer", "SectionEnabled", true, "Enables or disables the Lunar Seer Station section.");
-            LunarSeerAvailable = ModCompatibilityConfigPresets.Bind(config, "09 LunarSeer", "Available", true, "If enabled, Seer Stations appear in the Bazaar.");
-            LunarSeerCost = ModCompatibilityConfigPresets.Bind(config, "09 LunarSeer", "Cost", 3, "Lunar coin cost for using Seer Stations.");
+            LunarSeerSectionEnabled = config.Bind("09 LunarSeer", "SectionEnabled", true, "Enables or disables the Lunar Seer Station section.");
+            LunarSeerAvailable = config.Bind("09 LunarSeer", "Available", true, "If enabled, Seer Stations appear in the Bazaar.");
+            LunarSeerCost = config.Bind("09 LunarSeer", "Cost", 3, "Lunar coin cost for using Seer Stations.");
 
             // 10 ShrineOfOrder
-            ShrineOfOrderSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "10 ShrineOfOrder", "SectionEnabled", true, "Enables or disables the Shrine of Order section. Enabling lets the director spawn a Shrine of Order near the Newt.");
-            ShrineOfOrderDirectorCost = ModCompatibilityConfigPresets.Bind(config, "10 ShrineOfOrder", "DirectorCost", 5, "Director credits the Shrine of Order costs.");
-            ShrineOfOrderDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "10 ShrineOfOrder", "DirectorWeight", 1f, "How likely the director picks the Shrine of Order, compared to the DirectorWeight of the other interactables.");
-            ShrineOfOrderCost = ModCompatibilityConfigPresets.Bind(config, "10 ShrineOfOrder", "Cost", 1, "Lunar coin cost of each Shrine of Order use.");
-            ShrineOfOrderUseLimit = ModCompatibilityConfigPresets.Bind(config, "10 ShrineOfOrder", "UseLimit", -1, "Limit the amount of Shrine of Order uses per visit to the Bazaar. -1 = Unlimited.");
+            ShrineOfOrderSectionEnabled = config.Bind("10 ShrineOfOrder", "SectionEnabled", true, "Enables or disables the Shrine of Order section. Enabling lets the director spawn a Shrine of Order near the Newt.");
+            ShrineOfOrderDirectorCost = config.Bind("10 ShrineOfOrder", "DirectorCost", 5, "Director credits the Shrine of Order costs.");
+            ShrineOfOrderDirectorWeight = config.Bind("10 ShrineOfOrder", "DirectorWeight", 1f, "How likely the director picks the Shrine of Order, compared to the DirectorWeight of the other interactables.");
+            ShrineOfOrderCost = config.Bind("10 ShrineOfOrder", "Cost", 1, "Lunar coin cost of each Shrine of Order use.");
+            ShrineOfOrderUseLimit = config.Bind("10 ShrineOfOrder", "UseLimit", -1, "Limit the amount of Shrine of Order uses per visit to the Bazaar. -1 = Unlimited.");
 
             // 11 Donation
-            DonateSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "SectionEnabled", true, "Enables or disables the Donate section. Enabling lets the director spawn a Donation Altar near the Newt.");
-            DonateDirectorCost = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "DirectorCost", 10, "Director credits the Donation Altar costs.");
-            DonateDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "DirectorWeight", 1f, "How likely the director picks the Donation Altar, compared to the DirectorWeight of the other interactables.");
-            DonateCost = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "Cost", 5, "Cost of a donation, paid in CostType.");
-            DonateCostType = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "CostType", CostTypeIndex.LunarCoin, "What a donation costs, e.g. LunarCoin, Money, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
-            DonateRewardLimitPerVisit = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "RewardLimitPerVisit", 1, "Limit the number of rewards each player can get per visit to the Bazaar.");
-            DonateRewardLimitPerRun = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "RewardLimitPerRun", 1, "Limit the number of rewards each player can get in total over the course of the complete run. Must be equal or higher than RewardLimitPerVisit.");
-            DonateSequentialRewardLists = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "SequentialRewardLists", false, "If enabled, the reward lists will be choosen sequentially, ordered from heighest weight to lowest weight. The current reward list is stored for each player per run and swaps around. Reward lists with weight = 0 will be ignored.");
-            DonateRewardList1Weight = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "RewardList1Weight", 0f, "Weight for choosing RewardList1.");
-            DonateRewardList1 = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "RewardList1", "2xdtChest1 | Tier2", $"Item reward pool. Format: <amount1>x<item1> & <amount2>x<item2>, or | to pick one. See README.md for more detailed description. {itemKeyWordsExplanation} Example: Hoof & Tier1");
-            DonateRewardList2Weight = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "RewardList2Weight", 0f, "Weight for choosing RewardList2.");
-            DonateRewardList2 = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "RewardList2", "Tier3 | Boss", $"Item reward pool. Format: <amount1>x<item1> & <amount2>x<item2>, or | to pick one. See README.md for more detailed description. {itemKeyWordsExplanation} Example: AlienHead | 2xTier2");
-            DonateRewardList3Weight = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "RewardList3Weight", 0f, "Weight for choosing RewardList3.");
-            DonateRewardList3 = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "RewardList3", "10xBoostAttackSpeed | 10xBoostDamage | 10xBoostEquipmentRecharge | 10xBoostHp | 10xCrippleWardOnLevel | EmpowerAlways | Ghost | 3xIncubator | 10xLevelBonus | 10xWarCryOnCombat | 10xTempestOnKill", $"Item reward pool. Format: <amount1>x<item1> & <amount2>x<item2>, or | to pick one. See README.md for more detailed description. {itemKeyWordsExplanation}");
-            DonateRewardListCharacterWeight = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "RewardListCharacterWeight", 1.0f, "Weight for choosing the reward list of the respective character.");
+            DonateSectionEnabled = config.Bind("11 Donate", "SectionEnabled", true, "Enables or disables the Donate section. Enabling lets the director spawn a Donation Altar near the Newt.");
+            DonateDirectorCost = config.Bind("11 Donate", "DirectorCost", 10, "Director credits the Donation Altar costs.");
+            DonateDirectorWeight = config.Bind("11 Donate", "DirectorWeight", 1f, "How likely the director picks the Donation Altar, compared to the DirectorWeight of the other interactables.");
+            DonateCost = config.Bind("11 Donate", "Cost", 5, "Cost of a donation, paid in CostType.");
+            DonateCostType = config.Bind("11 Donate", "CostType", CostTypeIndex.LunarCoin, "What a donation costs, e.g. LunarCoin, Money, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
+            DonateRewardLimitPerVisit = config.Bind("11 Donate", "RewardLimitPerVisit", 1, "Limit the number of rewards each player can get per visit to the Bazaar.");
+            DonateRewardLimitPerRun = config.Bind("11 Donate", "RewardLimitPerRun", 1, "Limit the number of rewards each player can get in total over the course of the complete run. Must be equal or higher than RewardLimitPerVisit.");
+            DonateSequentialRewardLists = config.Bind("11 Donate", "SequentialRewardLists", false, "If enabled, the reward lists will be choosen sequentially, ordered from heighest weight to lowest weight. The current reward list is stored for each player per run and swaps around. Reward lists with weight = 0 will be ignored.");
+            DonateRewardList1Weight = config.Bind("11 Donate", "RewardList1Weight", 0f, "Weight for choosing RewardList1.");
+            DonateRewardList1 = config.Bind("11 Donate", "RewardList1", "2xdtChest1 | Tier2", $"Item reward pool. Format: <amount1>x<item1> & <amount2>x<item2>, or | to pick one. See README.md for more detailed description. {itemKeyWordsExplanation} Example: Hoof & Tier1");
+            DonateRewardList2Weight = config.Bind("11 Donate", "RewardList2Weight", 0f, "Weight for choosing RewardList2.");
+            DonateRewardList2 = config.Bind("11 Donate", "RewardList2", "Tier3 | Boss", $"Item reward pool. Format: <amount1>x<item1> & <amount2>x<item2>, or | to pick one. See README.md for more detailed description. {itemKeyWordsExplanation} Example: AlienHead | 2xTier2");
+            DonateRewardList3Weight = config.Bind("11 Donate", "RewardList3Weight", 0f, "Weight for choosing RewardList3.");
+            DonateRewardList3 = config.Bind("11 Donate", "RewardList3", "10xBoostAttackSpeed | 10xBoostDamage | 10xBoostEquipmentRecharge | 10xBoostHp | 10xCrippleWardOnLevel | EmpowerAlways | Ghost | 3xIncubator | 10xLevelBonus | 10xWarCryOnCombat | 10xTempestOnKill", $"Item reward pool. Format: <amount1>x<item1> & <amount2>x<item2>, or | to pick one. See README.md for more detailed description. {itemKeyWordsExplanation}");
+            DonateRewardListCharacterWeight = config.Bind("11 Donate", "RewardListCharacterWeight", 1.0f, "Weight for choosing the reward list of the respective character.");
             string[] survivorNames = SurvivorCatalog.allSurvivorDefs.Select(survivor => survivor.cachedName).ToArray();
-            DonateRewardListAvailableCharacters = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "RewardListAvailableCharacters", string.Join(", ", survivorNames), "Available special reward lists for certain characters. Applies only if the donator is a character of the respective type. Comma-separated list of characters (see README.md)");
-            DonateRewardListCharacterDefault = ModCompatibilityConfigPresets.Bind(config, "11 Donate", "RewardListCharacterDefault", "3xScrapGreen", $"Item reward pool for characters without a reward list of their own, or whose list gives no reward. Format: <amount1>x<item1> & <amount2>x<item2>, or | to pick one. See README.md for more detailed description. {itemKeyWordsExplanation}");
+            DonateRewardListAvailableCharacters = config.Bind("11 Donate", "RewardListAvailableCharacters", string.Join(", ", survivorNames), "Available special reward lists for certain characters. Applies only if the donator is a character of the respective type. Comma-separated list of characters (see README.md)");
+            DonateRewardListCharacterDefault = config.Bind("11 Donate", "RewardListCharacterDefault", "3xScrapGreen", $"Item reward pool for characters without a reward list of their own, or whose list gives no reward. Format: <amount1>x<item1> & <amount2>x<item2>, or | to pick one. See README.md for more detailed description. {itemKeyWordsExplanation}");
 
             // 12 Wandering Chef
-            WanderingChefSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "12 WanderingChef", "SectionEnabled", true, "Enables or disables the Wandering Chef section. Only works if the Alloyed Collective is enabled for the run. Enabling lets the director spawn a Wandering Chef near the Lunar Shop.");
-            WanderingChefDirectorCost = ModCompatibilityConfigPresets.Bind(config, "12 WanderingChef", "DirectorCost", 7, "Director credits the Wandering Chef costs.");
-            WanderingChefDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "12 WanderingChef", "DirectorWeight", 0.5f, "How likely the director picks the Wandering Chef, compared to the DirectorWeight of the other interactables.");
-            WanderingChefUnrestrictedCrafting = ModCompatibilityConfigPresets.Bind(config, "12 WanderingChef", "UnrestrictedCrafting", false, "Allows you to craft anything. Otherwise crafting is restricted to a single randomly selected target pickup.");
-            WanderingChefCraftableRecipesOnly = ModCompatibilityConfigPresets.Bind(config, "12 WanderingChef", "CraftableRecipesOnly", true, "Only if UnrestrictedCrafting is false: The Wandering Chef only offers a recipe that a player can cook from their inventory and what the Bazaar offers (items in printers, Lunar Buds, Equipment Terminals and cauldrons, scrap if there are Scrappers, and one item from the Command Pedestal's choices). If there is none, he leaves and the director spends his credits on something else.");
-            WanderingChefBuyToInventory = ModCompatibilityConfigPresets.Bind(config, "12 WanderingChef", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground. Cooked equipment replaces yours once your slots are full, and the old one is discarded.");
+            WanderingChefSectionEnabled = config.Bind("12 WanderingChef", "SectionEnabled", true, "Enables or disables the Wandering Chef section. Only works if the Alloyed Collective is enabled for the run. Enabling lets the director spawn a Wandering Chef near the Lunar Shop.");
+            WanderingChefDirectorCost = config.Bind("12 WanderingChef", "DirectorCost", 7, "Director credits the Wandering Chef costs.");
+            WanderingChefDirectorWeight = config.Bind("12 WanderingChef", "DirectorWeight", 0.5f, "How likely the director picks the Wandering Chef, compared to the DirectorWeight of the other interactables.");
+            WanderingChefUnrestrictedCrafting = config.Bind("12 WanderingChef", "UnrestrictedCrafting", false, "Allows you to craft anything. Otherwise crafting is restricted to a single randomly selected target pickup.");
+            WanderingChefCraftableRecipesOnly = config.Bind("12 WanderingChef", "CraftableRecipesOnly", true, "Only if UnrestrictedCrafting is false: The Wandering Chef only offers a recipe that a player can cook from their inventory and what the Bazaar offers (items in printers, Lunar Buds, Equipment Terminals and cauldrons, scrap if there are Scrappers, and one item from the Command Pedestal's choices). If there is none, he leaves and the director spends his credits on something else.");
+            WanderingChefBuyToInventory = config.Bind("12 WanderingChef", "BuyToInventory", true, "Items go directly into inventory instead of dropping on ground. Cooked equipment replaces yours once your slots are full, and the old one is discarded.");
 
             // 13 Drones
-            DronesSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "SectionEnabled", true, "Enables or disables the Drones section. Only works if the Alloyed Collective is enabled for the run. Enabling lets the director spawn the drone stations below, and the players' drones come along into the Bazaar like on any other stage.");
-            DronesDroneCombinerStationDirectorCost = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "DroneCombinerStationDirectorCost", 1, "Director credits the Drone Combiner Station costs.");
-            DronesDroneCombinerStationDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "DroneCombinerStationDirectorWeight", 1f, "How likely the director picks the Drone Combiner Station, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
-            DronesDroneUpgradeStationDirectorCost = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "DroneUpgradeStationDirectorCost", 5, "Director credits the Drone Upgrade Station costs.");
-            DronesDroneUpgradeStationDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "DroneUpgradeStationDirectorWeight", 1f, "How likely the director picks the Drone Upgrade Station, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
-            DronesDroneScrapperDirectorCost = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "DroneScrapperDirectorCost", 3, "Director credits the Drone Scrapper costs.");
-            DronesDroneScrapperDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "DroneScrapperDirectorWeight", 1f, "How likely the director picks the Drone Scrapper, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
-            DronesTripleDroneShopDirectorCost = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "TripleDroneShopDirectorCost", 8, "Director credits the Triple Drone Shop costs.");
-            DronesTripleDroneShopDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "TripleDroneShopDirectorWeight", 1f, "How likely the director picks the Triple Drone Shop, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
-            DronesTripleDroneShopCommonWeight = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "TripleDroneShopCommonWeight", 0.8f, "How likely the Triple Drone Shop offers common drones, compared to TripleDroneShopUncommonWeight. Unlike on other stages, where the game offers only common drones before the third stage, this applies on every visit.");
-            DronesTripleDroneShopUncommonWeight = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "TripleDroneShopUncommonWeight", 0.2f, "How likely the Triple Drone Shop offers uncommon drones, compared to TripleDroneShopCommonWeight. 0 = never.");
-            DronesTripleDroneShopCommonCost = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "TripleDroneShopCommonCost", 40, "Cost of a common drone from the Triple Drone Shop, paid in TripleDroneShopCostType.");
-            DronesTripleDroneShopUncommonCost = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "TripleDroneShopUncommonCost", 60, "Cost of an uncommon drone from the Triple Drone Shop, paid in TripleDroneShopCostType.");
-            DronesTripleDroneShopBuyAll = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "TripleDroneShopBuyAll", false, "Lets you buy all three drones of the Triple Drone Shop, as with an Executive Card. Off = only one, like in the base game.");
-            DronesTripleDroneShopInstancedPurchases = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "TripleDroneShopInstancedPurchases", true, "Each player can buy from the Triple Drone Shop independently: one drone, or all three with TripleDroneShopBuyAll. It stays full for the others.");
-            DronesTripleDroneShopCostType = ModCompatibilityConfigPresets.Bind(config, "13 Drones", "TripleDroneShopCostType", CostTypeIndex.Money, "What a drone from the Triple Drone Shop costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
+            DronesSectionEnabled = config.Bind("13 Drones", "SectionEnabled", true, "Enables or disables the Drones section. Only works if the Alloyed Collective is enabled for the run. Enabling lets the director spawn the drone stations below, and the players' drones come along into the Bazaar like on any other stage.");
+            DronesDroneCombinerStationDirectorCost = config.Bind("13 Drones", "DroneCombinerStationDirectorCost", 1, "Director credits the Drone Combiner Station costs.");
+            DronesDroneCombinerStationDirectorWeight = config.Bind("13 Drones", "DroneCombinerStationDirectorWeight", 1f, "How likely the director picks the Drone Combiner Station, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
+            DronesDroneUpgradeStationDirectorCost = config.Bind("13 Drones", "DroneUpgradeStationDirectorCost", 5, "Director credits the Drone Upgrade Station costs.");
+            DronesDroneUpgradeStationDirectorWeight = config.Bind("13 Drones", "DroneUpgradeStationDirectorWeight", 1f, "How likely the director picks the Drone Upgrade Station, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
+            DronesDroneScrapperDirectorCost = config.Bind("13 Drones", "DroneScrapperDirectorCost", 3, "Director credits the Drone Scrapper costs.");
+            DronesDroneScrapperDirectorWeight = config.Bind("13 Drones", "DroneScrapperDirectorWeight", 1f, "How likely the director picks the Drone Scrapper, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
+            DronesTripleDroneShopDirectorCost = config.Bind("13 Drones", "TripleDroneShopDirectorCost", 8, "Director credits the Triple Drone Shop costs.");
+            DronesTripleDroneShopDirectorWeight = config.Bind("13 Drones", "TripleDroneShopDirectorWeight", 1f, "How likely the director picks the Triple Drone Shop, compared to the DirectorWeight of the other interactables. 0 = never spawns.");
+            DronesTripleDroneShopCommonWeight = config.Bind("13 Drones", "TripleDroneShopCommonWeight", 0.8f, "How likely the Triple Drone Shop offers common drones, compared to TripleDroneShopUncommonWeight. Unlike on other stages, where the game offers only common drones before the third stage, this applies on every visit.");
+            DronesTripleDroneShopUncommonWeight = config.Bind("13 Drones", "TripleDroneShopUncommonWeight", 0.2f, "How likely the Triple Drone Shop offers uncommon drones, compared to TripleDroneShopCommonWeight. 0 = never.");
+            DronesTripleDroneShopCommonCost = config.Bind("13 Drones", "TripleDroneShopCommonCost", 40, "Cost of a common drone from the Triple Drone Shop, paid in TripleDroneShopCostType.");
+            DronesTripleDroneShopUncommonCost = config.Bind("13 Drones", "TripleDroneShopUncommonCost", 60, "Cost of an uncommon drone from the Triple Drone Shop, paid in TripleDroneShopCostType.");
+            DronesTripleDroneShopBuyAll = config.Bind("13 Drones", "TripleDroneShopBuyAll", false, "Lets you buy all three drones of the Triple Drone Shop, as with an Executive Card. Off = only one, like in the base game.");
+            DronesTripleDroneShopInstancedPurchases = config.Bind("13 Drones", "TripleDroneShopInstancedPurchases", true, "Each player can buy from the Triple Drone Shop independently: one drone, or all three with TripleDroneShopBuyAll. It stays full for the others.");
+            DronesTripleDroneShopCostType = config.Bind("13 Drones", "TripleDroneShopCostType", CostTypeIndex.Money, "What a drone from the Triple Drone Shop costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
 
             // 14 CommandPedestal
-            CommandPedestalSectionEnabled = ModCompatibilityConfigPresets.Bind(config, "14 CommandPedestal", "SectionEnabled", true, "Enables or disables the Command Pedestal section. It lets you pick an item for a price.");
+            CommandPedestalSectionEnabled = config.Bind("14 CommandPedestal", "SectionEnabled", true, "Enables or disables the Command Pedestal section. It lets you pick an item for a price.");
             CommandPedestalTiers.Clear();
             // by how many items of each tier a typical stage gives; lunar and void boss items are off
             AddCommandPedestalTier("Tier1", "white items", run => run.availableTier1DropList, 50, 10, 0.5f);
@@ -357,20 +357,20 @@ namespace BazaarIsMyHaven
             // all the tiers' director costs, then the pedestal's own weight, then the tiers' weights and prices
             foreach (var tier in CommandPedestalTiers)
             {
-                tier.directorCost = ModCompatibilityConfigPresets.Bind(config, "14 CommandPedestal", $"{tier.name}DirectorCost", tier.defaultDirectorCost, $"Director credits a Command Pedestal offering {tier.offers} costs.");
+                tier.directorCost = config.Bind("14 CommandPedestal", $"{tier.name}DirectorCost", tier.defaultDirectorCost, $"Director credits a Command Pedestal offering {tier.offers} costs.");
             }
-            CommandPedestalDirectorWeight = ModCompatibilityConfigPresets.Bind(config, "14 CommandPedestal", "DirectorWeight", 0.2f, "How likely the director picks the Command Pedestal, compared to the DirectorWeight of the other interactables. Which tier it offers is rolled by the tier weights below.");
+            CommandPedestalDirectorWeight = config.Bind("14 CommandPedestal", "DirectorWeight", 0.2f, "How likely the director picks the Command Pedestal, compared to the DirectorWeight of the other interactables. Which tier it offers is rolled by the tier weights below.");
             foreach (var tier in CommandPedestalTiers)
             {
-                tier.weight = ModCompatibilityConfigPresets.Bind(config, "14 CommandPedestal", $"{tier.name}Weight", tier.defaultWeight, $"Weight for a Command Pedestal offering {tier.offers}, compared to the other tier weights. 0 = never.");
+                tier.weight = config.Bind("14 CommandPedestal", $"{tier.name}Weight", tier.defaultWeight, $"Weight for a Command Pedestal offering {tier.offers}, compared to the other tier weights. 0 = never.");
             }
             foreach (var tier in CommandPedestalTiers)
             {
-                tier.cost = ModCompatibilityConfigPresets.Bind(config, "14 CommandPedestal", $"{tier.name}Cost", tier.defaultCost, $"Cost of a Command Pedestal offering {tier.offers}, paid in CostType.");
+                tier.cost = config.Bind("14 CommandPedestal", $"{tier.name}Cost", tier.defaultCost, $"Cost of a Command Pedestal offering {tier.offers}, paid in CostType.");
             }
-            CommandPedestalCostType = ModCompatibilityConfigPresets.Bind(config, "14 CommandPedestal", "CostType", CostTypeIndex.Money, "What opening the Command Pedestal costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
-            CommandPedestalInstancedPurchases = ModCompatibilityConfigPresets.Bind(config, "14 CommandPedestal", "InstancedPurchases", true, "Each player can buy from the Command Pedestal once, independently of the others. It stays ready for the others, and each buyer gets their own Command Essence.");
-            CommandPedestalBuyToInventory = ModCompatibilityConfigPresets.Bind(config, "14 CommandPedestal", "BuyToInventory", true, "Using the Command Pedestal shows its item picker right away, and the price is only charged once you pick an item, which goes directly into your inventory. Equipment it replaces goes into the vault, where only you can swap it back, for free. No essence appears; closing the picker costs nothing, and using the Command Pedestal again reopens it. Otherwise buying drops a Command Essence that anyone can use.");
+            CommandPedestalCostType = config.Bind("14 CommandPedestal", "CostType", CostTypeIndex.Money, "What opening the Command Pedestal costs, e.g. Money, LunarCoin, WhiteItem or PercentHealth. The price tag shows it too. Money scales with difficulty if ScaleMoneyCosts is on.");
+            CommandPedestalInstancedPurchases = config.Bind("14 CommandPedestal", "InstancedPurchases", true, "Each player can buy from the Command Pedestal once, independently of the others. It stays ready for the others, and each buyer gets their own Command Essence.");
+            CommandPedestalBuyToInventory = config.Bind("14 CommandPedestal", "BuyToInventory", true, "Using the Command Pedestal shows its item picker right away, and the price is only charged once you pick an item, which goes directly into your inventory. Equipment it replaces goes into the vault, where only you can swap it back, for free. No essence appears; closing the picker costs nothing, and using the Command Pedestal again reopens it. Otherwise buying drops a Command Essence that anyone can use.");
 
             RefreshDerivedData(config);
             ConfigMigration.Migrate();
@@ -514,7 +514,12 @@ namespace BazaarIsMyHaven
         private static void RefreshDonationRewardLists(ConfigFile config)
         {
             DonateRewardListCharacters.Clear();
+            var listed = DonateRewardListAvailableCharacters.Value.Split(",").Select(name => name.Trim()).Where(name => !string.IsNullOrWhiteSpace(name)).ToList();
+            var listedBodies = new HashSet<BodyIndex>(listed.Select(CatalogHelper.FindBody));
+            // A mod's survivor joins RewardListAvailableCharacters once, when its reward list is new to the config, e.g.
+            // when the config is older than the mod. After that the setting decides, so players can take it out again.
             var modRewards = new Dictionary<BodyIndex, string>();
+            var added = new List<string>();
             foreach (var (name, reward) in modDonationRewards)
             {
                 BodyIndex bodyIndex = CatalogHelper.FindBody(name);
@@ -524,14 +529,25 @@ namespace BazaarIsMyHaven
                     continue;
                 }
                 modRewards[bodyIndex] = reward;
+                if (!listedBodies.Contains(bodyIndex) && !HasEntry(config, new ConfigDefinition("11 Donate", $"RewardList{name}")))
+                {
+                    added.Add(name);
+                    listedBodies.Add(bodyIndex);
+                }
             }
-            // A mod's survivor joins RewardListAvailableCharacters once, when its reward list is new to the config, e.g.
-            // when the config is older than the mod. After that the setting decides, so players can take it out again.
-            AddModSurvivors(ModCompatibilityConfigPresets.PlayerEntry(DonateRewardListAvailableCharacters), definition => HasEntry(config, definition));
-            // a preset's list, unless the preset sets the survivor's reward list
-            if (ModCompatibilityConfigPresets.IsPreset(DonateRewardListAvailableCharacters))
-                AddModSurvivors(DonateRewardListAvailableCharacters, definition => ModCompatibilityConfigPresets.IsPreset(config, definition));
-            var listed = DonateRewardListAvailableCharacters.Value.Split(",").Select(name => name.Trim()).Where(name => !string.IsNullOrWhiteSpace(name)).ToList();
+            if (added.Count > 0)
+            {
+                listed.AddRange(added);
+                addingModSurvivors = true;
+                try
+                {
+                    DonateRewardListAvailableCharacters.Value = string.Join(", ", listed);
+                }
+                finally
+                {
+                    addingModSurvivors = false;
+                }
+            }
             foreach (var name in listed)
             {
                 BodyIndex bodyIndex = CatalogHelper.FindBody(name);
@@ -543,36 +559,8 @@ namespace BazaarIsMyHaven
                 if (DonateRewardListCharacters.ContainsKey(bodyIndex))
                     continue;
                 string defaultReward = modRewards.TryGetValue(bodyIndex, out var modReward) ? modReward : DefaultDonationReward(name);
-                ConfigEntry<string> donateRewardListCharacter = ModCompatibilityConfigPresets.Bind(config, "11 Donate", $"RewardList{name}", defaultReward, $"Item reward pool for {name} in the format <amount1>x<item1> & <amount2>x<item2>. See README.md for more detailed description. {itemKeyWordsExplanation}");
+                ConfigEntry<string> donateRewardListCharacter = config.Bind("11 Donate", $"RewardList{name}", defaultReward, $"Item reward pool for {name} in the format <amount1>x<item1> & <amount2>x<item2>. See README.md for more detailed description. {itemKeyWordsExplanation}");
                 DonateRewardListCharacters[bodyIndex] = donateRewardListCharacter;
-            }
-        }
-
-        private static void AddModSurvivors(ConfigEntry<string> availableCharacters, Func<ConfigDefinition, bool> hasRewardList)
-        {
-            var listed = availableCharacters.Value.Split(",").Select(name => name.Trim()).Where(name => !string.IsNullOrWhiteSpace(name)).ToList();
-            var listedBodies = new HashSet<BodyIndex>(listed.Select(CatalogHelper.FindBody));
-            var added = new List<string>();
-            foreach (var name in modDonationRewards.Keys)
-            {
-                BodyIndex bodyIndex = CatalogHelper.FindBody(name);
-                if (bodyIndex != BodyIndex.None && !listedBodies.Contains(bodyIndex) && !hasRewardList(new ConfigDefinition("11 Donate", $"RewardList{name}")))
-                {
-                    added.Add(name);
-                    listedBodies.Add(bodyIndex);
-                }
-            }
-            if (added.Count == 0)
-                return;
-            listed.AddRange(added);
-            addingModSurvivors = true;
-            try
-            {
-                availableCharacters.Value = string.Join(", ", listed);
-            }
-            finally
-            {
-                addingModSurvivors = false;
             }
         }
 
