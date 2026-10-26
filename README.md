@@ -38,6 +38,7 @@ Works with
 - [InLobbyConfig](https://thunderstore.io/package/KingEnderBrine/InLobbyConfig/)
 - [SuppressorInBazaar](https://thunderstore.io/c/riskofrain2/p/TheBugReport/SuppressorInBazaar/)
 - [ProperSave](https://thunderstore.io/c/riskofrain2/p/KingEnderBrine/ProperSave/)
+- [Quality](https://thunderstore.io/c/riskofrain2/p/Goorakh/Quality/): the Command Pedestal's item can have a quality, with the chance set in Quality's config.
 
 Not compatible with
 - BazaarLunarForEveryone

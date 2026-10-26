@@ -35,6 +35,22 @@ namespace BazaarIsMyHaven
             public Vector3 vaultPosition;
         }
 
+        // Picks one of a tier's items. As a drop table, mods that change what drop tables give change this pick too
+        private class TierDropTable : PickupDropTable
+        {
+            public List<PickupIndex> pickups;
+
+            public override int GetPickupCount()
+            {
+                return pickups != null ? pickups.Count : 0;
+            }
+
+            public override UniquePickup GeneratePickupPreReplacement(Xoroshiro128Plus rng)
+            {
+                return pickups != null && pickups.Count > 0 ? new UniquePickup(rng.NextElementUniform(pickups)) : UniquePickup.none;
+            }
+        }
+
         // The director picks the pedestal by its DirectorWeight, then a tier it can afford by the tier weights; the tier sets the essence and the price
         private class CommandPedestalCard : DirectorCard
         {
@@ -75,6 +91,7 @@ namespace BazaarIsMyHaven
         bool spawned;
         GameObject pedestal;
         Xoroshiro128Plus rng;
+        TierDropTable dropTable;
         // bought without instanced purchases; nobody can buy it any more
         bool sold;
         // rolled once per visit, so the essence shown above the vault is the one everyone gets
@@ -349,7 +366,7 @@ namespace BazaarIsMyHaven
             return card != null && card.tier != null ? Helper.GetCost(card.tier.cost.Value, ModConfig.CommandPedestalCostType.Value) : 0;
         }
 
-        // Rolls an item of the director's tier; the essence then offers every item of that tier
+        // Rolls an item of the director's tier, which mods that change what drop tables give may change; the essence then offers every item of the rolled item's group
         private bool TryRollPickup(out UniquePickup pickup)
         {
             var dropList = card != null && card.tier != null ? card.tier.dropList(Run.instance) : null;
@@ -358,7 +375,14 @@ namespace BazaarIsMyHaven
                 pickup = UniquePickup.none;
                 return false;
             }
-            pickup = new UniquePickup(rng.NextElementUniform(dropList));
+            if (!dropTable)
+            {
+                dropTable = ScriptableObject.CreateInstance<TierDropTable>();
+                // the tier's item, not a lunar one from Eulogy Zero
+                dropTable.canDropBeReplaced = false;
+            }
+            dropTable.pickups = dropList;
+            pickup = dropTable.GeneratePickup(rng);
             return true;
         }
 
