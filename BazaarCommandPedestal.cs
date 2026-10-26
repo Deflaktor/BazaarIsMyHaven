@@ -51,43 +51,49 @@ namespace BazaarIsMyHaven
             }
         }
 
-        // The director picks the pedestal by its DirectorWeight, then a tier it can afford by the tier weights; the tier sets the essence and the price
-        private class CommandPedestalCard : DirectorCard
+        // A tier the pedestal can offer: the director picks the pedestal by its DirectorWeight, then a tier it can afford by
+        // the tier weights; the tier sets the essence's items and the price
+        private class PedestalTier : DirectorKind
         {
-            public ModConfig.CommandPedestalTier tier;
+            public System.Func<List<PickupIndex>> dropList;
+            public System.Func<int> price;
+        }
 
-            public CommandPedestalCard() : base("Command Pedestal", null, ModConfig.CommandPedestalDirectorWeight, () => 1) { }
+        // tiers of other mods, see BazaarAPI.AddCommandPedestalTier
+        private static readonly List<PedestalTier> addedTiers = new List<PedestalTier>();
 
-            private static List<ModConfig.CommandPedestalTier> GetTiers()
+        public static void AddTier(string name, System.Func<List<PickupIndex>> dropList, System.Func<int> price, System.Func<int> directorCost, System.Func<float> weight, System.Func<bool> isAvailable)
+        {
+            addedTiers.Add(new PedestalTier
             {
-                return ModConfig.CommandPedestalTiers.Where(tier => tier.weight.Value > 0f && tier.dropList(Run.instance).Count > 0).ToList();
-            }
+                name = name,
+                dropList = dropList,
+                price = price,
+                cost = directorCost,
+                weight = weight,
+                isAvailable = () => (isAvailable == null || isAvailable()) && dropList() is { Count: > 0 }
+            });
+        }
 
-            // without a tier to offer, there is no pedestal
-            public override float Weight => GetTiers().Count > 0 ? base.Weight : 0f;
-
-            protected override int CheapestCost()
+        // The tiers the director can roll on this visit: the Bazaar's own with a weight and items, and other mods' tiers
+        private static List<DirectorKind> GetTiers()
+        {
+            var tiers = ModConfig.CommandPedestalTiers.Select(tier => new PedestalTier
             {
-                var tiers = GetTiers();
-                return tiers.Count == 0 ? int.MaxValue : tiers.Min(tier => System.Math.Max(0, tier.directorCost.Value));
-            }
-
-            protected override int PickCost(int credits)
-            {
-                var weightedSelection = new WeightedSelection<ModConfig.CommandPedestalTier>();
-                foreach (var choice in GetTiers())
-                {
-                    if (System.Math.Max(0, choice.directorCost.Value) <= credits)
-                        weightedSelection.AddChoice(choice, choice.weight.Value);
-                }
-                tier = weightedSelection.Evaluate(UnityEngine.Random.value);
-                return System.Math.Max(0, tier.directorCost.Value);
-            }
+                name = tier.name,
+                dropList = () => tier.dropList(Run.instance),
+                price = () => tier.cost.Value,
+                cost = () => tier.directorCost.Value,
+                weight = () => tier.weight.Value,
+                isAvailable = () => tier.dropList(Run.instance).Count > 0
+            });
+            return DirectorKind.Available(tiers.Concat(addedTiers));
         }
 
         AsyncOperationHandle<GameObject> vaultPrefab;
         AsyncOperationHandle<GameObject> shrineUseEffect;
-        CommandPedestalCard card;
+        KindCard card;
+        PedestalTier tier => card != null && card.picks.Count > 0 ? (PedestalTier)card.picks[0] : null;
         bool spawned;
         GameObject pedestal;
         Xoroshiro128Plus rng;
@@ -142,7 +148,11 @@ namespace BazaarIsMyHaven
             card = null;
             if (ModConfig.CommandPedestalSectionEnabled.Value)
             {
-                card = new CommandPedestalCard();
+                // without a tier to offer, there is no pedestal
+                var tiers = GetTiers();
+                if (tiers.Count == 0)
+                    return;
+                card = new KindCard("Command Pedestal", tiers, () => ModConfig.CommandPedestalDirectorWeight.Value, () => 1);
                 cards.Add(card);
             }
         }
@@ -363,13 +373,13 @@ namespace BazaarIsMyHaven
         // The tier's price, scaled with difficulty if it is paid in money
         private int GetPrice()
         {
-            return card != null && card.tier != null ? Helper.GetCost(card.tier.cost.Value, ModConfig.CommandPedestalCostType.Value) : 0;
+            return tier != null ? Helper.GetCost(tier.price(), ModConfig.CommandPedestalCostType.Value) : 0;
         }
 
         // Rolls an item of the director's tier, which mods that change what drop tables give may change; the essence then offers every item of the rolled item's group
         private bool TryRollPickup(out UniquePickup pickup)
         {
-            var dropList = card != null && card.tier != null ? card.tier.dropList(Run.instance) : null;
+            var dropList = tier != null ? tier.dropList() : null;
             if (dropList == null || dropList.Count == 0)
             {
                 pickup = UniquePickup.none;
@@ -576,7 +586,7 @@ namespace BazaarIsMyHaven
                 SpawnDisplayEssence();
             }
 
-            Log.LogDebug($"The Command Pedestal offers {card.tier.name}.");
+            Log.LogDebug($"The Command Pedestal offers {tier.name}.");
             PriceSigns.Apply(new List<GameObject> { pedestal }, GetPrice(), ModConfig.CommandPedestalCostType.Value, SignHeight);
         }
     }

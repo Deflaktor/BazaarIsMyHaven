@@ -1,5 +1,6 @@
 using RoR2;
 using System;
+using System.Collections.Generic;
 
 namespace BazaarIsMyHaven
 {
@@ -45,6 +46,23 @@ namespace BazaarIsMyHaven
         public static void AddCauldron(string name, Func<SpawnCard> spawnCard, Func<int> directorCost, Func<float> weight, Func<bool> isAvailable = null)
         {
             BazaarCauldron.AddKind(name, spawnCard, directorCost, weight, isAvailable);
+        }
+
+        /// <summary>
+        /// Adds a tier to the Command Pedestal. When the director buys the pedestal, it rolls the tier among the ones it
+        /// can afford, by weight, so yours competes with the tier weights (Tier1Weight and so on). As with the Artifact of
+        /// Command, the essence then offers every item of the rolled item's tier, not only those in dropList.
+        /// </summary>
+        /// <param name="name">The name in the log</param>
+        /// <param name="dropList">The items one item is rolled from, e.g. Run.instance.availableTier2DropList; it is
+        /// left out on a visit when it is empty</param>
+        /// <param name="price">The price, paid in the pedestal's CostType and scaled with difficulty if that is money</param>
+        /// <param name="directorCost">The credits it costs, e.g. 20 like the green tier by default</param>
+        /// <param name="weight">How likely the director rolls it, compared to the tier weights</param>
+        /// <param name="isAvailable">Whether the director can roll it on this visit</param>
+        public static void AddCommandPedestalTier(string name, Func<List<PickupIndex>> dropList, Func<int> price, Func<int> directorCost, Func<float> weight, Func<bool> isAvailable = null)
+        {
+            BazaarCommandPedestal.AddTier(name, dropList, price, directorCost, weight, isAvailable);
         }
 
         /// <summary>
