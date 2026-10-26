@@ -49,6 +49,27 @@ namespace BazaarIsMyHaven
             return gameObject;
         }
 
+        // A kind of another mod, added through BazaarAPI; it spawns its spawn card's prefab
+        private protected static DirectorKind AddedKind(string name, Func<SpawnCard> spawnCard, Func<int> cost, Func<float> weight, Func<bool> isAvailable)
+        {
+            return new DirectorKind
+            {
+                name = name,
+                cost = cost,
+                weight = weight,
+                isAvailable = isAvailable,
+                spawn = slot =>
+                {
+                    var card = spawnCard();
+                    var prefab = card ? card.prefab : null;
+                    if (prefab)
+                        SpawnAt(prefab, slot);
+                    else
+                        Log.LogError($"{name} has no spawn card to spawn.");
+                }
+            };
+        }
+
         protected static List<GameObject> SpawnInSlots(Dictionary<int, SpawnCardStruct> slots, GameObject prefab, int start, int count)
         {
             List<GameObject> result = new List<GameObject>();

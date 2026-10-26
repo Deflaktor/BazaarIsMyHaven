@@ -19,40 +19,15 @@ namespace BazaarIsMyHaven
         AsyncOperationHandle<InteractableSpawnCard>[] PrintersCode;
 
         Dictionary<int, SpawnCardStruct> DicPrinters = new Dictionary<int, SpawnCardStruct>();
-        PrinterCard card;
+        KindCard card;
         int spawned;
 
         // printers of other mods, see BazaarAPI.AddPrinter
-        private static readonly List<PrinterKind> addedKinds = new List<PrinterKind>();
-
-        // What a printer pick spawns: the Bazaar's own print an item tier, other mods add their own
-        private class PrinterKind
-        {
-            public string name;
-            public Func<int> cost;
-            public Func<float> weight;
-            public Func<bool> isAvailable;
-            public Action<SpawnCardStruct> spawn;
-        }
+        private static readonly List<DirectorKind> addedKinds = new List<DirectorKind>();
 
         public static void AddKind(string name, Func<SpawnCard> spawnCard, Func<int> cost, Func<float> weight, Func<bool> isAvailable)
         {
-            addedKinds.Add(new PrinterKind
-            {
-                name = name,
-                cost = cost,
-                weight = weight,
-                isAvailable = isAvailable,
-                spawn = slot =>
-                {
-                    var card = spawnCard();
-                    var prefab = card ? card.prefab : null;
-                    if (prefab)
-                        SpawnAt(prefab, slot);
-                    else
-                        Log.LogError($"The printer {name} has no spawn card to spawn.");
-                }
-            });
+            addedKinds.Add(AddedKind(name, spawnCard, cost, weight, isAvailable));
         }
         public override void Preload()
         {
@@ -89,7 +64,7 @@ namespace BazaarIsMyHaven
                     Log.LogWarning("No printer tiers with a valid weight; skipping printers.");
                     return;
                 }
-                card = new PrinterCard(kinds);
+                card = new KindCard("Printer", kinds, () => ModConfig.PrinterDirectorWeight.Value, () => ModConfig.PrinterMaxAmount.Value);
                 cards.Add(card);
             }
         }
@@ -225,36 +200,6 @@ namespace BazaarIsMyHaven
             }
         }
 
-        // The kind is rolled among the ones the director can afford, since printers cost by their kind
-        private class PrinterCard : DirectorCard
-        {
-            private readonly List<PrinterKind> kinds;
-            public readonly List<PrinterKind> picks = new List<PrinterKind>();
-
-            public PrinterCard(List<PrinterKind> kinds) : base("Printer", null, ModConfig.PrinterDirectorWeight, () => ModConfig.PrinterMaxAmount.Value)
-            {
-                this.kinds = kinds;
-            }
-
-            protected override int CheapestCost()
-            {
-                return kinds.Min(kind => Math.Max(0, kind.cost()));
-            }
-
-            protected override int PickCost(int credits)
-            {
-                WeightedSelection<PrinterKind> weightedSelection = new WeightedSelection<PrinterKind>();
-                foreach (var kind in kinds)
-                {
-                    if (Math.Max(0, kind.cost()) <= credits)
-                        weightedSelection.AddChoice(kind, kind.weight());
-                }
-                PrinterKind pick = weightedSelection.Evaluate(UnityEngine.Random.value);
-                picks.Add(pick);
-                return Math.Max(0, pick.cost());
-            }
-        }
-
         private void SetPrinter()
         {
             List<int> total = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -277,15 +222,15 @@ namespace BazaarIsMyHaven
         }
 
         // The kinds the director can roll on this visit: the item tiers with items and a weight, and other mods' printers
-        private List<PrinterKind> GetKinds()
+        private List<DirectorKind> GetKinds()
         {
-            var choices = new List<PrinterKind>();
+            var choices = new List<DirectorKind>();
 
             //Same localized helper to handle weights and counts and avoid empty choices.
             void AddTier(ItemTier choice, float weight, int availableCount)
             {
                 if (availableCount > 0 && weight > 0)
-                    choices.Add(new PrinterKind
+                    choices.Add(new DirectorKind
                     {
                         name = choice.ToString(),
                         cost = () => GetTierCost(choice),
@@ -305,18 +250,7 @@ namespace BazaarIsMyHaven
             int voidCount = Run.instance.availableVoidTier1DropList.Count + Run.instance.availableVoidTier2DropList.Count +
                 Run.instance.availableVoidTier3DropList.Count + Run.instance.availableVoidBossDropList.Count;
             AddTier(ItemTier.NoTier, ModConfig.PrinterTierVoidAnyWeight.Value, voidCount);
-            foreach (var kind in addedKinds)
-            {
-                try
-                {
-                    if (kind.weight() > 0f && (kind.isAvailable == null || kind.isAvailable()))
-                        choices.Add(kind);
-                }
-                catch (Exception exception)
-                {
-                    Log.LogError($"Could not check the printer {kind.name}: {exception}");
-                }
-            }
+            choices.AddRange(DirectorKind.Available(addedKinds));
             return choices;
         }
     }
