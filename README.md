@@ -190,6 +190,17 @@ A few things worth knowing:
 - If your shop turns out to have nothing to sell, you can give the credits back in `CheckAfterSetup`. The director spends them again a frame later, and you spawn those in `SpawnLatePicks`.
 - Apart from `Preload` and `Hook`, your section only runs on the host. Clients don't have your mod, so stick to prefabs the game already knows.
 
+### Adding your own printers
+
+To add a printer to the Bazaar's own printers instead of a section of its own, use `BazaarAPI.AddPrinter`. When the director buys a printer, it rolls its kind by weight among the ones it can afford, so yours competes with the printer tiers' `Tier1Weight` and so on, and takes one of the printer spots. For example, Quality's printers:
+
+```csharp
+BazaarAPI.AddPrinter("Quality white printer", () => ItemQualitiesContent.SpawnCards.QualityDuplicator, () => 5, () => 0.1f);
+BazaarAPI.AddPrinter("Quality green printer", () => ItemQualitiesContent.SpawnCards.QualityDuplicatorLarge, () => 10, () => 0.05f);
+```
+
+The cost and weight can be your own config entries, as with sections, and an optional last argument decides whether the director can roll it on a visit.
+
 ### Donation Altar rewards for your survivor
 
 If your mod adds a survivor, you can give it its own Donation Altar reward:

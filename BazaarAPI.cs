@@ -1,3 +1,6 @@
+using RoR2;
+using System;
+
 namespace BazaarIsMyHaven
 {
     /// <summary>
@@ -13,6 +16,21 @@ namespace BazaarIsMyHaven
         public static void AddSection(BazaarBase section)
         {
             Main.instance.AddSection(section);
+        }
+
+        /// <summary>
+        /// Adds a kind of printer to the Bazaar's printers. When the director buys a printer, it rolls the kind among
+        /// the ones it can afford, by weight, so yours competes with the printer tiers' weights (Tier1Weight and so on)
+        /// and spawns in one of the printer spots.
+        /// </summary>
+        /// <param name="name">The name in the log</param>
+        /// <param name="spawnCard">The printer's spawn card; its prefab is spawned</param>
+        /// <param name="directorCost">The credits one costs, e.g. 5 like a white printer by default</param>
+        /// <param name="weight">How likely the director rolls it, compared to the printer tiers' weights</param>
+        /// <param name="isAvailable">Whether the director can roll it on this visit</param>
+        public static void AddPrinter(string name, Func<SpawnCard> spawnCard, Func<int> directorCost, Func<float> weight, Func<bool> isAvailable = null)
+        {
+            BazaarPrinter.AddKind(name, spawnCard, directorCost, weight, isAvailable);
         }
 
         /// <summary>
